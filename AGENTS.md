@@ -16,7 +16,7 @@ Before changing this project, follow the shared policies in:
 
 ## Project Contracts
 
-Use these deterministic project contracts as the authoritative Phase 0 context:
+Use these deterministic project contracts as the authoritative project context:
 
 - `README.md` for the project overview and current phase.
 - `docs/contracts/system-contract.md` for product scope, system boundaries,
@@ -24,14 +24,17 @@ Use these deterministic project contracts as the authoritative Phase 0 context:
 - `docs/contracts/workflow-and-architecture.md` for lifecycle terminology,
   architecture, pipeline boundaries, and technology direction.
 - `docs/contracts/evaluation-plan.md` for benchmark and metric contracts.
+- `docs/contracts/canonical-w2-schema.md` for the Phase 1 canonical Pydantic
+  schema contract.
 - `docs/references/irs/README.md` for official IRS reference artifact handling.
 
 ## Scope Guard
 
-Phase 0 establishes project contracts only. Do not implement extraction,
-canonical W-2 schemas, OCR, validation engines, evaluation runners, adapters,
-review UI, CSV export, RAG, or production integrations unless a later brief
-explicitly asks for them.
+The project currently includes Phase 0 contracts and the Phase 1 canonical W-2
+schema contract. Do not implement extraction, OCR, validation engines,
+evaluation runners, adapters, review UI, CSV export, RAG, persistence,
+frontend, or production integrations unless a later brief explicitly asks for
+them.
 
 ## Data Handling
 

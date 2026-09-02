@@ -4,8 +4,11 @@ Last updated: 2026-09-02
 
 ## Current Phase
 
-Phase 0 is established: domain contract, architecture contract, official
-reference-form handling, data separation, and evaluation foundation.
+Phase 1 is established: Canonical W-2 Data Contract / Pydantic Schema.
+
+Phase 0 established the domain contract, architecture contract, official
+reference-form handling, data separation, and evaluation foundation. Phase 1
+added the typed canonical W-2 contract that future extractors must produce.
 
 ## Authoritative Reference
 
@@ -17,8 +20,15 @@ Reference PDF:
 docs/references/irs/2026_W2.pdf
 ```
 
-Phase 1 must use that PDF as the source of truth for the canonical W-2 field
+Phase 1 used that PDF as the source of truth for the canonical W-2 field
 inventory.
+
+Canonical schema:
+
+```text
+src/w2_pipeline/contracts/w2.py
+docs/contracts/canonical-w2-schema.md
+```
 
 ## Encoded Assumptions
 
@@ -39,22 +49,22 @@ inventory.
 ## Next Phase
 
 ```text
-Phase 1 - Canonical W-2 Data Contract / Pydantic Schema
+Phase 2 - Ingestion Boundary And Document Intake Contract
 ```
 
-Phase 1 should derive the initial field inventory directly from the official
-2026 Form W-2 PDF.
+Phase 2 should define how documents enter the system, including source metadata
+and routing boundaries, without implementing extraction.
 
-Implementation brief:
+Completed Phase 1 brief:
 
 ```text
 docs/briefs/phase-1-canonical-w2-schema.md
 ```
 
-The brief instructs the next implementation pass to create the Pydantic
-contract layer, package structure, tests, and schema documentation without
-drifting into extraction, validation engines, export, persistence, or UI.
+The Phase 1 implementation created the Pydantic contract layer, package
+structure, tests, and schema documentation without adding extraction, validation
+engines, export, persistence, or UI.
 
 ## Open Issues
 
-- No project-local test/build harness exists yet.
+- No ingestion contract exists yet.

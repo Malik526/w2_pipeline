@@ -14,26 +14,28 @@ W-2 ingestion
 
 ## Current Phase
 
-The project is in Phase 0: domain contract, architecture contract, reference
-form handling, and evaluation foundation.
+The project has completed Phase 1: Canonical W-2 Data Contract / Pydantic
+Schema.
 
-Phase 0 intentionally does not implement document processing or application
-functionality. It establishes the project vocabulary and boundaries that later
-agents should follow.
+Phase 0 established the project vocabulary and boundaries. Phase 1 adds the
+typed canonical W-2 structure every future extractor must produce.
+
+The current schema contract lives at:
+
+```text
+src/w2_pipeline/contracts/w2.py
+```
+
+Import it with:
+
+```python
+from w2_pipeline.contracts.w2 import W2Document
+```
 
 The expected next phase is:
 
 ```text
-Phase 1 - Canonical W-2 Data Contract / Pydantic Schema
-```
-
-Phase 1 must derive the initial field inventory from the official 2026 Form W-2
-reference PDF.
-
-The implementation brief for that phase lives at:
-
-```text
-docs/briefs/phase-1-canonical-w2-schema.md
+Phase 2 - Ingestion Boundary And Document Intake Contract
 ```
 
 ## Working Product Assumption
@@ -64,6 +66,12 @@ docs/references/irs/2026_W2.pdf
 
 That PDF is a reference/specification artifact, not taxpayer data, benchmark
 data, training data, or ground truth.
+
+The canonical schema was derived from this reference and is summarized in:
+
+```text
+docs/contracts/canonical-w2-schema.md
+```
 
 ## System Boundary
 
@@ -125,3 +133,8 @@ Detailed Phase 0 contracts live in:
 Implementation briefs live in:
 
 - `docs/briefs/phase-1-canonical-w2-schema.md`
+
+Current schema contract:
+
+- `docs/contracts/canonical-w2-schema.md`
+- `src/w2_pipeline/contracts/w2.py`
