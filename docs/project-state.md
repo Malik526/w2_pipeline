@@ -4,11 +4,15 @@ Last updated: 2026-09-02
 
 ## Current Phase
 
-Phase 1 is established: Canonical W-2 Data Contract / Pydantic Schema.
+Phase 2 is established: Document Ingestion Boundary + Lightweight PDF
+Inspection.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
 added the typed canonical W-2 contract that future extractors must produce.
+Phase 2 added local source-file intake, SHA-256 file metadata, MIME/type
+reconciliation, lightweight PyMuPDF PDF inspection, and JPEG/PNG readability
+checks before extraction.
 
 ## Authoritative Reference
 
@@ -30,6 +34,13 @@ src/w2_pipeline/contracts/w2.py
 docs/contracts/canonical-w2-schema.md
 ```
 
+Ingestion boundary:
+
+```text
+src/w2_pipeline/ingestion/
+docs/contracts/ingestion-contract.md
+```
+
 ## Encoded Assumptions
 
 - The working user is an accounting or tax-preparation firm processing W-2s
@@ -49,11 +60,11 @@ docs/contracts/canonical-w2-schema.md
 ## Next Phase
 
 ```text
-Phase 2 - Ingestion Boundary And Document Intake Contract
+Phase 3 - Evaluation Dataset + Ground-Truth Harness
 ```
 
-Phase 2 should define how documents enter the system, including source metadata
-and routing boundaries, without implementing extraction.
+Phase 3 should establish safe evaluation documents and ground truth for
+benchmarking extraction pipelines. It should not use real taxpayer PII.
 
 Completed Phase 1 brief:
 
@@ -65,6 +76,19 @@ The Phase 1 implementation created the Pydantic contract layer, package
 structure, tests, and schema documentation without adding extraction, validation
 engines, export, persistence, or UI.
 
+Completed Phase 2 implementation:
+
+```text
+src/w2_pipeline/ingestion/
+tests/ingestion/
+docs/contracts/ingestion-contract.md
+```
+
+The Phase 2 implementation created the ingestion service, typed intake result,
+explicit ingestion errors, PyMuPDF PDF inspection, image readability checks,
+and tests without adding OCR, field extraction, tax-year inference, validation
+engines, export, persistence, UI, or RAG.
+
 ## Open Issues
 
-- No ingestion contract exists yet.
+- No evaluation dataset or ground-truth harness exists yet.

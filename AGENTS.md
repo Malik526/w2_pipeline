@@ -26,15 +26,17 @@ Use these deterministic project contracts as the authoritative project context:
 - `docs/contracts/evaluation-plan.md` for benchmark and metric contracts.
 - `docs/contracts/canonical-w2-schema.md` for the Phase 1 canonical Pydantic
   schema contract.
+- `docs/contracts/ingestion-contract.md` for the Phase 2 document ingestion
+  boundary.
 - `docs/references/irs/README.md` for official IRS reference artifact handling.
 
 ## Scope Guard
 
-The project currently includes Phase 0 contracts and the Phase 1 canonical W-2
-schema contract. Do not implement extraction, OCR, validation engines,
-evaluation runners, adapters, review UI, CSV export, RAG, persistence,
-frontend, or production integrations unless a later brief explicitly asks for
-them.
+The project currently includes Phase 0 contracts, the Phase 1 canonical W-2
+schema contract, and the Phase 2 ingestion boundary. Do not implement OCR,
+W-2 field extraction, validation engines, evaluation runners, adapters, review
+UI, CSV export, RAG, persistence, frontend, or production integrations unless a
+later brief explicitly asks for them.
 
 ## Data Handling
 

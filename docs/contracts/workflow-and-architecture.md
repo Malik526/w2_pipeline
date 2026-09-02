@@ -163,6 +163,33 @@ normalized document/image
 Both pipelines must converge on the same canonical representation and must be
 evaluated against the same ground truth.
 
+## Implemented Ingestion Boundary
+
+Phase 2 implements the document intake layer before extraction:
+
+```text
+raw file
+-> validate intake
+-> inspect document
+-> classify routing characteristics
+-> IngestedDocument
+-> ready for future extraction
+```
+
+The ingestion service accepts local PDF, JPEG, and PNG files, validates
+extension and detectable content type, records source filename, MIME type, file
+size, generated or caller-provided document ID, and SHA-256 fingerprint.
+
+For PDFs, PyMuPDF records page count and classifies embedded-text routing as
+`embedded_text`, `image_only`, `mixed`, or `unknown` using the documented
+heuristic in `docs/contracts/ingestion-contract.md`.
+
+For JPEG/PNG files, Pillow verifies readability and records dimensions.
+
+This boundary is reusable by future deterministic and model-based extraction
+pipelines. It does not implement OCR, W-2 field extraction, W-2 classification,
+tax-year inference, validation engines, persistence, or export.
+
 ## RAG Boundary
 
 This is primarily a document-processing and structured-extraction system, not a

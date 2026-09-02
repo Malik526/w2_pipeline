@@ -14,11 +14,13 @@ W-2 ingestion
 
 ## Current Phase
 
-The project has completed Phase 1: Canonical W-2 Data Contract / Pydantic
-Schema.
+The project has completed Phase 2: Document Ingestion Boundary + Lightweight
+PDF Inspection.
 
 Phase 0 established the project vocabulary and boundaries. Phase 1 adds the
-typed canonical W-2 structure every future extractor must produce.
+typed canonical W-2 structure every future extractor must produce. Phase 2 adds
+the local document intake service that validates PDF/JPEG/PNG inputs, captures
+file metadata, and inspects PDFs for routing metadata.
 
 The current schema contract lives at:
 
@@ -32,10 +34,22 @@ Import it with:
 from w2_pipeline.contracts.w2 import W2Document
 ```
 
+The ingestion boundary lives at:
+
+```text
+src/w2_pipeline/ingestion/
+```
+
+Use it with:
+
+```python
+from w2_pipeline.ingestion import ingest_document
+```
+
 The expected next phase is:
 
 ```text
-Phase 2 - Ingestion Boundary And Document Intake Contract
+Phase 3 - Evaluation Dataset + Ground-Truth Harness
 ```
 
 ## Working Product Assumption
@@ -138,3 +152,8 @@ Current schema contract:
 
 - `docs/contracts/canonical-w2-schema.md`
 - `src/w2_pipeline/contracts/w2.py`
+
+Current ingestion contract:
+
+- `docs/contracts/ingestion-contract.md`
+- `src/w2_pipeline/ingestion/`
