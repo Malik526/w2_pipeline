@@ -1,0 +1,32 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# JavaScript / Next.js
+node_modules/
+.next/
+out/
+dist/
+
+# Local databases and runtime state
+*.sqlite
+*.sqlite3
+*.db
+
+# Real taxpayer/source documents must stay local.
+data/documents/**
+!data/documents/
+!data/documents/README.md
+
+# Private evaluation material must stay local unless explicitly sanitized.
+data/evaluation/private/**
