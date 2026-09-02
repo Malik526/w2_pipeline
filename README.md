@@ -30,6 +30,12 @@ Phase 1 - Canonical W-2 Data Contract / Pydantic Schema
 Phase 1 must derive the initial field inventory from the official 2026 Form W-2
 reference PDF.
 
+The implementation brief for that phase lives at:
+
+```text
+docs/briefs/phase-1-canonical-w2-schema.md
+```
+
 ## Working Product Assumption
 
 The primary assumed user is an accounting or tax-preparation firm processing
@@ -115,3 +121,7 @@ Detailed Phase 0 contracts live in:
 - `docs/contracts/workflow-and-architecture.md`
 - `docs/contracts/evaluation-plan.md`
 - `docs/references/irs/README.md`
+
+Implementation briefs live in:
+
+- `docs/briefs/phase-1-canonical-w2-schema.md`

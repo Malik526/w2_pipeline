@@ -45,8 +45,16 @@ Phase 1 - Canonical W-2 Data Contract / Pydantic Schema
 Phase 1 should derive the initial field inventory directly from the official
 2026 Form W-2 PDF.
 
+Implementation brief:
+
+```text
+docs/briefs/phase-1-canonical-w2-schema.md
+```
+
+The brief instructs the next implementation pass to create the Pydantic
+contract layer, package structure, tests, and schema documentation without
+drifting into extraction, validation engines, export, persistence, or UI.
+
 ## Open Issues
 
 - No project-local test/build harness exists yet.
-- The project directory is not currently a Git repository, so Phase 0 changes
-  could not be committed locally.

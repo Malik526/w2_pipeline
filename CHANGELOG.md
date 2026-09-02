@@ -2,6 +2,8 @@
 
 ## 2026-09-02
 
+- Added a deterministic Phase 1 Codex implementation brief for the canonical
+  W-2 Pydantic schema contract.
 - Established Phase 0 project contracts for W-2 Pipeline.
 - Added the official IRS 2026 Form W-2 PDF as an authoritative reference
   artifact under `docs/references/irs/`.
