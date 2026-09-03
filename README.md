@@ -22,7 +22,8 @@ the local document intake service that validates PDF/JPEG/PNG inputs, captures
 file metadata, and inspects PDFs for routing metadata. Phase 3 adds
 deterministic synthetic 2026 W-2 ground truth, W-2-like evaluation document
 rendering, a JSONL manifest, and a pipeline-independent field-accuracy
-evaluator.
+evaluator. Phase 3B extends that harness with an external synthetic Hugging
+Face benchmark adapter while enforcing annotation leakage prevention.
 
 The current schema contract lives at:
 
@@ -68,6 +69,19 @@ data/evaluation/generated/
 
 The generated documents are synthetic development artifacts, not official IRS
 forms. Ground truth is serialized from the canonical `W2Document` model.
+
+Prepare the external Symage Hugging Face 2026 W-2 subset with:
+
+```bash
+python3 -m pip install '.[external]'
+python -m w2_pipeline.evaluation.prepare_external_dataset
+```
+
+The external command uses Hugging Face `datasets` to load
+`Symage/synthetic-us-forms-preview` and filters to
+`irs_w2_single_page_2026`. Downloaded/prepared external assets are ignored
+under `data/evaluation/external/`. The command can also use the dataset's
+pandas parquet route with `--loader pandas`.
 
 The expected next phase is:
 
@@ -154,6 +168,12 @@ scores are exploratory and must not be treated as correctness.
 Phase 3 implements field accuracy, failure classification, and latency capture
 support. Review routing, confidence thresholds, cost tracking, OCR, and model
 extraction remain future work.
+
+Benchmark isolation is explicit: primary end-to-end extractors receive only the
+document image/path and production-realistic non-answer metadata. Dataset
+annotations such as tokens, bounding boxes, NER tags, FUNSD, COCO, and YOLO
+remain evaluator-side ground-truth material and are not passed to Pipeline A or
+Pipeline B.
 
 ## Security
 

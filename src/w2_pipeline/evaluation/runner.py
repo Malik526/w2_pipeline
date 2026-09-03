@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from w2_pipeline.contracts.w2 import W2Document
 from w2_pipeline.evaluation.comparison import compare_w2_documents, flatten_w2_document
+from w2_pipeline.evaluation.inputs import ExtractionInput
 from w2_pipeline.evaluation.manifest import DatasetManifestEntry
 from w2_pipeline.evaluation.models import (
     BenchmarkEvaluation,
@@ -24,7 +25,7 @@ from w2_pipeline.evaluation.models import (
 class W2Extractor(Protocol):
     """Minimal boundary future extractors must satisfy for evaluation."""
 
-    def extract(self, document_path: Path) -> W2Document | dict:
+    def extract(self, extraction_input: ExtractionInput) -> W2Document | dict:
         """Return a canonical W-2 prediction for the provided source document."""
 
 
@@ -58,12 +59,17 @@ def _evaluate_entry(
     pipeline_id: str,
 ) -> DocumentEvaluation:
     expected = _load_ground_truth(base_dir / entry.ground_truth_path)
-    document_path = base_dir / entry.document_path
+    extraction_input = ExtractionInput(
+        document_path=base_dir / entry.document_path,
+        document_id=f"{entry.sample_id}:{entry.variant_id}",
+        tax_year_hint=entry.tax_year,
+        source=entry.source,
+    )
     started_at = datetime.now(timezone.utc)
     start = time.perf_counter()
 
     try:
-        raw_prediction = extractor.extract(document_path)
+        raw_prediction = extractor.extract(extraction_input)
     except Exception as exc:  # noqa: BLE001 - runner isolates pipeline failures.
         duration = time.perf_counter() - start
         return _failed_evaluation(
@@ -103,6 +109,7 @@ def _evaluate_entry(
         sample_id=entry.sample_id,
         variant_id=entry.variant_id,
         pipeline_id=pipeline_id,
+        evaluated_field_paths=entry.evaluated_field_paths,
     )
     return evaluation.model_copy(
         update={"started_at": started_at, "duration_seconds": duration}

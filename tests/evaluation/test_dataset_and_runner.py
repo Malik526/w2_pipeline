@@ -2,6 +2,7 @@ from pathlib import Path
 
 from w2_pipeline.contracts.w2 import W2Document
 from w2_pipeline.evaluation.dataset import generate_evaluation_dataset
+from w2_pipeline.evaluation.inputs import ExtractionInput
 from w2_pipeline.evaluation.manifest import VariantType, load_manifest_jsonl
 from w2_pipeline.evaluation.models import DocumentEvaluationStatus
 from w2_pipeline.evaluation.runner import evaluate_manifest
@@ -12,7 +13,8 @@ class GroundTruthExtractor:
     def __init__(self, base_dir: Path) -> None:
         self.base_dir = base_dir
 
-    def extract(self, document_path: Path) -> W2Document:
+    def extract(self, extraction_input: ExtractionInput) -> W2Document:
+        document_path = extraction_input.document_path
         sample_id = document_path.name.split("_clean", maxsplit=1)[0]
         if "_rotated" in document_path.name:
             sample_id = document_path.name.split("_rotated", maxsplit=1)[0]
@@ -25,12 +27,12 @@ class GroundTruthExtractor:
 
 
 class FailingExtractor:
-    def extract(self, document_path: Path) -> W2Document:
+    def extract(self, extraction_input: ExtractionInput) -> W2Document:
         raise RuntimeError("synthetic failure")
 
 
 class InvalidExtractor:
-    def extract(self, document_path: Path) -> dict:
+    def extract(self, extraction_input: ExtractionInput) -> dict:
         return {"not": "a canonical w2"}
 
 

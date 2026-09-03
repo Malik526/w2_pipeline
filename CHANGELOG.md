@@ -2,6 +2,28 @@
 
 ## 2026-09-03
 
+### Phase 3B - External Synthetic W-2 Benchmark Isolation
+
+- Added a Symage Hugging Face dataset adapter for
+  `Symage/synthetic-us-forms-preview`, targeting only
+  `irs_w2_single_page_2026` records as an external synthetic 2026 W-2
+  benchmark source.
+- Added strict `ExtractionInput` modeling so primary benchmark extractors
+  receive document input and production-realistic metadata without annotation
+  leakage from tokens, bounding boxes, NER tags, FUNSD, COCO, or YOLO data.
+- Added evaluator-side external annotation storage, explicit FUNSD-to-canonical
+  `W2Document` mapping for supported fields, partial ground-truth
+  `evaluated_field_paths`, and external provenance fields in the manifest.
+- Added an optional Hugging Face dataset preparation CLI and optional
+  `external` dependency group for local retrieval without committing prepared
+  external assets, with support for both Hugging Face `datasets` and pandas
+  parquet loading.
+- Added offline unit tests for external record mapping, unsupported/incomplete
+  annotation handling, stable sample identity, manifest provenance, variant
+  linkage, evaluator compatibility, and annotation isolation.
+- Documented inspected external dataset properties, the primary end-to-end
+  benchmark mode, and the future oracle/parser-isolation diagnostic boundary.
+
 ### Phase 3 - Evaluation Dataset And Ground-Truth Harness
 
 - Added deterministic synthetic 2026 W-2 semantic generation using the canonical

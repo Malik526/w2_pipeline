@@ -4,7 +4,8 @@ Last updated: 2026-09-03
 
 ## Current Phase
 
-Phase 3 is established: Evaluation Dataset + Ground-Truth Harness.
+Phase 3B is established: External 2026 W-2 Dataset Integration + Benchmark
+Isolation.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -13,7 +14,9 @@ Phase 2 added local source-file intake, SHA-256 file metadata, MIME/type
 reconciliation, lightweight PyMuPDF PDF inspection, and JPEG/PNG readability
 checks before extraction. Phase 3 added deterministic synthetic canonical W-2
 generation, W-2-like document rendering, document variants, a JSONL manifest,
-and a pipeline-independent field-accuracy evaluator.
+and a pipeline-independent field-accuracy evaluator. Phase 3B added an
+external Hugging Face synthetic 2026 W-2 adapter and an explicit extraction
+input boundary that prevents answer-bearing annotation leakage.
 
 ## Authoritative Reference
 
@@ -67,6 +70,10 @@ data/evaluation/README.md
   canonical ground truth, independent of OCR, vision models, regex extraction,
   or future pipeline internals.
 - Phase 3 repeated-field comparison is deterministic and index-sensitive.
+- The Phase 3B external benchmark source is kept distinct from the internal
+  synthetic benchmark in manifest provenance.
+- Primary end-to-end benchmark extractors receive only `ExtractionInput`; FUNSD,
+  COCO, YOLO, token, bounding-box, and NER annotations remain evaluator-side.
 - Confidence scores remain exploratory.
 - Real taxpayer data must not be committed.
 
@@ -117,6 +124,24 @@ clean/rotated/compressed/blurred variants, JSONL manifest contracts, canonical
 field flattening, field accuracy, explicit missing/mismatch/unexpected failure
 classifications, extractor failure handling, invalid canonical result handling,
 and latency capture support.
+
+Completed Phase 3B implementation:
+
+```text
+src/w2_pipeline/evaluation/external_symage.py
+src/w2_pipeline/evaluation/inputs.py
+src/w2_pipeline/evaluation/prepare_external_dataset.py
+tests/evaluation/test_external_symage.py
+```
+
+The Phase 3B implementation added a Symage Hugging Face adapter for
+`Symage/synthetic-us-forms-preview`, filters records to
+`irs_w2_single_page_2026`, stores answer-bearing annotations evaluator-side,
+maps supported FUNSD key-value annotations into canonical `W2Document` ground
+truth, records external provenance and evaluated field coverage in the
+manifest, prepares external clean-render PNGs and derived variants, and keeps
+extractor inputs isolated from tokens, bounding boxes, NER tags, FUNSD, COCO,
+and YOLO annotations.
 
 ## Open Issues
 

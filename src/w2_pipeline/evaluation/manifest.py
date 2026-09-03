@@ -20,7 +20,16 @@ class DatasetSource(str, Enum):
     """Supported provenance labels for evaluation dataset items."""
 
     SYNTHETIC = "synthetic"
+    HUGGINGFACE = "huggingface"
     PUBLIC_DATASET = "public_dataset"
+
+
+class BenchmarkMode(str, Enum):
+    """Evaluation mode label used to keep benchmark results separate."""
+
+    END_TO_END = "end_to_end"
+    PARSER_ISOLATION = "parser_isolation"
+    ORACLE_LAYOUT = "oracle_layout"
 
 
 class VariantType(str, Enum):
@@ -28,6 +37,7 @@ class VariantType(str, Enum):
 
     CLEAN_PDF = "clean_pdf"
     CLEAN_PNG = "clean_png"
+    EXTERNAL_CLEAN_RENDER = "external_clean_render"
     ROTATED_PNG = "rotated_png"
     COMPRESSED_JPEG = "compressed_jpeg"
     BLURRED_PNG = "blurred_png"
@@ -54,6 +64,16 @@ class DatasetManifestEntry(ManifestModel):
     expected_quality: ExpectedQuality
     source: DatasetSource = DatasetSource.SYNTHETIC
     pii: bool = False
+    synthetic: bool = True
+    dataset: str | None = None
+    dataset_split: str | None = None
+    form_id: str | None = None
+    external_record_id: str | None = None
+    identity_id: str | None = None
+    page: int | None = Field(default=None, ge=0)
+    annotations_path: str | None = None
+    evaluated_field_paths: list[str] | None = None
+    benchmark_mode: BenchmarkMode = BenchmarkMode.END_TO_END
     generator_seed: int | None = None
     generator_version: str | None = None
     renderer_version: str | None = None
@@ -98,6 +118,12 @@ def load_manifest_jsonl(
                     entry.ground_truth_path,
                     "ground_truth_path",
                 )
+                if entry.annotations_path is not None:
+                    _ensure_manifest_reference(
+                        path.parent,
+                        entry.annotations_path,
+                        "annotations_path",
+                    )
             entries.append(entry)
     return DatasetManifest(entries=entries)
 

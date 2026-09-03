@@ -60,12 +60,17 @@ def compare_w2_documents(
     sample_id: str,
     variant_id: str,
     pipeline_id: str | None = None,
+    evaluated_field_paths: list[str] | None = None,
 ) -> DocumentEvaluation:
     """Compare two canonical W-2 documents and calculate field accuracy."""
 
     expected_fields = flatten_w2_document(expected)
     predicted_fields = flatten_w2_document(predicted)
-    field_paths = sorted(set(expected_fields) | set(predicted_fields))
+    field_paths = (
+        sorted(evaluated_field_paths)
+        if evaluated_field_paths is not None
+        else sorted(set(expected_fields) | set(predicted_fields))
+    )
 
     field_evaluations: list[FieldEvaluation] = []
     failures: list[EvaluationIssue] = []

@@ -1,7 +1,16 @@
 """Evaluation dataset and scoring harness for W-2 Pipeline."""
 
 from w2_pipeline.evaluation.comparison import compare_w2_documents, flatten_w2_document
+from w2_pipeline.evaluation.external_symage import (
+    HF_DATASET_NAME,
+    SYMAGE_W2_FORM_ID,
+    ExternalAnnotationBundle,
+    ExternalGroundTruthResult,
+    SymageW2Adapter,
+)
+from w2_pipeline.evaluation.inputs import ExtractionInput
 from w2_pipeline.evaluation.manifest import (
+    BenchmarkMode,
     DatasetManifest,
     DatasetManifestEntry,
     DatasetSource,
@@ -28,6 +37,7 @@ from w2_pipeline.evaluation.synthetic import (
 
 __all__ = [
     "BenchmarkEvaluation",
+    "BenchmarkMode",
     "DEFAULT_SYNTHETIC_SEED",
     "DatasetManifest",
     "DatasetManifestEntry",
@@ -37,8 +47,14 @@ __all__ = [
     "EvaluationFailureKind",
     "EvaluationIssue",
     "ExpectedQuality",
+    "ExternalAnnotationBundle",
+    "ExternalGroundTruthResult",
     "FieldEvaluation",
+    "HF_DATASET_NAME",
     "SYNTHETIC_GENERATOR_VERSION",
+    "SYMAGE_W2_FORM_ID",
+    "SymageW2Adapter",
+    "ExtractionInput",
     "SyntheticGenerationConfig",
     "VariantType",
     "W2Extractor",

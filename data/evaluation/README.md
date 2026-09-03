@@ -1,7 +1,7 @@
 # Evaluation Data
 
 Phase 3 defines a reproducible synthetic evaluation dataset for offline
-benchmarking. Generated assets are written under:
+benchmarking. Internally generated assets are written under:
 
 ```text
 data/evaluation/generated/
@@ -38,3 +38,76 @@ The rendered documents are W-2-like development artifacts based on the 2026
 field relationships. They are not official IRS forms and must not be described
 as IRS-compliant printable W-2s. Keep authoritative blank IRS reference forms
 under `docs/references/`, not in this directory.
+
+## External Synthetic Benchmark
+
+Phase 3B adds support for the Hugging Face dataset:
+
+```text
+Symage/synthetic-us-forms-preview
+```
+
+The adapter targets only:
+
+```text
+form_id = irs_w2_single_page_2026
+```
+
+Prepare the external benchmark locally with:
+
+```bash
+python3 -m pip install '.[external]'
+python -m w2_pipeline.evaluation.prepare_external_dataset
+```
+
+The default loader uses Hugging Face `datasets` when available and can fall
+back to pandas over the Hugging Face parquet URLs. To force the pandas path:
+
+```bash
+python -m w2_pipeline.evaluation.prepare_external_dataset --loader pandas
+```
+
+The prepared external benchmark is written under:
+
+```text
+data/evaluation/external/symage-synthetic-us-forms-preview/
+```
+
+That path is ignored by Git. Do not commit the downloaded/prepared external
+dataset.
+
+Inspected source metadata from the Hugging Face dataset card:
+
+- dataset license: `cc-by-4.0`
+- total rows: 525
+- splits: `train` with 420 rows and `test` with 105 rows
+- target W-2 subset: 150 `irs_w2_single_page_2026` documents
+- image format: clean typed page renders, 300 DPI PNG
+- columns: `id`, `identity_id`, `form_id`, `page`, `image`, `tokens`,
+  `bboxes`, `ner_tags`, `funsd_json`, `coco_json`, `yolo_txt`,
+  `num_entities`
+- annotation formats: FUNSD, BIO token tags, COCO field-region annotations,
+  and YOLO per-word annotations
+
+The external adapter treats the dataset image as the primary benchmark
+document and classifies it as `external_clean_render`, not as a scan. Controlled
+rotated, compressed, and degraded variants can be derived from that clean image
+while retaining the same semantic ground truth.
+
+## Benchmark Isolation
+
+Primary end-to-end benchmark extractors must receive only image/document input
+and production-realistic non-answer metadata. They must not receive
+dataset-provided:
+
+- `tokens`
+- `bboxes`
+- `ner_tags`
+- `funsd_json`
+- `coco_json`
+- `yolo_txt`
+
+Those fields are stored separately as evaluator-side annotations and are used
+to construct or verify canonical ground truth. They may support a future
+explicitly labeled `parser_isolation` or `oracle_layout` diagnostic, but those
+results must not be reported as end-to-end extraction accuracy.
