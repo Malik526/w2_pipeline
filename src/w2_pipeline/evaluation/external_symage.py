@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import json
-import re
-from io import BytesIO
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from io import BytesIO
+import json
 from pathlib import Path
+import re
 from typing import Any
 
 from PIL import Image
@@ -59,9 +59,9 @@ class ExternalAnnotationBundle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     tokens: list[str] = Field(default_factory=list)
-    bboxes: list[list[int]] = Field(default_factory=list)
+    bboxes: list[list[int | float]] = Field(default_factory=list)
     ner_tags: list[int | str] = Field(default_factory=list)
-    funsd_json: dict[str, Any] = Field(default_factory=dict)
+    funsd_json: list[dict[str, Any]] = Field(default_factory=list)
     coco_json: dict[str, Any] = Field(default_factory=dict)
     yolo_txt: str = ""
 
@@ -101,12 +101,12 @@ class SymageW2Adapter:
         """Extract answer-bearing annotations into evaluator-side storage."""
 
         return ExternalAnnotationBundle(
-            tokens=list(record.get("tokens") or []),
-            bboxes=[list(box) for box in (record.get("bboxes") or [])],
-            ner_tags=list(record.get("ner_tags") or []),
-            funsd_json=_loads_json_field(record.get("funsd_json"), field_name="funsd_json"),
-            coco_json=_loads_json_field(record.get("coco_json"), field_name="coco_json"),
-            yolo_txt=str(record.get("yolo_txt") or ""),
+            tokens=_coerce_tokens(record.get("tokens")),
+            bboxes=_coerce_bboxes(record.get("bboxes")),
+            ner_tags=_coerce_ner_tags(record.get("ner_tags")),
+            funsd_json=_loads_funsd_json(record.get("funsd_json")),
+            coco_json=_loads_coco_json(record.get("coco_json")),
+            yolo_txt=_coerce_yolo_txt(record.get("yolo_txt")),
         )
 
     def build_ground_truth(self, record: dict[str, Any]) -> ExternalGroundTruthResult:
@@ -385,28 +385,87 @@ def _save_record_image(record: dict[str, Any], output_path: Path) -> None:
     raise ExternalDatasetError("External record image is missing or unsupported.")
 
 
-def _loads_json_field(value: Any, *, field_name: str) -> dict[str, Any]:
+def _coerce_tokens(value: Any) -> list[str]:
+    raw_tokens = _coerce_sequence(value, field_name="tokens")
+    if not all(isinstance(token, str) for token in raw_tokens):
+        raise ExternalDatasetError("tokens must be a sequence of strings.")
+    return list(raw_tokens)
+
+
+def _coerce_bboxes(value: Any) -> list[list[int | float]]:
+    raw_bboxes = _coerce_sequence(value, field_name="bboxes")
+    bboxes: list[list[int | float]] = []
+    for bbox in raw_bboxes:
+        coordinates = _coerce_sequence(bbox, field_name="bboxes item")
+        if len(coordinates) != 4:
+            raise ExternalDatasetError("Each bboxes item must contain four coordinates.")
+        if not all(isinstance(coordinate, (int, float)) for coordinate in coordinates):
+            raise ExternalDatasetError("Each bboxes coordinate must be numeric.")
+        bboxes.append(list(coordinates))
+    return bboxes
+
+
+def _coerce_ner_tags(value: Any) -> list[int | str]:
+    raw_tags = _coerce_sequence(value, field_name="ner_tags")
+    if not all(isinstance(tag, (int, str)) for tag in raw_tags):
+        raise ExternalDatasetError("ner_tags must be a sequence of integers or strings.")
+    return list(raw_tags)
+
+
+def _coerce_sequence(value: Any, *, field_name: str) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if hasattr(value, "tolist"):
+        converted = value.tolist()
+        if isinstance(converted, list):
+            return converted
+    raise ExternalDatasetError(f"{field_name} must be a list-like sequence.")
+
+
+def _loads_funsd_json(value: Any) -> list[dict[str, Any]]:
+    loaded = _loads_json(value, field_name="funsd_json")
+    if not isinstance(loaded, list):
+        raise ExternalDatasetError("funsd_json must decode to a FUNSD entity list.")
+    if not all(isinstance(entity, dict) for entity in loaded):
+        raise ExternalDatasetError("Every funsd_json entity must be an object.")
+    return loaded
+
+
+def _loads_coco_json(value: Any) -> dict[str, Any]:
+    loaded = _loads_json(value, field_name="coco_json")
+    if not isinstance(loaded, dict):
+        raise ExternalDatasetError("coco_json must decode to a COCO object.")
+    return loaded
+
+
+def _loads_json(value: Any, *, field_name: str) -> Any:
     if value in (None, ""):
-        return {}
-    if isinstance(value, dict):
+        return [] if field_name == "funsd_json" else {}
+    if isinstance(value, (dict, list)):
         return value
     if isinstance(value, str):
         try:
-            loaded = json.loads(value)
+            return json.loads(value)
         except json.JSONDecodeError as exc:
             raise ExternalDatasetError(f"Invalid {field_name} JSON.") from exc
-        if not isinstance(loaded, dict):
-            raise ExternalDatasetError(f"{field_name} JSON must decode to an object.")
-        return loaded
     raise ExternalDatasetError(f"Unsupported {field_name} value.")
 
 
-def _extract_funsd_values(funsd_json: dict[str, Any]) -> tuple[dict[str, str], list[str]]:
-    form = funsd_json.get("form")
-    if not isinstance(form, list):
-        raise ExternalDatasetError("FUNSD annotation is missing a form array.")
+def _coerce_yolo_txt(value: Any) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise ExternalDatasetError("yolo_txt must be a string.")
+    return value
 
-    entities = {entity.get("id"): entity for entity in form if isinstance(entity, dict)}
+
+def _extract_funsd_values(funsd_json: list[dict[str, Any]]) -> tuple[dict[str, str], list[str]]:
+    if not funsd_json:
+        raise ExternalDatasetError("FUNSD annotation entity list is empty.")
+
+    entities = {entity.get("id"): entity for entity in funsd_json}
     values: dict[str, str] = {}
     unmapped_questions: list[str] = []
     for entity in entities.values():

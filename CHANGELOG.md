@@ -4,6 +4,10 @@
 
 ### Phase 3B - External Synthetic W-2 Benchmark Isolation
 
+- Fixed the Symage external adapter against the real dataset runtime schema:
+  `funsd_json` now validates as a JSON-encoded FUNSD entity list, `coco_json`
+  remains a JSON object, parquet ndarray token/bbox/tag values are coerced
+  field-specifically, and pandas image bytes are supported.
 - Added a Symage Hugging Face dataset adapter for
   `Symage/synthetic-us-forms-preview`, targeting only
   `irs_w2_single_page_2026` records as an external synthetic 2026 W-2

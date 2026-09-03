@@ -89,6 +89,17 @@ Inspected source metadata from the Hugging Face dataset card:
 - annotation formats: FUNSD, BIO token tags, COCO field-region annotations,
   and YOLO per-word annotations
 
+Runtime loader notes:
+
+- Hugging Face `datasets` yields `image` as a PIL PNG image, `tokens` /
+  `bboxes` / `ner_tags` as lists, `funsd_json` as a JSON string decoding to a
+  FUNSD entity list, `coco_json` as a JSON string decoding to a COCO object,
+  and `yolo_txt` as text.
+- pandas parquet loading yields `image` as a `{bytes, path}` dict, `tokens` /
+  `bboxes` / `ner_tags` as ndarray-backed values, `funsd_json` as a JSON string
+  decoding to a FUNSD entity list, `coco_json` as a JSON string decoding to a
+  COCO object, and `yolo_txt` as text.
+
 The external adapter treats the dataset image as the primary benchmark
 document and classifies it as `external_clean_render`, not as a scan. Controlled
 rotated, compressed, and degraded variants can be derived from that clean image

@@ -61,7 +61,7 @@ def sample_record() -> dict:
         "tokens": ["Employee's", "social", "security", "number", "242-48-4959"],
         "bboxes": [[0, 0, 10, 10]],
         "ner_tags": [3, 4, 4, 4, 5],
-        "funsd_json": json.dumps({"form": form}),
+        "funsd_json": json.dumps(form),
         "coco_json": json.dumps({"images": [{"file_name": "typed_p0.png"}]}),
         "yolo_txt": "5 0.5 0.5 0.1 0.1",
     }
@@ -117,6 +117,8 @@ def test_prepare_record_keeps_annotations_evaluator_side_and_links_variants(tmp_
     assert all(entry.annotations_path == first.annotations_path for entry in manifest.entries)
     annotations = json.loads((tmp_path / first.annotations_path).read_text(encoding="utf-8"))
     assert annotations["tokens"] == sample_record()["tokens"]
+    assert isinstance(annotations["funsd_json"], list)
+    assert annotations["funsd_json"][0]["label"] == "question"
 
 
 def test_prepare_record_accepts_pandas_style_image_bytes(tmp_path: Path) -> None:
@@ -199,10 +201,34 @@ def test_unsupported_or_incomplete_external_annotations_fail_clearly() -> None:
         SymageW2Adapter().build_ground_truth(record)
 
     incomplete = sample_record()
-    incomplete["funsd_json"] = json.dumps({"form": []})
+    incomplete["funsd_json"] = json.dumps([])
 
     with pytest.raises(ExternalDatasetError):
         SymageW2Adapter().build_ground_truth(incomplete)
+
+
+def test_external_annotation_shape_validation_is_field_specific() -> None:
+    adapter = SymageW2Adapter()
+
+    wrong_funsd = sample_record()
+    wrong_funsd["funsd_json"] = json.dumps({"form": []})
+    with pytest.raises(ExternalDatasetError, match="funsd_json must decode"):
+        adapter.build_annotation_bundle(wrong_funsd)
+
+    wrong_coco = sample_record()
+    wrong_coco["coco_json"] = json.dumps([])
+    with pytest.raises(ExternalDatasetError, match="coco_json must decode"):
+        adapter.build_annotation_bundle(wrong_coco)
+
+    wrong_yolo = sample_record()
+    wrong_yolo["yolo_txt"] = ["not", "text"]
+    with pytest.raises(ExternalDatasetError, match="yolo_txt must be a string"):
+        adapter.build_annotation_bundle(wrong_yolo)
+
+    wrong_bbox = sample_record()
+    wrong_bbox["bboxes"] = [[0, 1, 2]]
+    with pytest.raises(ExternalDatasetError, match="four coordinates"):
+        adapter.build_annotation_bundle(wrong_bbox)
 
 
 def test_stable_external_sample_identity_prefers_record_id() -> None:
