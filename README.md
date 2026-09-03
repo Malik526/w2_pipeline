@@ -14,13 +14,15 @@ W-2 ingestion
 
 ## Current Phase
 
-The project has completed Phase 2: Document Ingestion Boundary + Lightweight
-PDF Inspection.
+The project has completed Phase 3: Evaluation Dataset + Ground-Truth Harness.
 
 Phase 0 established the project vocabulary and boundaries. Phase 1 adds the
 typed canonical W-2 structure every future extractor must produce. Phase 2 adds
 the local document intake service that validates PDF/JPEG/PNG inputs, captures
-file metadata, and inspects PDFs for routing metadata.
+file metadata, and inspects PDFs for routing metadata. Phase 3 adds
+deterministic synthetic 2026 W-2 ground truth, W-2-like evaluation document
+rendering, a JSONL manifest, and a pipeline-independent field-accuracy
+evaluator.
 
 The current schema contract lives at:
 
@@ -46,10 +48,31 @@ Use it with:
 from w2_pipeline.ingestion import ingest_document
 ```
 
+The evaluation harness lives at:
+
+```text
+src/w2_pipeline/evaluation/
+```
+
+Generate the reproducible local evaluation dataset with:
+
+```bash
+python -m w2_pipeline.evaluation.generate_dataset
+```
+
+By default this writes ignored generated assets to:
+
+```text
+data/evaluation/generated/
+```
+
+The generated documents are synthetic development artifacts, not official IRS
+forms. Ground truth is serialized from the canonical `W2Document` model.
+
 The expected next phase is:
 
 ```text
-Phase 3 - Evaluation Dataset + Ground-Truth Harness
+Phase 4 - Pipeline A: Deterministic Native Text/OCR Extraction Baseline
 ```
 
 ## Working Product Assumption
@@ -128,6 +151,10 @@ Core metrics are field accuracy, review rate, processing latency, failure rate,
 and cost per document where paid APIs or models are used. Extractor confidence
 scores are exploratory and must not be treated as correctness.
 
+Phase 3 implements field accuracy, failure classification, and latency capture
+support. Review routing, confidence thresholds, cost tracking, OCR, and model
+extraction remain future work.
+
 ## Security
 
 Real taxpayer W-2 data must not be committed or casually used as development
@@ -157,3 +184,8 @@ Current ingestion contract:
 
 - `docs/contracts/ingestion-contract.md`
 - `src/w2_pipeline/ingestion/`
+
+Current evaluation contract:
+
+- `docs/contracts/evaluation-plan.md`
+- `src/w2_pipeline/evaluation/`

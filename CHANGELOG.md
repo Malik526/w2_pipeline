@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-09-03
+
+### Phase 3 - Evaluation Dataset And Ground-Truth Harness
+
+- Added deterministic synthetic 2026 W-2 semantic generation using the canonical
+  `W2Document` contract, with safe fake identifiers and schema variation across
+  optional federal boxes, Box 12, Box 13, Box 14a/14b, and state/local entries.
+- Added W-2-like development document rendering for clean PDF, clean PNG,
+  modest rotation, JPEG compression, and blurred/lower-quality variants.
+- Added JSONL dataset manifest contracts linking semantic samples, ground
+  truth, document variants, tax year, source provenance, generator metadata,
+  and transformation config.
+- Added pipeline-independent canonical comparison, field flattening, field
+  accuracy, explicit missing/mismatch/unexpected failure classifications,
+  extractor failure handling, invalid canonical result handling, and latency
+  capture support.
+- Added `python -m w2_pipeline.evaluation.generate_dataset` for reproducible
+  local dataset generation under ignored `data/evaluation/generated/` assets.
+- Added Phase 3 tests for deterministic generation, ground-truth round trips,
+  manifest loading, evaluator semantics, runner failure isolation, and Phase 2
+  ingestion compatibility for generated PDF/PNG/JPEG examples.
+- Updated README, project state, evaluation docs, and generated-data Git ignore
+  policy.
+
 ## 2026-09-02
 
 ### Phase 2 - Document Ingestion

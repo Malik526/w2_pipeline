@@ -1,18 +1,19 @@
 # Project State
 
-Last updated: 2026-09-02
+Last updated: 2026-09-03
 
 ## Current Phase
 
-Phase 2 is established: Document Ingestion Boundary + Lightweight PDF
-Inspection.
+Phase 3 is established: Evaluation Dataset + Ground-Truth Harness.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
 added the typed canonical W-2 contract that future extractors must produce.
 Phase 2 added local source-file intake, SHA-256 file metadata, MIME/type
 reconciliation, lightweight PyMuPDF PDF inspection, and JPEG/PNG readability
-checks before extraction.
+checks before extraction. Phase 3 added deterministic synthetic canonical W-2
+generation, W-2-like document rendering, document variants, a JSONL manifest,
+and a pipeline-independent field-accuracy evaluator.
 
 ## Authoritative Reference
 
@@ -41,6 +42,14 @@ src/w2_pipeline/ingestion/
 docs/contracts/ingestion-contract.md
 ```
 
+Evaluation harness:
+
+```text
+src/w2_pipeline/evaluation/
+docs/contracts/evaluation-plan.md
+data/evaluation/README.md
+```
+
 ## Encoded Assumptions
 
 - The working user is an accounting or tax-preparation firm processing W-2s
@@ -54,17 +63,22 @@ docs/contracts/ingestion-contract.md
 - Extraction pipelines are replaceable and must converge on one canonical
   representation.
 - Evaluation uses common ground truth and reports by tax year where applicable.
+- The Phase 3 evaluator compares canonical `W2Document` predictions to
+  canonical ground truth, independent of OCR, vision models, regex extraction,
+  or future pipeline internals.
+- Phase 3 repeated-field comparison is deterministic and index-sensitive.
 - Confidence scores remain exploratory.
 - Real taxpayer data must not be committed.
 
 ## Next Phase
 
 ```text
-Phase 3 - Evaluation Dataset + Ground-Truth Harness
+Phase 4 - Pipeline A: Deterministic Native Text/OCR Extraction Baseline
 ```
 
-Phase 3 should establish safe evaluation documents and ground truth for
-benchmarking extraction pipelines. It should not use real taxpayer PII.
+Phase 4 should implement the first deterministic extraction baseline. It should
+use the Phase 3 dataset and evaluator instead of creating a competing benchmark
+or ground-truth format.
 
 Completed Phase 1 brief:
 
@@ -89,6 +103,23 @@ explicit ingestion errors, PyMuPDF PDF inspection, image readability checks,
 and tests without adding OCR, field extraction, tax-year inference, validation
 engines, export, persistence, UI, or RAG.
 
+Completed Phase 3 implementation:
+
+```text
+src/w2_pipeline/evaluation/
+tests/evaluation/
+data/evaluation/README.md
+```
+
+The Phase 3 implementation created deterministic synthetic 2026 W-2 semantic
+samples, ground-truth serialization, W-2-like PDF/PNG/JPEG document rendering,
+clean/rotated/compressed/blurred variants, JSONL manifest contracts, canonical
+field flattening, field accuracy, explicit missing/mismatch/unexpected failure
+classifications, extractor failure handling, invalid canonical result handling,
+and latency capture support.
+
 ## Open Issues
 
-- No evaluation dataset or ground-truth harness exists yet.
+- Review routing, confidence calibration, OCR, model extraction, validation
+  engines, persistence, frontend, export, and cost tracking remain unimplemented
+  future-phase work.

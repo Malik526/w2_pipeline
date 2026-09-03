@@ -113,3 +113,62 @@ datasets without sensitive taxpayer information.
 
 Real taxpayer W-2 data must not be committed to the repository or casually used
 as development fixtures.
+
+## Phase 3 Harness
+
+Phase 3 implements the first pipeline-independent ground-truth harness in:
+
+```text
+src/w2_pipeline/evaluation/
+```
+
+The harness compares an extractor's predicted `W2Document` with the expected
+canonical `W2Document`. It does not inspect OCR output, PDF text, vision-model
+responses, regex matches, or any pipeline-specific intermediate state.
+
+The primary metric is:
+
+```text
+field accuracy = correct evaluated fields / total evaluated fields
+```
+
+The comparison flattens nested canonical models into deterministic field paths,
+including list indexes for repeated fields:
+
+```text
+employee.first_name
+federal_wages_and_taxes.box_1_wages_tips_other_compensation
+box_12_entries[0].code
+state_local_entries[0].box_15_state
+```
+
+Repeated fields are compared by index in Phase 3. This matches the current
+canonical contract's order-preserving list representation and keeps the initial
+evaluator deterministic. A later extractor phase may add semantic matching if
+real extraction evidence shows order is not reliable enough.
+
+Operational metadata fields that are not semantic W-2 content are excluded from
+field accuracy:
+
+```text
+metadata.document_id
+metadata.source_filename
+metadata.source_file_type
+field_observations
+```
+
+`metadata.document_type`, `metadata.tax_year`, and `metadata.schema_version`
+remain evaluated so results stay tax-year and schema aware.
+
+Failures are classified explicitly:
+
+- `missing` when an expected field path is absent or an expected value is
+  predicted as `null`
+- `mismatch` when expected and predicted semantic values differ
+- `unexpected` when a prediction contains a field path absent from ground truth
+- `extraction_failed` when a pipeline raises instead of returning a prediction
+- `invalid_canonical_result` when a pipeline returns data that cannot validate
+  as `W2Document`
+
+Strings are normalized only by trimming surrounding whitespace. Decimal values
+remain `Decimal` values and are compared without float conversion.
