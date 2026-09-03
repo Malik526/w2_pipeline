@@ -1,0 +1,160 @@
+{
+  "accuracy_by_route": {
+    "ocr": {
+      "correct_fields": 3263,
+      "documents": 150,
+      "field_accuracy": 0.9887878787878788,
+      "total_fields": 3300
+    }
+  },
+  "accuracy_by_variant": {
+    "external_clean_render": {
+      "correct_fields": 3263,
+      "documents": 150,
+      "field_accuracy": 0.9887878787878788,
+      "total_fields": 3300
+    }
+  },
+  "average_duration_seconds": 2.1432020549401445,
+  "correct_fields": 3263,
+  "documents": 150,
+  "failed_documents": 0,
+  "failure_rate": 0.0,
+  "field_accuracy": 0.9887878787878788,
+  "per_field_accuracy": {
+    "box_13.retirement_plan": {
+      "correct": 145,
+      "field_accuracy": 0.9666666666666667,
+      "incorrect": 5,
+      "total": 150
+    },
+    "box_13.statutory_employee": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "box_13.third_party_sick_pay": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.first_name": {
+      "correct": 126,
+      "field_accuracy": 0.84,
+      "incorrect": 24,
+      "total": 150
+    },
+    "employee.last_name": {
+      "correct": 148,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 2,
+      "total": 150
+    },
+    "employee.ssn": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.suffix": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.control_number": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.ein": {
+      "correct": 148,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 2,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "correct": 149,
+      "field_accuracy": 0.9933333333333333,
+      "incorrect": 1,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "correct": 149,
+      "field_accuracy": 0.9933333333333333,
+      "incorrect": 1,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "correct": 148,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 2,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.document_type": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.schema_version": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.tax_year": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    }
+  },
+  "pipeline_id": "pipeline_a",
+  "total_fields": 3300
+}

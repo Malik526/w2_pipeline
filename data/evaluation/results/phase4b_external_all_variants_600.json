@@ -1,0 +1,178 @@
+{
+  "accuracy_by_route": {
+    "ocr": {
+      "correct_fields": 11783,
+      "documents": 600,
+      "field_accuracy": 0.8926515151515152,
+      "total_fields": 13200
+    }
+  },
+  "accuracy_by_variant": {
+    "blurred_png": {
+      "correct_fields": 2236,
+      "documents": 150,
+      "field_accuracy": 0.6775757575757576,
+      "total_fields": 3300
+    },
+    "compressed_jpeg": {
+      "correct_fields": 3233,
+      "documents": 150,
+      "field_accuracy": 0.9796969696969697,
+      "total_fields": 3300
+    },
+    "external_clean_render": {
+      "correct_fields": 3263,
+      "documents": 150,
+      "field_accuracy": 0.9887878787878788,
+      "total_fields": 3300
+    },
+    "rotated_png": {
+      "correct_fields": 3051,
+      "documents": 150,
+      "field_accuracy": 0.9245454545454546,
+      "total_fields": 3300
+    }
+  },
+  "average_duration_seconds": 2.1310415448267,
+  "correct_fields": 11783,
+  "documents": 600,
+  "failed_documents": 0,
+  "failure_rate": 0.0,
+  "field_accuracy": 0.8926515151515152,
+  "per_field_accuracy": {
+    "box_13.retirement_plan": {
+      "correct": 401,
+      "field_accuracy": 0.6683333333333333,
+      "incorrect": 199,
+      "total": 600
+    },
+    "box_13.statutory_employee": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "box_13.third_party_sick_pay": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.first_name": {
+      "correct": 289,
+      "field_accuracy": 0.4816666666666667,
+      "incorrect": 311,
+      "total": 600
+    },
+    "employee.last_name": {
+      "correct": 485,
+      "field_accuracy": 0.8083333333333333,
+      "incorrect": 115,
+      "total": 600
+    },
+    "employee.ssn": {
+      "correct": 498,
+      "field_accuracy": 0.83,
+      "incorrect": 102,
+      "total": 600
+    },
+    "employee.suffix": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.control_number": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.ein": {
+      "correct": 498,
+      "field_accuracy": 0.83,
+      "incorrect": 102,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "correct": 505,
+      "field_accuracy": 0.8416666666666667,
+      "incorrect": 95,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "correct": 505,
+      "field_accuracy": 0.8416666666666667,
+      "incorrect": 95,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "correct": 495,
+      "field_accuracy": 0.825,
+      "incorrect": 105,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "correct": 505,
+      "field_accuracy": 0.8416666666666667,
+      "incorrect": 95,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "correct": 501,
+      "field_accuracy": 0.835,
+      "incorrect": 99,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "correct": 501,
+      "field_accuracy": 0.835,
+      "incorrect": 99,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.document_type": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.schema_version": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.tax_year": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    }
+  },
+  "pipeline_id": "pipeline_a",
+  "total_fields": 13200
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -13,12 +14,22 @@ import pymupdf
 from w2_pipeline.extraction.errors import MissingOcrDependencyError, OcrExecutionError
 from w2_pipeline.extraction.models import BoundingBox, ObservationSource, TextObservation
 
+_TOP_IDENTIFIER_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
+
 
 class TesseractOcrAdapter:
     """Run local Tesseract OCR and convert TSV output to observations."""
 
-    def __init__(self, executable: str = "tesseract") -> None:
+    def __init__(
+        self,
+        executable: str = "tesseract",
+        *,
+        page_segmentation_mode: int = 3,
+        supplemental_page_segmentation_modes: tuple[int, ...] = (6,),
+    ) -> None:
         self.executable = executable
+        self.page_segmentation_mode = page_segmentation_mode
+        self.supplemental_page_segmentation_modes = supplemental_page_segmentation_modes
 
     def ensure_available(self) -> None:
         """Raise an actionable error when the OCR binary is missing."""
@@ -33,8 +44,23 @@ class TesseractOcrAdapter:
         """OCR one image file into text observations."""
 
         self.ensure_available()
-        tsv = self._run_tesseract(Path(image_path))
-        return parse_tesseract_tsv(tsv, page_number=page_number)
+        path = Path(image_path)
+        observations = parse_tesseract_tsv(
+            self._run_tesseract(path, page_segmentation_mode=self.page_segmentation_mode),
+            page_number=page_number,
+        )
+        for supplemental_mode in self.supplemental_page_segmentation_modes:
+            supplemental_observations = parse_tesseract_tsv(
+                self._run_tesseract(path, page_segmentation_mode=supplemental_mode),
+                page_number=page_number,
+            )
+            observations.extend(
+                _top_identifier_observations(
+                    supplemental_observations,
+                    reference_observations=[*observations, *supplemental_observations],
+                )
+            )
+        return observations
 
     def extract_pdf_pages(
         self,
@@ -57,8 +83,15 @@ class TesseractOcrAdapter:
                     observations.extend(self.extract_image(image_path, page_number=page_index))
         return observations
 
-    def _run_tesseract(self, image_path: Path) -> str:
-        command = [self.executable, str(image_path), "stdout", "--psm", "6", "tsv"]
+    def _run_tesseract(self, image_path: Path, *, page_segmentation_mode: int) -> str:
+        command = [
+            self.executable,
+            str(image_path),
+            "stdout",
+            "--psm",
+            str(page_segmentation_mode),
+            "tsv",
+        ]
         try:
             completed = subprocess.run(
                 command,
@@ -98,6 +131,30 @@ def parse_tesseract_tsv(tsv_payload: str, *, page_number: int) -> list[TextObser
             )
         )
     return observations
+
+
+def _top_identifier_observations(
+    observations: list[TextObservation],
+    *,
+    reference_observations: list[TextObservation],
+) -> list[TextObservation]:
+    """Keep supplemental PSM output only when it matches the top SSN region."""
+
+    if not reference_observations:
+        return []
+    max_x = max(observation.bbox.x1 for observation in reference_observations)
+    max_y = max(observation.bbox.y1 for observation in reference_observations)
+    kept = []
+    for observation in observations:
+        center_x = (observation.bbox.x0 + observation.bbox.x1) / 2
+        center_y = (observation.bbox.y0 + observation.bbox.y1) / 2
+        if not (0.25 * max_x <= center_x <= 0.55 * max_x):
+            continue
+        if not (0.10 * max_y <= center_y <= 0.17 * max_y):
+            continue
+        if _TOP_IDENTIFIER_RE.search(observation.text):
+            kept.append(observation)
+    return kept
 
 
 def _parse_float(value: str | None) -> float:

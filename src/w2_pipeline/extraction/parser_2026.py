@@ -21,7 +21,13 @@ from w2_pipeline.contracts.w2 import (
     W2Document,
     W2Metadata,
 )
-from w2_pipeline.extraction.models import ExtractionWarning, ObservationSet, TextObservation
+from w2_pipeline.extraction.models import (
+    AcquisitionRoute,
+    ExtractionWarning,
+    ObservationSet,
+    ObservationSource,
+    TextObservation,
+)
 from w2_pipeline.ingestion.models import SourceDocumentType
 
 _SSN_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
@@ -62,13 +68,16 @@ def parse_w2_2026_observations(
         observation_set.observations,
         key=lambda observation: (observation.page, observation.bbox.y0, observation.bbox.x0),
     )
-    lines = _line_texts(observations)
+    group_word_rows = observation_set.route in {AcquisitionRoute.OCR, AcquisitionRoute.MIXED}
+    lines = _line_texts(observations, group_word_rows=group_word_rows)
     warnings: list[ExtractionWarning] = []
     employee = _parse_employee(observations, warnings)
     employer = _parse_employer(observations, warnings)
     federal = _parse_federal(lines, warnings)
+    if _has_ocr_observations(observations):
+        federal = _apply_ocr_federal_layout_fallbacks(federal, observations, warnings)
     box_12_entries = _parse_box_12(lines, warnings)
-    box_13 = _parse_box_13(lines)
+    box_13 = _parse_box_13(lines, observations)
     box_14_entries, tipped_codes = _parse_box_14(lines, warnings)
     state_local_entries = _parse_state_local(lines, warnings)
 
@@ -107,8 +116,52 @@ def parse_money(value: str, *, field_path: str) -> Decimal | None:
         raise ValueError(f"Invalid monetary value for {field_path}: {value!r}") from exc
 
 
-def _line_texts(observations: list[TextObservation]) -> list[str]:
-    return [observation.text.strip() for observation in observations if observation.text.strip()]
+def _line_texts(
+    observations: list[TextObservation],
+    *,
+    group_word_rows: bool,
+) -> list[str]:
+    if not group_word_rows:
+        return [observation.text.strip() for observation in observations if observation.text.strip()]
+
+    return [
+        " ".join(observation.text.strip() for observation in row if observation.text.strip())
+        for row in _group_observation_rows(observations)
+    ]
+
+
+def _group_observation_rows(observations: list[TextObservation]) -> list[list[TextObservation]]:
+    sorted_observations = sorted(
+        observations,
+        key=lambda observation: (
+            observation.page,
+            _vertical_center(observation),
+            observation.bbox.x0,
+        ),
+    )
+    rows: list[tuple[int, float, list[TextObservation]]] = []
+    for observation in sorted_observations:
+        center = _vertical_center(observation)
+        tolerance = max(6.0, (observation.bbox.y1 - observation.bbox.y0) * 0.65)
+        for row_index, (page, row_center, row_observations) in enumerate(rows):
+            if page == observation.page and abs(row_center - center) <= tolerance:
+                row_observations.append(observation)
+                new_center = (
+                    row_center * (len(row_observations) - 1) + center
+                ) / len(row_observations)
+                rows[row_index] = (page, new_center, row_observations)
+                break
+        else:
+            rows.append((observation.page, center, [observation]))
+
+    return [
+        sorted(row_observations, key=lambda observation: observation.bbox.x0)
+        for _, _, row_observations in rows
+    ]
+
+
+def _vertical_center(observation: TextObservation) -> float:
+    return (observation.bbox.y0 + observation.bbox.y1) / 2
 
 
 def _parse_employee(
@@ -119,7 +172,7 @@ def _parse_employee(
     name_value = _value_after_label(left_lines, "Name")
     first_name, middle_initial, last_name, suffix = _parse_person_name(name_value)
     city, state, postal_code = _parse_city_state_zip(_value_after_label(left_lines, "City/State/ZIP"))
-    return Employee(
+    employee = Employee(
         ssn=_first_match(_value_after_label(left_lines, "SSN"), _SSN_RE),
         first_name=first_name,
         middle_initial=middle_initial,
@@ -134,6 +187,9 @@ def _parse_employee(
             country="US" if city or state or postal_code else None,
         ),
     )
+    if _has_ocr_observations(observations):
+        employee = _apply_ocr_employee_layout_fallbacks(employee, observations)
+    return employee
 
 
 def _parse_employer(
@@ -142,7 +198,7 @@ def _parse_employer(
 ) -> Employer:
     right_lines = _observations_in_x_range(observations, min_x=300)
     city, state, postal_code = _parse_city_state_zip(_value_after_label(right_lines, "City/State/ZIP"))
-    return Employer(
+    employer = Employer(
         ein=_first_match(_value_after_label(right_lines, "EIN"), _EIN_RE),
         name=_empty_to_none(_value_after_label(right_lines, "Name")),
         address=Address(
@@ -155,6 +211,9 @@ def _parse_employer(
         ),
         control_number=_empty_to_none(_value_after_label(right_lines, "Control")),
     )
+    if _has_ocr_observations(observations) and employer.ein is None:
+        employer = employer.model_copy(update={"ein": _first_ein_from_ocr_layout(observations)})
+    return employer
 
 
 def _parse_federal(lines: list[str], warnings: list[ExtractionWarning]) -> FederalWagesAndTaxes:
@@ -177,6 +236,42 @@ def _parse_federal(lines: list[str], warnings: list[ExtractionWarning]) -> Feder
     return federal
 
 
+def _apply_ocr_federal_layout_fallbacks(
+    federal: FederalWagesAndTaxes,
+    observations: list[TextObservation],
+    warnings: list[ExtractionWarning],
+) -> FederalWagesAndTaxes:
+    if not _looks_like_full_page_ocr_form(observations):
+        return federal
+
+    zones = {
+        1: (0.55, 0.80, 0.185, 0.230),
+        2: (0.80, 1.00, 0.185, 0.230),
+        3: (0.55, 0.80, 0.245, 0.290),
+        4: (0.80, 1.00, 0.245, 0.290),
+        5: (0.55, 0.80, 0.300, 0.345),
+        6: (0.80, 1.00, 0.300, 0.350),
+        7: (0.55, 0.80, 0.355, 0.415),
+        8: (0.80, 1.00, 0.355, 0.415),
+        10: (0.80, 1.00, 0.405, 0.470),
+        11: (0.55, 0.80, 0.450, 0.500),
+    }
+    for box_number, zone in zones.items():
+        field_name = _FEDERAL_MONEY_FIELDS.get(box_number)
+        if field_name is None or getattr(federal, field_name) is not None:
+            continue
+        value_text = _first_money_text_in_zone(observations, zone)
+        if value_text is None:
+            continue
+        field_path = f"federal_wages_and_taxes.{field_name}"
+        try:
+            setattr(federal, field_name, parse_money(value_text, field_path=field_path))
+        except ValueError as exc:
+            warnings.append(ExtractionWarning(field_path=field_path, message=str(exc)))
+
+    return federal
+
+
 def _parse_box_12(lines: list[str], warnings: list[ExtractionWarning]) -> list[Box12Entry]:
     entries: list[Box12Entry] = []
     for line in lines:
@@ -194,12 +289,156 @@ def _parse_box_12(lines: list[str], warnings: list[ExtractionWarning]) -> list[B
     return entries
 
 
-def _parse_box_13(lines: list[str]) -> Box13Flags:
-    return Box13Flags(
+def _parse_box_13(lines: list[str], observations: list[TextObservation]) -> Box13Flags:
+    box_13 = Box13Flags(
         statutory_employee=_checkbox_value(_value_after_prefix(lines, "13 Statutory employee")),
         retirement_plan=_checkbox_value(_value_after_prefix(lines, "13 Retirement plan")),
         third_party_sick_pay=_checkbox_value(_value_after_prefix(lines, "13 Third-party sick pay")),
     )
+    if _has_ocr_observations(observations):
+        box_13 = _apply_ocr_box_13_layout_fallbacks(box_13, observations)
+    return box_13
+
+
+def _apply_ocr_employee_layout_fallbacks(
+    employee: Employee,
+    observations: list[TextObservation],
+) -> Employee:
+    if not _looks_like_full_page_ocr_form(observations):
+        return employee
+
+    updates: dict[str, object] = {}
+    if employee.ssn is None:
+        updates["ssn"] = _first_regex_text_in_zone(observations, _SSN_RE, (0.25, 0.55, 0.10, 0.17))
+    if employee.first_name is None:
+        updates["first_name"] = _zone_text(observations, (0.04, 0.28, 0.505, 0.550))
+    if employee.last_name is None:
+        updates["last_name"] = _zone_text(observations, (0.28, 0.53, 0.505, 0.555))
+    if employee.suffix is None:
+        updates["suffix"] = _zone_text(observations, (0.50, 0.58, 0.505, 0.555))
+    return employee.model_copy(update=updates)
+
+
+def _first_ein_from_ocr_layout(observations: list[TextObservation]) -> str | None:
+    return _first_regex_text_in_zone(observations, _EIN_RE, (0.20, 0.42, 0.16, 0.24))
+
+
+def _apply_ocr_box_13_layout_fallbacks(
+    box_13: Box13Flags,
+    observations: list[TextObservation],
+) -> Box13Flags:
+    if not _looks_like_full_page_ocr_form(observations):
+        return box_13
+
+    return box_13.model_copy(
+        update={
+            "statutory_employee": box_13.statutory_employee
+            or _has_checkbox_mark(observations, (0.605, 0.650, 0.535, 0.585)),
+            "retirement_plan": box_13.retirement_plan
+            or _has_checkbox_mark(observations, (0.655, 0.705, 0.535, 0.585)),
+            "third_party_sick_pay": box_13.third_party_sick_pay
+            or _has_checkbox_mark(observations, (0.715, 0.770, 0.535, 0.585)),
+        }
+    )
+
+
+def _has_ocr_observations(observations: list[TextObservation]) -> bool:
+    return any(observation.source == ObservationSource.OCR for observation in observations)
+
+
+def _looks_like_full_page_ocr_form(observations: list[TextObservation]) -> bool:
+    if not observations:
+        return False
+    max_x, max_y = _layout_extent(observations)
+    return max_x > 1000 and max_y > 1000
+
+
+def _layout_extent(observations: list[TextObservation]) -> tuple[float, float]:
+    return (
+        max((observation.bbox.x1 for observation in observations), default=1.0),
+        max((observation.bbox.y1 for observation in observations), default=1.0),
+    )
+
+
+def _observations_in_zone(
+    observations: list[TextObservation],
+    zone: tuple[float, float, float, float],
+) -> list[TextObservation]:
+    max_x, max_y = _layout_extent(observations)
+    x0_ratio, x1_ratio, y0_ratio, y1_ratio = zone
+    return [
+        observation
+        for observation in observations
+        if x0_ratio * max_x <= (observation.bbox.x0 + observation.bbox.x1) / 2 <= x1_ratio * max_x
+        and y0_ratio * max_y <= (observation.bbox.y0 + observation.bbox.y1) / 2 <= y1_ratio * max_y
+    ]
+
+
+def _zone_text(
+    observations: list[TextObservation],
+    zone: tuple[float, float, float, float],
+) -> str | None:
+    tokens = [
+        cleaned
+        for observation in sorted(
+            _observations_in_zone(observations, zone),
+            key=lambda observation: (observation.bbox.y0, observation.bbox.x0),
+        )
+        if (cleaned := _clean_layout_token(observation.text)) is not None
+    ]
+    return " ".join(tokens) or None
+
+
+def _clean_layout_token(text: str) -> str | None:
+    cleaned = text.strip().strip("|[]_~`\"'“”")
+    if not cleaned:
+        return None
+    if cleaned in {"-", "—", "–", "°", "¢", ";", "=", "Cc", "c", "e", "f"}:
+        return None
+    if cleaned.isdigit():
+        return None
+    return cleaned
+
+
+def _first_regex_text_in_zone(
+    observations: list[TextObservation],
+    pattern: re.Pattern[str],
+    zone: tuple[float, float, float, float],
+) -> str | None:
+    for observation in sorted(
+        _observations_in_zone(observations, zone),
+        key=lambda observation: (observation.bbox.y0, observation.bbox.x0),
+    ):
+        match = pattern.search(observation.text)
+        if match:
+            return match.group(0)
+    return None
+
+
+def _first_money_text_in_zone(
+    observations: list[TextObservation],
+    zone: tuple[float, float, float, float],
+) -> str | None:
+    for observation in sorted(
+        _observations_in_zone(observations, zone),
+        key=lambda observation: (observation.bbox.y0, observation.bbox.x0),
+    ):
+        text = observation.text.strip()
+        if any(separator in text for separator in ("$", ",", ".")) and _MONEY_RE.match(text):
+            return text
+    return None
+
+
+def _has_checkbox_mark(
+    observations: list[TextObservation],
+    zone: tuple[float, float, float, float],
+) -> bool:
+    mark_tokens = {"x", "v", "✓", "✔", "[v", "v]", "[x", "x]", "4"}
+    for observation in _observations_in_zone(observations, zone):
+        normalized = observation.text.strip().lower().replace("|", "").replace("\\", "")
+        if normalized in mark_tokens:
+            return True
+    return False
 
 
 def _parse_box_14(

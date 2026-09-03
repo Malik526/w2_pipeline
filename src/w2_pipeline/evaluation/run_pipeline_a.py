@@ -66,6 +66,7 @@ def _summarize(evaluations):
     ]
     by_variant = defaultdict(lambda: {"documents": 0, "correct_fields": 0, "total_fields": 0})
     by_route = defaultdict(lambda: {"documents": 0, "correct_fields": 0, "total_fields": 0})
+    by_field = defaultdict(lambda: {"correct": 0, "total": 0})
 
     for evaluation in evaluations:
         variant_bucket = by_variant[evaluation.variant_id]
@@ -76,6 +77,11 @@ def _summarize(evaluations):
         route_bucket["documents"] += 1
         route_bucket["correct_fields"] += evaluation.correct_fields
         route_bucket["total_fields"] += evaluation.total_fields
+        for field_evaluation in evaluation.field_evaluations:
+            field_bucket = by_field[field_evaluation.field_path]
+            field_bucket["total"] += 1
+            if field_evaluation.correct:
+                field_bucket["correct"] += 1
 
     return {
         "pipeline_id": "pipeline_a",
@@ -88,6 +94,7 @@ def _summarize(evaluations):
         "average_duration_seconds": sum(durations) / len(durations) if durations else 0.0,
         "accuracy_by_variant": _accuracy_buckets(by_variant),
         "accuracy_by_route": _accuracy_buckets(by_route),
+        "per_field_accuracy": _field_accuracy_buckets(by_field),
     }
 
 
@@ -102,6 +109,20 @@ def _accuracy_buckets(buckets):
             ),
         }
         for key, value in sorted(buckets.items())
+    }
+
+
+def _field_accuracy_buckets(buckets):
+    return {
+        key: {
+            **value,
+            "incorrect": value["total"] - value["correct"],
+            "field_accuracy": value["correct"] / value["total"] if value["total"] else 0.0,
+        }
+        for key, value in sorted(
+            buckets.items(),
+            key=lambda item: (item[1]["correct"] / item[1]["total"] if item[1]["total"] else 0.0, item[0]),
+        )
     }
 
 

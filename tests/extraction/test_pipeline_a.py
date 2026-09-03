@@ -9,7 +9,9 @@ from w2_pipeline.evaluation.inputs import ExtractionInput
 from w2_pipeline.evaluation.manifest import DatasetSource, VariantType, load_manifest_jsonl
 from w2_pipeline.evaluation.runner import evaluate_manifest
 from w2_pipeline.extraction import MissingOcrDependencyError, PipelineAExtractor
+from w2_pipeline.extraction.acquisition import ObservationAcquirer
 from w2_pipeline.extraction.models import AcquisitionRoute
+from w2_pipeline.extraction.ocr import TesseractOcrAdapter
 from w2_pipeline.ingestion import ingest_document
 
 
@@ -105,7 +107,11 @@ def test_pipeline_a_image_route_reports_missing_ocr_runtime(tmp_path: Path) -> N
     Image.new("RGB", (20, 10), color="white").save(image_path)
 
     with pytest.raises(MissingOcrDependencyError):
-        PipelineAExtractor().extract(
+        PipelineAExtractor(
+            observation_acquirer=ObservationAcquirer(
+                ocr_adapter=TesseractOcrAdapter(executable="definitely-missing-tesseract")
+            )
+        ).extract(
             ExtractionInput(
                 document_path=image_path,
                 document_id="doc",

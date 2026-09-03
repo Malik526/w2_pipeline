@@ -22,6 +22,15 @@ def obs(text: str, x0: float, y0: float) -> TextObservation:
     )
 
 
+def ocr_obs(text: str, x0: float, y0: float, width: float = 80, height: float = 24) -> TextObservation:
+    return TextObservation(
+        text=text,
+        page=1,
+        bbox=BoundingBox(x0=x0, y0=y0, x1=x0 + width, y1=y0 + height),
+        source=ObservationSource.OCR,
+    )
+
+
 def fixture_observations() -> ObservationSet:
     return ObservationSet(
         route=AcquisitionRoute.NATIVE_PDF,
@@ -120,3 +129,95 @@ def test_parser_records_field_warning_for_invalid_money() -> None:
     assert document.federal_wages_and_taxes.box_1_wages_tips_other_compensation is None
     assert warnings
     assert warnings[0].field_path == "federal_wages_and_taxes.box_1_wages_tips_other_compensation"
+
+
+def test_parser_extracts_external_style_ocr_word_observations() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            ocr_obs("a", 650, 165, 15),
+            ocr_obs("Employee’s", 690, 162, 150),
+            ocr_obs("social", 850, 162, 75),
+            ocr_obs("security", 935, 162, 100),
+            ocr_obs("number", 1045, 162, 100),
+            ocr_obs("242-48-4959", 805, 210, 190),
+            ocr_obs("b", 175, 262, 15),
+            ocr_obs("Employer", 210, 262, 122),
+            ocr_obs("identification", 342, 262, 164),
+            ocr_obs("number", 517, 262, 98),
+            ocr_obs("(EIN)", 624, 262, 60),
+            ocr_obs("1", 1413, 263, 10),
+            ocr_obs("Wages,", 1449, 262, 88),
+            ocr_obs("tips,", 1546, 262, 50),
+            ocr_obs("other", 1605, 262, 62),
+            ocr_obs("compensation", 1675, 262, 168),
+            ocr_obs("2", 1922, 262, 15),
+            ocr_obs("Federal", 1964, 262, 93),
+            ocr_obs("income", 2069, 262, 93),
+            ocr_obs("tax", 2171, 263, 39),
+            ocr_obs("withheld", 2220, 262, 107),
+            ocr_obs("75-5696876", 679, 310, 178),
+            ocr_obs("$114,858.00", 1689, 309, 186, 30),
+            ocr_obs("$21,930.26", 2218, 309, 167, 30),
+            ocr_obs("3", 1412, 374, 12),
+            ocr_obs("Social", 1453, 374, 88),
+            ocr_obs("security", 1541, 374, 100),
+            ocr_obs("wages", 1651, 374, 85),
+            ocr_obs("4", 1922, 374, 15),
+            ocr_obs("Social", 1963, 374, 88),
+            ocr_obs("security", 2051, 374, 100),
+            ocr_obs("tax", 2160, 374, 39),
+            ocr_obs("withheld", 2209, 374, 107),
+            ocr_obs("$122,000.00", 1693, 405, 184, 30),
+            ocr_obs("$7,564.00", 2236, 409, 147, 30),
+            ocr_obs("5", 1412, 473, 12),
+            ocr_obs("Medicare", 1454, 473, 128),
+            ocr_obs("wages", 1582, 473, 85),
+            ocr_obs("and", 1676, 473, 45),
+            ocr_obs("tips", 1732, 473, 50),
+            ocr_obs("6", 1922, 473, 15),
+            ocr_obs("Medicare", 1964, 473, 128),
+            ocr_obs("tax", 2092, 473, 39),
+            ocr_obs("withheld", 2140, 473, 107),
+            ocr_obs("$122,000.00", 1693, 492, 184, 30),
+            ocr_obs("$1,769.00", 2236, 509, 147, 30),
+            ocr_obs("e", 176, 767, 15),
+            ocr_obs("Employee’s", 210, 762, 150),
+            ocr_obs("first", 368, 762, 50),
+            ocr_obs("name", 426, 768, 72),
+            ocr_obs("and", 506, 762, 49),
+            ocr_obs("initial", 564, 762, 67),
+            ocr_obs("Last", 739, 762, 55),
+            ocr_obs("name", 802, 768, 72),
+            ocr_obs("Steven", 168, 810, 100),
+            ocr_obs("D", 282, 811, 20),
+            ocr_obs("Armstrong", 733, 806, 151, 40),
+            ocr_obs("13", 1399, 812, 30),
+            ocr_obs("Retirement", 1592, 804, 112),
+            ocr_obs("plan", 1595, 825, 46),
+            ocr_obs("[V", 1601, 850, 36, 44),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 993, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="external-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.ssn == "242-48-4959"
+    assert document.employee.first_name == "Steven D"
+    assert document.employee.middle_initial is None
+    assert document.employee.last_name == "Armstrong"
+    assert document.employer.ein == "75-5696876"
+    assert document.federal_wages_and_taxes.box_1_wages_tips_other_compensation == Decimal("114858.00")
+    assert document.federal_wages_and_taxes.box_2_federal_income_tax_withheld == Decimal("21930.26")
+    assert document.federal_wages_and_taxes.box_3_social_security_wages == Decimal("122000.00")
+    assert document.federal_wages_and_taxes.box_4_social_security_tax_withheld == Decimal("7564.00")
+    assert document.federal_wages_and_taxes.box_5_medicare_wages_and_tips == Decimal("122000.00")
+    assert document.federal_wages_and_taxes.box_6_medicare_tax_withheld == Decimal("1769.00")
+    assert document.box_13.retirement_plan is True

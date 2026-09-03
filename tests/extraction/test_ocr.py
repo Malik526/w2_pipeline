@@ -30,3 +30,10 @@ def test_missing_tesseract_runtime_fails_clearly(tmp_path: Path) -> None:
 
     with pytest.raises(MissingOcrDependencyError, match="Tesseract OCR runtime"):
         adapter.extract_image(image_path)
+
+
+def test_tesseract_adapter_defaults_to_full_page_segmentation() -> None:
+    adapter = TesseractOcrAdapter()
+
+    assert adapter.page_segmentation_mode == 3
+    assert adapter.supplemental_page_segmentation_modes == (6,)
