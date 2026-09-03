@@ -2,6 +2,29 @@
 
 ## 2026-09-03
 
+### Phase 4 - Pipeline A Deterministic Extraction Baseline
+
+- Added Pipeline A with a common text/layout observation model, route metadata,
+  PyMuPDF native PDF text acquisition, Tesseract OCR acquisition, and explicit
+  missing OCR runtime errors.
+- Added a deterministic 2026 W-2 parser for employee/employer identity,
+  federal Boxes 1-8, 10, and 11, repeated Box 12 entries, Box 13 flags, Box
+  14a/14b values, and repeated state/local Boxes 15-20.
+- Integrated Pipeline A with the existing evaluation runner, including typed
+  extraction results and route-aware document evaluations.
+- Added `python -m w2_pipeline.evaluation.run_pipeline_a` for benchmark runs
+  with field accuracy, failure rate, average duration, accuracy by variant, and
+  accuracy by route.
+- Corrected internal synthetic 2026 fixtures so generated documents no longer
+  invent Box 9 verification-code content and visible employer Address 2 aligns
+  with ground truth.
+- Added extraction tests for observations, native PDF acquisition, OCR TSV
+  adaptation and missing-runtime handling, parser rules, monetary parsing,
+  benchmark isolation, and evaluation integration.
+- Recorded baseline results: internal clean PDFs reached `1.0` field accuracy
+  on 5 documents via native PDF extraction; external Symage OCR benchmarks ran
+  but failed because the local `tesseract` binary is not installed.
+
 ### Phase 3B - External Synthetic W-2 Benchmark Isolation
 
 - Fixed the Symage external adapter against the real dataset runtime schema:

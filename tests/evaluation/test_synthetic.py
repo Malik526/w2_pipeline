@@ -59,3 +59,12 @@ def test_ground_truth_round_trip_preserves_decimals_and_nulls() -> None:
     )
     assert round_tripped.employee.middle_initial is None
     assert round_tripped == document
+
+
+def test_internal_synthetic_2026_ground_truth_does_not_invent_box_9() -> None:
+    documents = generate_synthetic_w2_documents(SyntheticGenerationConfig(sample_count=12))
+
+    assert all(
+        document.federal_wages_and_taxes.box_9_verification_code is None
+        for document in documents
+    )

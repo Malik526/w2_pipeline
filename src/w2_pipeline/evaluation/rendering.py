@@ -251,6 +251,7 @@ def _draw_identity_blocks(page: pymupdf.Page, document: W2Document) -> None:
             ("Name", employer.name),
             ("Control", employer.control_number),
             ("Address 1", employer.address.address_line_1),
+            ("Address 2", employer.address.address_line_2),
             ("City/State/ZIP", _city_state_zip(employer.address.city, employer.address.state, employer.address.postal_code)),
         ],
     )
@@ -267,7 +268,7 @@ def _draw_federal_boxes(page: pymupdf.Page, document: W2Document) -> None:
         ("6 Medicare tax withheld", federal.box_6_medicare_tax_withheld),
         ("7 Social security tips", federal.box_7_social_security_tips),
         ("8 Allocated tips", federal.box_8_allocated_tips),
-        ("9 Verification code", federal.box_9_verification_code),
+        ("9 Reserved", None),
         ("10 Dependent care benefits", federal.box_10_dependent_care_benefits),
         ("11 Nonqualified plans", federal.box_11_nonqualified_plans),
     ]

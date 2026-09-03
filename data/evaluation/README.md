@@ -122,3 +122,20 @@ Those fields are stored separately as evaluator-side annotations and are used
 to construct or verify canonical ground truth. They may support a future
 explicitly labeled `parser_isolation` or `oracle_layout` diagnostic, but those
 results must not be reported as end-to-end extraction accuracy.
+
+## Pipeline A Benchmarks
+
+Run Pipeline A against internal generated clean PDFs:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/generated/manifest.jsonl --variant-id clean_pdf --limit 5
+```
+
+Run Pipeline A against external Symage clean renders:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --limit 5
+```
+
+Pipeline A never receives external annotations. It receives only the document
+path and production-realistic metadata through `ExtractionInput`.

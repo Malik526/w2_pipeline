@@ -14,7 +14,8 @@ W-2 ingestion
 
 ## Current Phase
 
-The project has completed Phase 3: Evaluation Dataset + Ground-Truth Harness.
+The project has completed Phase 4: Pipeline A Deterministic Native Text/OCR
+Extraction Baseline.
 
 Phase 0 established the project vocabulary and boundaries. Phase 1 adds the
 typed canonical W-2 structure every future extractor must produce. Phase 2 adds
@@ -23,7 +24,10 @@ file metadata, and inspects PDFs for routing metadata. Phase 3 adds
 deterministic synthetic 2026 W-2 ground truth, W-2-like evaluation document
 rendering, a JSONL manifest, and a pipeline-independent field-accuracy
 evaluator. Phase 3B extends that harness with an external synthetic Hugging
-Face benchmark adapter while enforcing annotation leakage prevention.
+Face benchmark adapter while enforcing annotation leakage prevention. Phase 4
+adds Pipeline A, the first deterministic extractor, with PyMuPDF native text
+acquisition, a Tesseract OCR baseline, common text/layout observations, and
+rule-based 2026 W-2 parsing.
 
 The current schema contract lives at:
 
@@ -70,6 +74,23 @@ data/evaluation/generated/
 The generated documents are synthetic development artifacts, not official IRS
 forms. Ground truth is serialized from the canonical `W2Document` model.
 
+Pipeline A lives at:
+
+```text
+src/w2_pipeline/extraction/
+```
+
+Run Pipeline A against an evaluation manifest with:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/generated/manifest.jsonl --variant-id clean_pdf --limit 5
+```
+
+Pipeline A uses native PDF text when Phase 2 identifies usable embedded text.
+Images and image-only PDF pages route to Tesseract OCR. If the `tesseract`
+system binary is missing, OCR documents fail with an explicit
+`MissingOcrDependencyError` instead of silently producing empty predictions.
+
 Prepare the external Symage Hugging Face 2026 W-2 subset with:
 
 ```bash
@@ -86,7 +107,7 @@ pandas parquet route with `--loader pandas`.
 The expected next phase is:
 
 ```text
-Phase 4 - Pipeline A: Deterministic Native Text/OCR Extraction Baseline
+Phase 5 - Pipeline B: Document Vision / Schema-Constrained Extraction
 ```
 
 ## Working Product Assumption
@@ -169,6 +190,12 @@ Phase 3 implements field accuracy, failure classification, and latency capture
 support. Review routing, confidence thresholds, cost tracking, OCR, and model
 extraction remain future work.
 
+Phase 4 implements Pipeline A benchmark execution and route-aware evaluation
+metadata. In this environment, the internal generated clean-PDF smoke benchmark
+reached `1.0` field accuracy through the native PDF route. The external Symage
+image benchmark ran but failed all OCR documents because the local `tesseract`
+runtime is not installed.
+
 Benchmark isolation is explicit: primary end-to-end extractors receive only the
 document image/path and production-realistic non-answer metadata. Dataset
 annotations such as tokens, bounding boxes, NER tags, FUNSD, COCO, and YOLO
@@ -209,3 +236,8 @@ Current evaluation contract:
 
 - `docs/contracts/evaluation-plan.md`
 - `src/w2_pipeline/evaluation/`
+
+Current extraction contract:
+
+- `docs/contracts/extraction-pipeline-a.md`
+- `src/w2_pipeline/extraction/`

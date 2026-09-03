@@ -233,3 +233,25 @@ The external mapping produces canonical `W2Document` ground truth and records
 `evaluated_field_paths`. When external annotations do not authoritatively map a
 canonical field, that field is excluded from scoring for that external item
 rather than being treated as an extraction failure.
+
+## Phase 4 Pipeline A Benchmark Integration
+
+Phase 4 adds Pipeline A as the first evaluated extractor. Pipeline A plugs into
+the existing benchmark runner through the same annotation-free `ExtractionInput`
+contract used by all future extractors.
+
+The benchmark runner now records `extraction_route` when a pipeline returns a
+typed extraction result. Pipeline A route values are:
+
+- `native_pdf`
+- `ocr`
+- `mixed`
+
+The developer benchmark command is:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a <manifest.jsonl>
+```
+
+The command reports field accuracy, document failure count/rate, average
+duration, accuracy by variant, and accuracy by route.

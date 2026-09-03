@@ -87,7 +87,7 @@ def _generate_document(*, sample_number: int, random: Random) -> W2Document:
             box_6_medicare_tax_withheld=medicare_tax,
             box_7_social_security_tips=_optional_money(random, sample_number, 2),
             box_8_allocated_tips=_optional_money(random, sample_number, 3),
-            box_9_verification_code=f"SYN{sample_number:05d}" if sample_number % 4 == 0 else None,
+            box_9_verification_code=None,
             box_10_dependent_care_benefits=_optional_money(random, sample_number, 5),
             box_11_nonqualified_plans=_optional_money(random, sample_number, 6),
         ),
@@ -105,13 +105,12 @@ def _generate_document(*, sample_number: int, random: Random) -> W2Document:
 
 
 def _employee(sample_number: int) -> Employee:
-    suffix = "" if sample_number % 4 == 0 else None
     return Employee(
         ssn=f"000-00-{sample_number:04d}",
         first_name=f"SyntheticFirst{sample_number:04d}",
         middle_initial=chr(65 + (sample_number % 26)) if sample_number % 3 else None,
         last_name=f"SyntheticLast{sample_number:04d}",
-        suffix=suffix,
+        suffix=None,
         address=Address(
             address_line_1=f"{1000 + sample_number} Synthetic Test Ave",
             address_line_2=f"Unit {sample_number}" if sample_number % 2 else None,

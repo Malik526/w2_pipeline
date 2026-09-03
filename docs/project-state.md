@@ -4,8 +4,8 @@ Last updated: 2026-09-03
 
 ## Current Phase
 
-Phase 3B is established: External 2026 W-2 Dataset Integration + Benchmark
-Isolation.
+Phase 4 is established: Pipeline A Deterministic Native Text/OCR Extraction
+Baseline.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -17,6 +17,10 @@ generation, W-2-like document rendering, document variants, a JSONL manifest,
 and a pipeline-independent field-accuracy evaluator. Phase 3B added an
 external Hugging Face synthetic 2026 W-2 adapter and an explicit extraction
 input boundary that prevents answer-bearing annotation leakage.
+Phase 4 added the first deterministic extraction pipeline with common
+text/layout observations, PyMuPDF native PDF acquisition, Tesseract OCR
+fallback, deterministic 2026 W-2 parsing rules, route-aware benchmark
+integration, and baseline benchmark commands.
 
 ## Authoritative Reference
 
@@ -53,6 +57,13 @@ docs/contracts/evaluation-plan.md
 data/evaluation/README.md
 ```
 
+Pipeline A:
+
+```text
+src/w2_pipeline/extraction/
+docs/contracts/extraction-pipeline-a.md
+```
+
 ## Encoded Assumptions
 
 - The working user is an accounting or tax-preparation firm processing W-2s
@@ -74,18 +85,22 @@ data/evaluation/README.md
   synthetic benchmark in manifest provenance.
 - Primary end-to-end benchmark extractors receive only `ExtractionInput`; FUNSD,
   COCO, YOLO, token, bounding-box, and NER annotations remain evaluator-side.
+- Pipeline A uses PyMuPDF native text for text PDFs and Tesseract OCR for image
+  inputs or image-only PDF pages.
+- Tesseract is a system runtime dependency; when absent, OCR documents fail
+  explicitly and benchmark failure isolation records the failure.
 - Confidence scores remain exploratory.
 - Real taxpayer data must not be committed.
 
 ## Next Phase
 
 ```text
-Phase 4 - Pipeline A: Deterministic Native Text/OCR Extraction Baseline
+Phase 5 - Pipeline B: Document Vision / Schema-Constrained Extraction
 ```
 
-Phase 4 should implement the first deterministic extraction baseline. It should
-use the Phase 3 dataset and evaluator instead of creating a competing benchmark
-or ground-truth format.
+Phase 5 should implement a model-based challenger that produces the same
+canonical `W2Document` and runs against the existing evaluator without changing
+ground truth or exposing annotations.
 
 Completed Phase 1 brief:
 
@@ -143,8 +158,33 @@ manifest, prepares external clean-render PNGs and derived variants, and keeps
 extractor inputs isolated from tokens, bounding boxes, NER tags, FUNSD, COCO,
 and YOLO annotations.
 
+Completed Phase 4 implementation:
+
+```text
+src/w2_pipeline/extraction/
+src/w2_pipeline/evaluation/run_pipeline_a.py
+tests/extraction/
+docs/contracts/extraction-pipeline-a.md
+```
+
+The Phase 4 implementation added route-aware common observations, native PDF
+text acquisition, Tesseract OCR integration with explicit missing-runtime
+errors, deterministic parsing for identity fields, federal boxes, Box 12, Box
+13, Box 14a/14b, and state/local rows, Pipeline A evaluation integration, and a
+benchmark CLI. It also corrected internal synthetic fixtures so 2026 generated
+documents no longer invent Box 9 verification-code content.
+
+Baseline on 2026-09-03:
+
+- internal generated clean PDFs, first 5 documents: `field_accuracy = 1.0`,
+  `failure_rate = 0.0`, route `native_pdf`
+- external Symage clean renders, 150 documents: `field_accuracy = 0.0`,
+  `failure_rate = 1.0`, because the local `tesseract` binary is not installed
+- all prepared external variants, 600 documents: `field_accuracy = 0.0`,
+  `failure_rate = 1.0`, same missing OCR runtime limitation
+
 ## Open Issues
 
-- Review routing, confidence calibration, OCR, model extraction, validation
-  engines, persistence, frontend, export, and cost tracking remain unimplemented
-  future-phase work.
+- Review routing, confidence calibration, OCR optimization, model extraction,
+  validation engines, persistence, frontend, export, and cost tracking remain
+  unimplemented future-phase work.

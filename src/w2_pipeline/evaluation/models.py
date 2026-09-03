@@ -68,6 +68,7 @@ class DocumentEvaluation(EvaluationModel):
     failures: list[EvaluationIssue] = Field(default_factory=list)
     started_at: datetime | None = None
     duration_seconds: float | None = Field(default=None, ge=0.0)
+    extraction_route: str | None = None
 
 
 class BenchmarkEvaluation(EvaluationModel):

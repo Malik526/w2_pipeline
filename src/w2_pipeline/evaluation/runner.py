@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Protocol
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from w2_pipeline.contracts.w2 import W2Document
 from w2_pipeline.evaluation.comparison import compare_w2_documents, flatten_w2_document
@@ -25,7 +25,7 @@ from w2_pipeline.evaluation.models import (
 class W2Extractor(Protocol):
     """Minimal boundary future extractors must satisfy for evaluation."""
 
-    def extract(self, extraction_input: ExtractionInput) -> W2Document | dict:
+    def extract(self, extraction_input: ExtractionInput) -> W2Document | dict | BaseModel:
         """Return a canonical W-2 prediction for the provided source document."""
 
 
@@ -72,6 +72,7 @@ def _evaluate_entry(
         raw_prediction = extractor.extract(extraction_input)
     except Exception as exc:  # noqa: BLE001 - runner isolates pipeline failures.
         duration = time.perf_counter() - start
+        extraction_route = getattr(exc, "extraction_route", None)
         return _failed_evaluation(
             entry=entry,
             expected=expected,
@@ -81,14 +82,11 @@ def _evaluate_entry(
             started_at=started_at,
             duration_seconds=duration,
             message=f"Extractor raised {exc.__class__.__name__}.",
+            extraction_route=extraction_route,
         )
 
     try:
-        predicted = (
-            raw_prediction
-            if isinstance(raw_prediction, W2Document)
-            else W2Document.model_validate(raw_prediction)
-        )
+        predicted, extraction_route = _coerce_prediction(raw_prediction)
     except ValidationError as exc:
         duration = time.perf_counter() - start
         return _failed_evaluation(
@@ -112,8 +110,27 @@ def _evaluate_entry(
         evaluated_field_paths=entry.evaluated_field_paths,
     )
     return evaluation.model_copy(
-        update={"started_at": started_at, "duration_seconds": duration}
+        update={
+            "started_at": started_at,
+            "duration_seconds": duration,
+            "extraction_route": extraction_route,
+        }
     )
+
+
+def _coerce_prediction(raw_prediction: W2Document | dict | BaseModel) -> tuple[W2Document, str | None]:
+    extraction_route = getattr(getattr(raw_prediction, "route", None), "value", None)
+    if extraction_route is None:
+        extraction_route = getattr(raw_prediction, "route", None)
+
+    if isinstance(raw_prediction, W2Document):
+        return raw_prediction, extraction_route
+    if hasattr(raw_prediction, "document"):
+        document = getattr(raw_prediction, "document")
+        if isinstance(document, W2Document):
+            return document, extraction_route
+        return W2Document.model_validate(document), extraction_route
+    return W2Document.model_validate(raw_prediction), extraction_route
 
 
 def _load_ground_truth(path: Path) -> W2Document:
@@ -130,6 +147,7 @@ def _failed_evaluation(
     started_at: datetime,
     duration_seconds: float,
     message: str,
+    extraction_route: str | None = None,
 ) -> DocumentEvaluation:
     total_fields = len(flatten_w2_document(expected))
     return DocumentEvaluation(
@@ -144,4 +162,5 @@ def _failed_evaluation(
         failures=[EvaluationIssue(kind=kind, message=message)],
         started_at=started_at,
         duration_seconds=duration_seconds,
+        extraction_route=extraction_route,
     )
