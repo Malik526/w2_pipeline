@@ -2,6 +2,33 @@
 
 ## 2026-09-04
 
+### Phase 4E - PaddleOCR GPU 5-Document Smoke
+
+- Ran the Phase 4E PaddleOCR backend with `--paddle-device gpu` against the
+  same 5-document external Symage clean-render subset used for the CPU
+  smoke, holding dataset, ground truth, parser, evaluator, and schema
+  constant. Pure experiment execution: no Paddle implementation changes were
+  needed or made.
+- Result: `field_accuracy = 0.9826086956521739` (113/115 correct),
+  `failed_documents = 0`, average `2.1144952545990234` seconds/document —
+  identical accuracy and failure profile to the CPU smoke (same two
+  documents failing `box_13.retirement_plan`), but roughly 35.2x faster
+  (`74.3s` -> `2.11s`/document), within ~3% of the Tesseract incumbent's
+  150-document average duration (`2.0517s`/document). Result artifacts:
+  `data/evaluation/results/phase4e_paddleocr_gpu_smoke_5.json` and `.md`.
+- Based on this result, launched the full 150-document PaddleOCR GPU
+  benchmark (`phase4e_paddleocr_gpu_external_clean_150`, detached); its
+  result is not yet included in this entry.
+- Updated `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` with the comparison against the CPU smoke and
+  Tesseract incumbent, and to record the 150-document GPU run as in
+  progress. Removed the completed 5-document GPU smoke's local `.pid`/`.log`
+  run-control files (log duplicated the JSON already saved, no unique
+  warnings beyond the already-documented ccache notice).
+- The Tesseract incumbent and all PaddleOCR defaults (`device="cpu"` in
+  `PaddleOcrConfig`) remain unchanged; no incumbent decision was made from
+  this 5-document result.
+
 ### Phase 4E - GPU Enablement for PaddleOCR
 
 - Installed `paddlepaddle-gpu==3.3.1` (replacing CPU `paddlepaddle==3.3.1`,

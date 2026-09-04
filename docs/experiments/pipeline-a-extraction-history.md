@@ -466,3 +466,76 @@ GPU. The CPU incumbent (Tesseract PSM 3 + PSM 6) is unchanged, and
 Phase 4E 150-document PaddleOCR comparison, now with the option of GPU
 execution — is deliberately left to a separate task using the Pipeline A
 extraction experiment workflow, per this task's explicit scope.
+
+## Phase 4E PaddleOCR GPU 5-Document Smoke
+
+A follow-up experiment ran PaddleOCR with `--paddle-device gpu` against the
+same 5-document external Symage clean-render subset used for the CPU smoke,
+holding dataset, ground truth, parser, evaluator, and schema constant. This
+was a pure configuration-flag experiment: no Paddle implementation changes
+were made or needed.
+
+```text
+date: 2026-09-04
+scope: external Symage clean renders, 5 documents (smoke only)
+artifact: data/evaluation/results/phase4e_paddleocr_gpu_smoke_5.json
+markdown: data/evaluation/results/phase4e_paddleocr_gpu_smoke_5.md
+pipeline_commit: ca3b2a3342abfe9ee81b7943e80db33a2c3f08ce
+backend: paddleocr (device=gpu, lang=en, use_doc_orientation_classify=False,
+  use_doc_unwarping=False, use_textline_orientation=False)
+paddlepaddle_version: 3.3.1 (paddlepaddle-gpu, cu126)
+paddleocr_version: 3.7.0
+hardware: NVIDIA GeForce RTX 3060 (WSL2 CUDA passthrough)
+documents: 5
+successful_documents: 5
+failed_documents: 0
+field_accuracy: 0.9826086956521739
+correct_fields: 113
+total_fields: 115
+field_failure_count: 2
+average_duration_seconds: 2.1144952545990234
+```
+
+Per-field failures are identical to the CPU smoke — the same two documents,
+the same field, the same direction of error:
+
+```text
+symage_900001-irs_w2_single_page_2026-p0: box_13.retirement_plan
+  expected=true, predicted=false
+symage_900002-irs_w2_single_page_2026-p0: box_13.retirement_plan
+  expected=true, predicted=false
+```
+
+Comparison against the prior CPU smoke (`phase4e_paddleocr_smoke_5.json`,
+same 5 documents, same commit lineage):
+
+```text
+                    CPU smoke              GPU smoke
+field_accuracy:     0.9826086956521739     0.9826086956521739  (identical)
+correct/total:      113/115                113/115             (identical)
+failed_documents:   0                      0                   (identical)
+field_failures:     2 (box_13.retirement_plan x2)  same 2, same documents, same field
+avg_duration_sec:   74.29913957080062      2.1144952545990234
+speedup:            -                       ~35.2x
+```
+
+Comparison against the Tesseract PSM 3 + PSM 6 incumbent (Phase 4C, 150-doc
+clean benchmark, not a 5-document subset, so only latency is directly
+comparable at this sample size): Tesseract's average duration was `2.0517`
+seconds/document. PaddleOCR GPU's `2.1145` seconds/document is now in the
+same order of magnitude as Tesseract, a roughly 3% difference on this
+5-document sample, versus the CPU backend's ~35-37x slower throughput.
+Accuracy is not directly compared here because the Tesseract figure is a
+150-document aggregate (99.13%) while this PaddleOCR figure is a 5-document
+sample (98.26%); a same-scale comparison requires the 150-document PaddleOCR
+GPU run.
+
+Conclusion: GPU execution eliminates PaddleOCR's throughput disadvantage on
+this smoke sample without any accuracy or failure-profile change relative to
+CPU — same 113/115 fields correct, same two `box_13.retirement_plan` misses,
+same zero document failures. This is a strong enough signal to justify
+running the full 150-document PaddleOCR GPU benchmark, which was launched
+immediately after this result (`phase4e_paddleocr_gpu_external_clean_150`,
+detached, not yet complete at the time this entry was written). The
+150-document result — not this 5-document smoke — is the basis for any future
+incumbent decision.
