@@ -301,10 +301,11 @@ docs/experiments/pipeline-a-extraction-history.md
 ## Immediate Next Experiment
 
 ```text
-Both mechanical 150-document reruns (Tesseract and PaddleOCR GPU) with the
-Box 13 visual-checkbox-detection fix in place are now complete. No further
-mechanical rerun is queued; what remains is the incumbent decision below,
-which is the user's to make.
+All three mechanical reruns this pointer called for (Tesseract 150-doc,
+PaddleOCR GPU 150-doc, Tesseract 600-doc robustness) are complete. What
+remains is the incumbent decision below and, if pursued, the PaddleOCR GPU
+600-document robustness rerun — both are the user's to decide, not
+mechanical next steps.
 ```
 
 Sequence: unit tests -> 5-doc CPU smoke -> GPU enablement -> 5-doc GPU
@@ -316,30 +317,44 @@ Tesseract unaffected) -> Tesseract formal 150-document rerun (**done**:
 99.28%, up from 99.13%, `box_13.retirement_plan` 100.0%, zero regressions
 elsewhere) -> PaddleOCR GPU formal 150-document rerun (**done**:
 `field_accuracy = 1.0`, 3,450/3,450, up from 97.39%, `box_13.retirement_plan`
-100.0% up from 40.0%, zero field failures anywhere, `1.44s`/doc). Both
-mechanical reruns this pointer called for are complete; see "Completed Phase
-History" for full detail on each.
+100.0% up from 40.0%, zero field failures anywhere, `1.44s`/doc) ->
+Tesseract formal 600-document robustness rerun (**done**: `field_accuracy =
+0.8897826086956522`, 12,279/13,800, up from 88.46%; `box_13.retirement_plan`
+fully resolved on clean/compressed variants, partially improved on
+rotated/blurred; zero regressions on any other field/variant). All three
+reruns this pointer called for are complete; see "Completed Phase History"
+for full detail on each.
 
 What remains a genuine decision rather than a rerun:
 
-- **The incumbent question, now materially changed.** With the fix
-  confirmed at full scale on both backends, PaddleOCR GPU is no longer a
-  worse-but-faster alternative — on this clean-150 benchmark it is strictly
-  better than the Tesseract incumbent on both accuracy (100.0% vs. 99.28%)
-  and speed (1.44s vs. 2.33s/doc), with zero field failures anywhere.
-  Whether to promote PaddleOCR GPU to incumbent is an explicit
+- **The incumbent question, now materially changed on clean data.** With
+  the fix confirmed at full scale on both backends, PaddleOCR GPU is no
+  longer a worse-but-faster alternative — on the clean-150 benchmark it is
+  strictly better than the Tesseract incumbent on both accuracy (100.0% vs.
+  99.28%) and speed (1.44s vs. 2.33s/doc), with zero field failures
+  anywhere. Whether to promote PaddleOCR GPU to incumbent is an explicit
   product/architecture decision for the user; this project state document
-  does not make that call on its own.
+  does not make that call on its own. Note this comparison is clean-only —
+  PaddleOCR GPU's behavior on the 600-document robustness set (below) is
+  still unknown.
+- **The Tesseract robustness rerun revealed the checkbox-vision fix's limit:**
+  it fully resolves `box_13.retirement_plan` under clean and compressed-JPEG
+  conditions but only partially under rotation (48.0% -> 60.0%) and blur
+  (40.0% -> 54.67%), because the fixed true-image-relative calibration zone
+  doesn't track geometry shifts from rotation and the ink-coverage
+  measurement gets noisier under blur. Whether this residual gap is worth a
+  follow-up (rotation-aware zone detection, a blur-adjusted threshold) or
+  should stand as a documented known weakness is an open decision, not
+  addressed by this rerun.
 - Whether to run the 600-document robustness set (compressed/rotated/blurred)
   with PaddleOCR GPU, now with the checkbox fix in place, to see how the
-  visual detector performs under degraded image quality — the ink-coverage
-  threshold was calibrated only against clean renders and has not been
-  validated against compression, rotation, or blur. Deliberately not run as
-  part of the 150-document reruns above.
+  visual detector performs under degraded image quality on that backend —
+  still outstanding; explicitly out of scope for the two most recent rerun
+  tasks (PaddleOCR GPU clean-150, and this Tesseract-only robustness rerun).
 - Whether `statutory_employee`/`third_party_sick_pay` visual zones are worth
   pursuing later if a genuine positive example becomes available to
   calibrate against.
-- Whether PaddleOCR GPU is worth further investment (including the
+- Whether PaddleOCR GPU is worth further investment (including its own
   600-document robustness question above) versus proceeding to Phase 5 —
   now a stronger case than before given the clean-150 result, but still
   gated on the robustness question and an explicit user decision.
@@ -493,10 +508,9 @@ data/evaluation/results/phase4c_external_all_variants_600_name_semantics.md
 
 These were the authoritative external Pipeline A benchmark results (main
 PSM 3 + supplemental PSM 6 incumbent, corrected Box e semantics) before the
-Phase 4E checkbox-vision fix; the clean-150 number below is now superseded
-by the Phase 4E Tesseract rerun (see "Completed Phase History"), the
-600-document robustness number is not yet reconfirmed with the fix in place
-and remains the current reference for that scope:
+Phase 4E checkbox-vision fix; both numbers below are now superseded by the
+Phase 4E post-checkbox-vision Tesseract reruns (see "Completed Phase
+History") and are retained here as historical record only:
 
 - external Symage clean renders, 150 documents: `field_accuracy =
   0.991304347826087` (3,420 / 3,450 correct), `failed_documents = 0`, average
@@ -508,10 +522,15 @@ and remains the current reference for that scope:
   fields unchanged.
 - all prepared external variants, 600 documents: `field_accuracy =
   0.8846376811594203` (12,208 / 13,800 correct), `failed_documents = 0`,
-  average 2.1994630620232782 seconds/document. Not yet rerun with the
-  checkbox-vision fix in place.
+  average 2.1994630620232782 seconds/document. **Superseded** by the
+  Phase 4E post-checkbox-vision rerun: `field_accuracy = 0.8897826086956522`
+  (12,279/13,800), `box_13.retirement_plan` improved on every variant (fully
+  resolved on clean/compressed, partially on rotated/blurred — see
+  "Completed Phase History"), all other fields unchanged.
 - variant accuracy: clean render 99.13% (see superseded note above),
-  compressed JPEG 98.20%, rotated PNG 89.45%, blurred PNG 67.07%.
+  compressed JPEG 98.20%, rotated PNG 89.45%, blurred PNG 67.07% — all four
+  superseded; post-fix figures are clean 99.28%, compressed 98.96%, rotated
+  89.97%, blurred 67.71%.
 
 The corrected numbers are lower than the Phase 4B pre-correction numbers
 primarily because `employee.middle_initial` is now scored as its own field
@@ -774,9 +793,10 @@ with the Box 13 visual checkbox detector in place:
   Tesseract clean-150 number, superseding
   `phase4c_external_clean_150_name_semantics` for that scope; the incumbent
   configuration itself (PSM 3 + PSM 6) is unchanged. The equivalent
-  PaddleOCR GPU 150-document rerun (done immediately after, see next entry)
-  and the 600-document robustness rerun (either backend) — the latter still
-  outstanding — see "Immediate Next Experiment."
+  PaddleOCR GPU 150-document rerun and the Tesseract 600-document robustness
+  rerun both followed (see the next two entries); the PaddleOCR GPU
+  600-document robustness rerun remains outstanding — see "Immediate Next
+  Experiment."
 
 Completed Phase 4E PaddleOCR GPU incumbent-comparison 150-document rerun
 (post checkbox-vision fix):
@@ -820,20 +840,72 @@ PaddleOCR GPU result) with the Box 13 visual checkbox detector in place:
   has deliberately not been run as part of this task; see "Immediate Next
   Experiment."
 
+Completed Phase 4E Tesseract incumbent 600-document robustness rerun (post
+checkbox-vision fix):
+
+```text
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_all_variants_600.json
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_all_variants_600.md
+```
+
+Formal rerun of the Tesseract incumbent's authoritative 600-document
+robustness benchmark (all four external variants: clean render, compressed
+JPEG, rotated PNG, blurred PNG; main PSM 3 + supplemental PSM 6, unchanged)
+with the Box 13 visual checkbox detector in place. Tesseract-only by
+explicit task scope — no PaddleOCR run as part of this task. This answers
+the open question left after the checkbox-vision implementation and the two
+prior clean-150 reruns: how the ink-coverage threshold, calibrated only
+against clean renders, behaves under degraded image quality.
+
+- `field_accuracy = 0.8897826086956522` (12,279/13,800 correct), up from
+  `0.8846376811594203` (12,208/13,800), `failed_documents = 0`, average
+  `2.318962704046665` seconds/document (up from `2.199s`).
+- **The only field that changed anywhere in the aggregate result is
+  `box_13.retirement_plan`**; every other field's correct/incorrect count is
+  unchanged across all four variants — zero regressions.
+- Per-variant `box_13.retirement_plan` breakdown (out of 150 documents each):
+  clean render 96.67% -> **100.0%** (fully resolved, matches the standalone
+  clean-150 rerun); compressed JPEG 82.67% -> **100.0%** (fully resolved —
+  compression doesn't shift checkbox geometry); rotated PNG 48.0% -> 60.0%
+  (improved but not resolved — rotation shifts the checkbox's true-image
+  position past the fixed calibration zone); blurred PNG 40.0% -> 54.67%
+  (improved but not resolved — blur degrades the ink-coverage measurement's
+  reliability near the `0.09` threshold rather than shifting geometry).
+- Conclusion: the fix is a full, unconditional win on clean and compressed
+  images but only a partial win under rotation and blur — exactly the
+  outcome anticipated by the documented caveat that
+  `RETIREMENT_PLAN_ZONE`/the ink-coverage threshold were calibrated solely
+  against clean renders. This result supersedes
+  `phase4c_external_all_variants_600_name_semantics` as the authoritative
+  Tesseract 600-document robustness number; the incumbent configuration is
+  unchanged. Whether the residual rotated/blurred gap warrants a follow-up
+  (rotation-aware zone, blur-adjusted threshold) is an open decision, not
+  addressed here. The equivalent PaddleOCR GPU 600-document robustness
+  rerun remains outstanding and was out of scope for this task.
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
   incumbent PSM 3 + PSM 6 configuration (93.33% / 94.0% on the clean set).
 - Box 13 retirement-plan checkbox detection was a known weak field under the
-  incumbent configuration (96.67% on the recorded 150-document benchmark). A
-  backend-neutral visual checkbox detector has since been added and is now
-  confirmed fixed at full 150-document scale on **both** backends: Tesseract
-  reached 100.0% (zero regressions elsewhere) and PaddleOCR GPU reached
-  100.0% (up from 40.0%, zero field failures anywhere) — no longer a known
-  weakness for either backend.
+  incumbent configuration (96.67% on the recorded 150-document clean
+  benchmark). A backend-neutral visual checkbox detector has since been
+  added. On clean and compressed-JPEG images it is a complete fix on both
+  backends: Tesseract and PaddleOCR GPU both reach 100.0% on the clean-150
+  benchmark, and Tesseract reaches 100.0% on clean and compressed in the
+  600-document robustness rerun too. **Under rotation and blur it is only a
+  partial fix** (Tesseract 600-doc rerun: rotated 48.0% -> 60.0%, blurred
+  40.0% -> 54.67%) — the fixed true-image-relative calibration zone doesn't
+  track rotation's geometry shift, and blur degrades the ink-coverage
+  measurement near the threshold. This residual rotated/blurred gap remains
+  a known weakness on Tesseract; PaddleOCR GPU's behavior under the same
+  degraded variants is still unconfirmed (its 600-document robustness rerun
+  has not been run).
 - Employer EIN and employee SSN degrade under rotated/blurred variants.
-- Blur is the dominant degradation case (67.07% aggregate field accuracy on
-  the blurred variant); rotation is a moderate degradation case (89.45%).
+- Blur is the dominant degradation case (aggregate field accuracy 67.07% ->
+  67.71% post-checkbox-vision-fix on the blurred variant, essentially
+  unchanged outside `box_13.retirement_plan`); rotation is a moderate
+  degradation case (89.45% -> 89.97%, same caveat).
 - PSM 11 trades the above name/EIN/Box 13 weaknesses for a total loss of
   federal Boxes 1 and 2, so it is documented as a known failure mode rather
   than adopted.

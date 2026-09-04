@@ -108,6 +108,43 @@
   robustness rerun (either backend) was deliberately not run as part of this
   task.
 
+### Phase 4E - Tesseract Incumbent 600-Document Robustness Rerun (Post Checkbox Vision)
+
+- Reran the Tesseract incumbent's authoritative 600-document external
+  robustness benchmark (all four variants: clean render, compressed JPEG,
+  rotated PNG, blurred PNG; main PSM 3 + supplemental PSM 6, unchanged
+  configuration) with the Box 13 visual checkbox detector in place.
+  Tesseract-only by explicit task scope — no PaddleOCR run.
+- Added `data/evaluation/results/phase4e_tesseract_checkbox_vision_external_all_variants_600.json`
+  and the matching `.md` report as new artifacts; the prior
+  `phase4c_external_all_variants_600_name_semantics.json`/`.md`,
+  `phase4b_external_all_variants_600.json`, and all other historical result
+  files were left unmodified.
+- Result: `field_accuracy = 0.8897826086956522` (12,279/13,800 correct, up
+  from 12,208/13,800), `failed_documents = 0`, average `2.319s`/document (up
+  from `2.199s`). The only field that changed anywhere in the aggregate
+  result is `box_13.retirement_plan` (66.83% -> 78.67% aggregate); every
+  other field's correct/incorrect count is unchanged across all four
+  variants — zero regressions.
+- Per-variant `box_13.retirement_plan` breakdown resolves the open question
+  left after the checkbox-vision implementation (the ink-coverage threshold
+  was calibrated only against clean renders): clean render 96.67% -> 100.0%
+  and compressed JPEG 82.67% -> 100.0% are **fully resolved**; rotated PNG
+  48.0% -> 60.0% and blurred PNG 40.0% -> 54.67% are **improved but not
+  fully resolved** — rotation shifts the checkbox's true-image position past
+  the fixed calibration zone, and blur degrades the ink-coverage measurement
+  near the `0.09` threshold.
+- This result now supersedes `phase4c_external_all_variants_600_name_semantics`
+  as the authoritative Tesseract 600-document robustness number. The
+  incumbent configuration itself is unchanged; no promotion decision applies
+  (Tesseract-only rerun). Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Immediate Next Experiment, Current
+  Known Weaknesses, Current Pipeline A Configuration, authoritative-results
+  section). Whether the residual rotated/blurred gap warrants a follow-up
+  fix is left as an open decision. The equivalent PaddleOCR GPU
+  600-document robustness rerun was not run and remains outstanding.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

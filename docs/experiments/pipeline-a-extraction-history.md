@@ -903,3 +903,70 @@ data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_clean_150
   mechanical step if the incumbent question is pursued further; the visual
   detector's ink-coverage threshold is still calibrated only against clean
   renders and unvalidated under degraded image quality.
+
+## Phase 4E Tesseract Incumbent 600-Document Robustness Rerun (Post Checkbox Vision Fix)
+
+Formal rerun of the Tesseract incumbent's authoritative 600-document
+external robustness benchmark (all four variants: clean render, compressed
+JPEG, rotated PNG, blurred PNG) with the Box 13 visual checkbox detector in
+place. Tesseract-only, per this task's explicit scope — no PaddleOCR run.
+Same 600 documents, same corrected ground truth/parser/evaluator/schema as
+the Phase 4C result; only the checkbox-vision code path changed. This
+directly answers the open question the checkbox-vision implementation and
+the two prior 150-document reruns left outstanding: how the ink-coverage
+threshold (calibrated only against clean renders) behaves under
+compression, rotation, and blur.
+
+```text
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_all_variants_600.json
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_all_variants_600.md
+```
+
+- `field_accuracy = 0.8897826086956522` (12,279 / 13,800 correct), up from
+  `0.8846376811594203` (12,208/13,800), `failed_documents = 0`,
+  `field_failure_count = 1,521` (down from 1,592), average
+  `2.318962704046665` seconds/document (up from `2.199s`, the added cost of
+  the pixel-based checkbox pass — consistent with the 150-document clean
+  rerun's overhead).
+- **The only field that changed anywhere in the aggregate 13,800-field
+  surface is `box_13.retirement_plan`** (aggregate `0.6683333333333333` ->
+  `0.7866666666666666`, 401/600 -> 472/600 correct); every other field's
+  correct/incorrect count is unchanged across all four variants. Zero
+  regressions.
+- Per-variant breakdown of `box_13.retirement_plan` (out of 150 documents
+  per variant), derived from the field-failure records:
+  - `external_clean_render`: 96.67% (145/150) -> **100.0%** (150/150, 0
+    failures) — matches the standalone clean-150 rerun exactly.
+  - `compressed_jpeg`: 82.67% (124/150) -> **100.0%** (150/150, 0 failures)
+    — fully resolved. Compression does not shift checkbox geometry, so the
+    true-image-relative zone the detector was calibrated against still
+    lands correctly.
+  - `rotated_png`: 48.0% (72/150) -> 60.0% (90/150) — improved (+12
+    points) but **not fully resolved**; 60 documents still fail. Rotation
+    shifts the checkbox mark's true-image-pixel position, so the
+    fixed-zone visual detector partially misses it; the remaining recovery
+    comes from the OR'd text-prefix/OCR-token fallback mechanisms, not the
+    visual signal.
+  - `blurred_png`: 40.0% (60/150) -> 54.67% (82/150) — improved (+14.67
+    points) but **not fully resolved**; 68 documents still fail. Blur
+    degrades the ink-coverage measurement's reliability near the
+    calibrated threshold rather than shifting geometry, so some documents
+    still land on the wrong side of the `0.09` threshold.
+- No other field showed any change under any variant, confirming the fix's
+  isolation holds even under degraded image quality — it neither helps nor
+  hurts any field besides `box_13.retirement_plan`.
+- Conclusion: this closes the open question left after the checkbox-vision
+  implementation. The fix is a full, unconditional win on clean and
+  compressed images (both now 100% on `retirement_plan`) but only a partial
+  win under rotation and blur, exactly as anticipated by the caveat that the
+  ink-coverage threshold and `RETIREMENT_PLAN_ZONE` were calibrated solely
+  against clean renders. This result now supersedes
+  `phase4c_external_all_variants_600_name_semantics` as the authoritative
+  Tesseract 600-document robustness number; the incumbent configuration
+  itself (PSM 3 + PSM 6) is unchanged, and no promotion decision applies
+  here (this is a Tesseract-only rerun). Whether the rotated/blurred
+  shortfall is worth a follow-up investigation (e.g., a rotation-aware zone,
+  or a blur-adjusted threshold) versus leaving it as a documented known
+  weakness is an open decision for later, not addressed by this rerun. The
+  equivalent PaddleOCR GPU 600-document robustness rerun remains outstanding
+  and was explicitly out of scope for this task.
