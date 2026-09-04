@@ -4,21 +4,26 @@ Last updated: 2026-09-04
 
 ## Current Phase
 
-Phase 4E has moved from evaluation into a code fix. The 150-document
-PaddleOCR GPU benchmark (97.39% vs. Tesseract's 99.13% on the identical
-clean set, not promoted to incumbent) found PaddleOCR's entire 90-field
-error surface was one field, `box_13.retirement_plan`. A follow-up
-investigation then a follow-up implementation determined the root cause
-(PaddleOCR's text detector never perceives the checkbox glyph as text at
-all) and shipped a backend-neutral, pixel-based fix
-(`src/w2_pipeline/extraction/checkbox_vision.py`) that no longer depends on
-any OCR engine's text output for that field. **The 97.39%/99.13% numbers
-above are historical** — they predate this fix. A 20-document smoke check
-after the fix reached `1.0` field accuracy on PaddleOCR GPU (20/20 on
-`retirement_plan`, previously the field's dominant failure) with no
-Tesseract regression, but the **full 150-document benchmark has not been
-rerun with the fix in place** — see "Immediate Next Experiment." Phase 4D
-(Tesseract main-PSM experiments) is complete.
+Phase 4E has moved from evaluation into a code fix, now partially reconfirmed
+at full scale. The 150-document PaddleOCR GPU benchmark (97.39% vs.
+Tesseract's 99.13% on the identical clean set, not promoted to incumbent)
+found PaddleOCR's entire 90-field error surface was one field,
+`box_13.retirement_plan`. A follow-up investigation then a follow-up
+implementation determined the root cause (PaddleOCR's text detector never
+perceives the checkbox glyph as text at all) and shipped a backend-neutral,
+pixel-based fix (`src/w2_pipeline/extraction/checkbox_vision.py`) that no
+longer depends on any OCR engine's text output for that field. **The
+97.39%/99.13% numbers above are historical** — they predate this fix. A
+20-document smoke check after the fix reached `1.0` field accuracy on
+PaddleOCR GPU (20/20 on `retirement_plan`, previously the field's dominant
+failure) with no Tesseract regression. The Tesseract incumbent's formal
+150-document rerun with the fix in place is now complete:
+`field_accuracy = 0.9927536231884058` (3,425/3,450, up from 99.13%), with
+`box_13.retirement_plan` at 100.0% (up from 96.67%) and every other field
+unchanged — a clean, isolated fix with zero regressions. **The equivalent
+PaddleOCR GPU 150-document rerun with the fix in place has not been run** —
+see "Immediate Next Experiment." Phase 4D (Tesseract main-PSM experiments)
+is complete.
 
 Most recently completed:
 
@@ -205,8 +210,10 @@ docs/experiments/pipeline-a-extraction-history.md
   (`src/w2_pipeline/extraction/checkbox_vision.py`) now supplements OCR text
   for `box_13.retirement_plan` (only that flag; see "Encoded Assumptions").
   A 20-document smoke check confirmed it fixes the field (20/20 on both
-  backends) without a Tesseract regression, but this has not been confirmed
-  at full 150-document scale.
+  backends) without a Tesseract regression. Confirmed at full 150-document
+  scale on Tesseract (100.0% vs. the prior 96.67%, zero regressions
+  elsewhere); the equivalent PaddleOCR GPU 150-document rerun has not been
+  run yet.
 - `PaddleOcrConfig` defaults to `enable_mkldnn=False`; the PaddlePaddle
   default (`True`) raised a PIR attribute-conversion error for the default
   PP-OCRv6 models on the reference development machine. `enable_mkldnn` is
@@ -276,8 +283,9 @@ docs/experiments/pipeline-a-extraction-history.md
 ## Immediate Next Experiment
 
 ```text
-Rerun the full 150-document benchmark (PaddleOCR GPU, and ideally Tesseract
-too) with the Box 13 visual-checkbox-detection fix in place.
+Rerun the full 150-document PaddleOCR GPU benchmark with the Box 13
+visual-checkbox-detection fix in place. (The Tesseract equivalent is done —
+see "Completed Phase History.")
 ```
 
 Sequence so far: unit tests -> 5-doc CPU smoke -> GPU enablement -> 5-doc GPU
@@ -285,15 +293,15 @@ smoke -> 150-doc GPU benchmark (97.39% vs. Tesseract's 99.13%, not promoted)
 -> `box_13.retirement_plan` root-cause investigation (diagnostic only) ->
 backend-neutral visual checkbox fix (implemented) -> 20-document smoke
 confirming the fix (PaddleOCR GPU 1.0 field accuracy on that sample,
-Tesseract unaffected). **The formal 150-document (and 600-document)
-benchmark artifacts have not been rerun with the fix in place** — the
-97.39%/99.13% numbers on record are historical, predating this change. This
-is the clear, mechanical next step (not an open decision): rerun
-`phase4e_paddleocr_gpu_external_clean_150`-equivalent with a distinct
-filename to get the corrected authoritative PaddleOCR GPU number, and
-consider rerunning Tesseract's clean-150 too since the fix changed a code
-path Tesseract also shares (unaffected on the 20-document sample, but not
-confirmed at full scale).
+Tesseract unaffected) -> Tesseract formal 150-document rerun (**done**:
+99.28%, up from 99.13%, `box_13.retirement_plan` 100.0%, zero regressions
+elsewhere). **The PaddleOCR GPU 150-document rerun with the fix in place has
+not been run** — the 97.39%/40.0% PaddleOCR numbers on record are still
+historical, predating this change. This is the clear, mechanical next step
+(not an open decision): rerun `phase4e_paddleocr_gpu_external_clean_150`-
+equivalent with a distinct filename to get the corrected authoritative
+PaddleOCR GPU number now that the Tesseract side has confirmed the fix is
+regression-free at full scale.
 
 Beyond that mechanical rerun, what remains a genuine decision rather than a
 rerun:
@@ -460,19 +468,27 @@ data/evaluation/results/phase4c_external_all_variants_600_name_semantics.json
 data/evaluation/results/phase4c_external_all_variants_600_name_semantics.md
 ```
 
-These are the current authoritative external Pipeline A benchmark results
-(main PSM 3 + supplemental PSM 6 incumbent, corrected Box e semantics):
+These were the authoritative external Pipeline A benchmark results (main
+PSM 3 + supplemental PSM 6 incumbent, corrected Box e semantics) before the
+Phase 4E checkbox-vision fix; the clean-150 number below is now superseded
+by the Phase 4E Tesseract rerun (see "Completed Phase History"), the
+600-document robustness number is not yet reconfirmed with the fix in place
+and remains the current reference for that scope:
 
 - external Symage clean renders, 150 documents: `field_accuracy =
   0.991304347826087` (3,420 / 3,450 correct), `failed_documents = 0`, average
   2.0517181199200363 seconds/document. Employee Box e breakdown:
   `employee.first_name` 93.33%, `employee.middle_initial` 94.0%,
-  `employee.last_name` 100%, `employee.suffix` 100%.
+  `employee.last_name` 100%, `employee.suffix` 100%. **Superseded** by the
+  Phase 4E post-checkbox-vision rerun: `field_accuracy = 0.9927536231884058`
+  (3,425/3,450), `box_13.retirement_plan` 100.0% (up from 96.67%), all other
+  fields unchanged.
 - all prepared external variants, 600 documents: `field_accuracy =
   0.8846376811594203` (12,208 / 13,800 correct), `failed_documents = 0`,
-  average 2.1994630620232782 seconds/document.
-- variant accuracy: clean render 99.13%, compressed JPEG 98.20%, rotated PNG
-  89.45%, blurred PNG 67.07%.
+  average 2.1994630620232782 seconds/document. Not yet rerun with the
+  checkbox-vision fix in place.
+- variant accuracy: clean render 99.13% (see superseded note above),
+  compressed JPEG 98.20%, rotated PNG 89.45%, blurred PNG 67.07%.
 
 The corrected numbers are lower than the Phase 4B pre-correction numbers
 primarily because `employee.middle_initial` is now scored as its own field
@@ -701,16 +717,50 @@ unrelated `employer.ein` failure on `symage_900021`). The formal
 150-document benchmark artifacts have not been rerun with this fix in
 place — see "Immediate Next Experiment."
 
+Completed Phase 4E Tesseract incumbent 150-document rerun (post
+checkbox-vision fix):
+
+```text
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_clean_150.json
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_clean_150.md
+```
+
+Formal rerun of the Tesseract incumbent's authoritative clean-150 benchmark
+(main PSM 3 + supplemental PSM 6, same 150 external clean-render documents,
+same corrected ground truth/parser/evaluator/schema as the Phase 4C result)
+with the Box 13 visual checkbox detector in place:
+
+- `field_accuracy = 0.9927536231884058` (3,425/3,450 correct),
+  `failed_documents = 0`, `field_failure_count = 25`, average
+  `2.330209926666645` seconds/document (up from `2.052s`, the added cost of
+  the pixel-based checkbox pass).
+- Versus the prior authoritative Phase 4C result (`0.991304347826087`,
+  3,420/3,450): the only per-field change across all 23 scored fields is
+  `box_13.retirement_plan`, 96.67% -> 100.0% (145/150 -> 150/150) — exactly
+  the 5 documents the fix was calibrated to recover. Every other field's
+  correct/incorrect count is bit-for-bit identical (weakest remaining:
+  `employee.first_name` 93.33%, `employee.middle_initial` 94.0%,
+  `employer.ein` 98.67%).
+- Conclusion: the checkbox-vision fix is confirmed regression-free at full
+  150-document scale on the Tesseract incumbent, matching the 20-document
+  smoke check's prediction exactly. This result is now the authoritative
+  Tesseract clean-150 number, superseding
+  `phase4c_external_clean_150_name_semantics` for that scope; the incumbent
+  configuration itself (PSM 3 + PSM 6) is unchanged. The equivalent
+  PaddleOCR GPU 150-document rerun and the 600-document robustness rerun
+  (either backend) remain outstanding — see "Immediate Next Experiment."
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
   incumbent PSM 3 + PSM 6 configuration (93.33% / 94.0% on the clean set).
 - Box 13 retirement-plan checkbox detection was a known weak field under the
   incumbent configuration (96.67% on the recorded 150-document benchmark). A
-  backend-neutral visual checkbox detector has since been added and confirmed
-  fixed on a 20-document smoke sample (20/20 for both Tesseract and
-  PaddleOCR); the recorded 96.67% figure predates this fix and has not been
-  reconfirmed at full 150-document scale.
+  backend-neutral visual checkbox detector has since been added; on
+  Tesseract it is now confirmed fixed at full 150-document scale (100.0%,
+  zero regressions elsewhere) — no longer a known weakness for the
+  incumbent. PaddleOCR GPU's equivalent 150-document confirmation is still
+  outstanding (confirmed only on a 20-document smoke sample so far).
 - Employer EIN and employee SSN degrade under rotated/blurred variants.
 - Blur is the dominant degradation case (67.07% aggregate field accuracy on
   the blurred variant); rotation is a moderate degradation case (89.45%).

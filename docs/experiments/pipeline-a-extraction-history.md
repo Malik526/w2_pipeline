@@ -802,3 +802,47 @@ failure on this sample without regressing Tesseract. The full 150-document
 rerun to update the authoritative Phase 4C/4E numbers with this change in
 place; that full rerun was not performed as part of this implementation
 task.
+
+## Phase 4E Tesseract Incumbent 150-Document Rerun (Post Checkbox Vision Fix)
+
+Formal rerun of the Tesseract incumbent's authoritative clean-150 benchmark
+with the Box 13 visual checkbox detector in place, per the "Immediate Next
+Experiment" pointer left by the prior implementation task. Same 150 external
+Symage clean-render documents, same corrected Box e ground truth, same
+parser/evaluator/schema as the Phase 4C result — only the checkbox-vision
+code path changed. Configuration held constant: main Tesseract PSM 3 +
+targeted supplemental PSM 6, `--ocr-backend tesseract` (CLI default).
+
+```text
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_clean_150.json
+data/evaluation/results/phase4e_tesseract_checkbox_vision_external_clean_150.md
+```
+
+- `field_accuracy = 0.9927536231884058` (3,425 / 3,450 correct),
+  `failed_documents = 0`, `field_failure_count = 25`, average
+  `2.330209926666645` seconds/document.
+- Comparison against the prior authoritative Tesseract clean-150 result
+  (`phase4c_external_clean_150_name_semantics`, `field_accuracy =
+  0.991304347826087`, 3,420/3,450 correct, 30 field failures, average
+  `2.0517181199200363` seconds/document): the **only** per-field change
+  across all 23 scored canonical fields is `box_13.retirement_plan`, which
+  moved from 96.67% (145/150) to 100.0% (150/150) — exactly the 5 documents
+  the checkbox-vision fix was calibrated to recover. Every other field's
+  correct/incorrect count is bit-for-bit identical to the Phase 4C result:
+  `employee.first_name` 93.33%, `employee.middle_initial` 94.0%,
+  `employer.ein` 98.67%, `box_6_medicare_tax_withheld` 98.67%,
+  `box_3_social_security_wages` 99.33%, `box_5_medicare_wages_and_tips`
+  99.33%, all remaining fields 100%.
+- Average per-document duration increased from `2.052s` to `2.330s`
+  (+13.5%), the added cost of running the pixel-based checkbox detector on
+  every OCR-routed document; still far faster than PaddleOCR CPU and
+  comparable to PaddleOCR GPU.
+- Conclusion: the checkbox-vision fix is confirmed at full 150-document
+  scale on the Tesseract incumbent — a clean, isolated improvement with zero
+  regressions anywhere else in the 3,450-field surface, exactly matching the
+  20-document smoke check's prediction. This result supersedes
+  `phase4c_external_clean_150_name_semantics` as the authoritative Tesseract
+  clean-150 number; the PSM 3 + PSM 6 configuration itself is unchanged and
+  remains the incumbent. The equivalent PaddleOCR GPU rerun
+  (`phase4e_paddleocr_gpu_external_clean_150`-equivalent) remains outstanding
+  — see `docs/project-state.md`'s "Immediate Next Experiment."

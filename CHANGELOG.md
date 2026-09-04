@@ -47,6 +47,32 @@
   authoritative numbers, deliberately not performed as part of this
   implementation task.
 
+### Phase 4E - Tesseract Incumbent 150-Document Rerun (Post Checkbox Vision)
+
+- Reran the Tesseract incumbent's authoritative 150-document external
+  clean-render benchmark (main PSM 3 + supplemental PSM 6, unchanged
+  configuration) with the Box 13 visual checkbox detector in place, per the
+  "Immediate Next Experiment" pointer left by the checkbox-vision
+  implementation above.
+- Added `data/evaluation/results/phase4e_tesseract_checkbox_vision_external_clean_150.json`
+  and the matching `.md` report as new artifacts; the prior
+  `phase4c_external_clean_150_name_semantics.json`/`.md` and all other
+  historical result files were left unmodified.
+- Result: `field_accuracy = 0.9927536231884058` (3,425/3,450 correct, up
+  from 3,420/3,450), `failed_documents = 0`, average `2.330s`/document (up
+  from `2.052s`, the added cost of the pixel-based checkbox pass). The only
+  per-field change versus the prior Phase 4C result is
+  `box_13.retirement_plan`, 96.67% -> 100.0% — every other field's
+  correct/incorrect count is unchanged, confirming the fix is regression-free
+  at full scale and matches the earlier 20-document smoke check exactly.
+- This result now supersedes `phase4c_external_clean_150_name_semantics` as
+  the authoritative Tesseract clean-150 number. The incumbent configuration
+  itself is unchanged; no promotion decision was made or required. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly. The equivalent PaddleOCR GPU
+  150-document rerun and the 600-document robustness rerun remain
+  outstanding.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the
