@@ -2,6 +2,25 @@
 
 ## 2026-09-04
 
+### Harness - Pipeline A Extraction Experiment Skill
+
+- Added the first project-local skill,
+  `skills/run-pipeline-a-extraction-experiment/SKILL.md`, encoding the
+  recurring workflow for launching a Pipeline A Tesseract OCR extraction
+  experiment: translating a request (named phase, PSM, dataset/variant,
+  document limit) into a `run_pipeline_a` invocation, naming result artifacts
+  without overwriting history, choosing foreground vs. detached/backgrounded
+  execution per the long-running command policy, and the post-run checklist
+  (experiment history, project state, changelog, run-control cleanup).
+- Scoped the skill to Pipeline A only; Pipeline B has no defined execution
+  workflow yet and is explicitly out of scope.
+- Wired `AGENTS.md` with a new "Skills" section referencing the skill, and
+  corrected the "Scope Guard" section, which still described the project as
+  stopped at Phase 2 ingestion despite Phase 4D being underway, so it no
+  longer contradicts the newly wired skill.
+- No extraction, evaluator, or schema code changed; no benchmark was run as
+  part of this task.
+
 ### Docs - Project State Reconciliation
 
 - Updated `docs/project-state.md` so the current-state framing reflects Phase

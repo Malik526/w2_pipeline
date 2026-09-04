@@ -30,13 +30,26 @@ Use these deterministic project contracts as the authoritative project context:
   boundary.
 - `docs/references/irs/README.md` for official IRS reference artifact handling.
 
+## Skills
+
+Use these project-local skills when the current task matches their scope:
+
+- `skills/run-pipeline-a-extraction-experiment/SKILL.md` for running or
+  benchmarking a Pipeline A OCR extraction configuration (named phase
+  experiments, PSM configuration runs, smoke tests, or full clean/robustness
+  benchmark runs). Pipeline A only; Pipeline B has no defined execution
+  workflow yet.
+
 ## Scope Guard
 
-The project currently includes Phase 0 contracts, the Phase 1 canonical W-2
-schema contract, and the Phase 2 ingestion boundary. Do not implement OCR,
-W-2 field extraction, validation engines, evaluation runners, adapters, review
-UI, CSV export, RAG, persistence, frontend, or production integrations unless a
-later brief explicitly asks for them.
+The project has implemented Phase 0-4D: contracts, the canonical W-2 schema,
+the ingestion boundary, the evaluation harness (internal and external Symage
+benchmarks), and Pipeline A (deterministic native-text/OCR extraction,
+including configurable Tesseract PSM experiments). Current phase status lives
+in `docs/project-state.md`. Do not implement Pipeline B, model/vision
+inference, validation engines, review UI, CSV export, RAG, persistence,
+frontend, or production integrations unless a later brief explicitly asks for
+them.
 
 ## Data Handling
 
