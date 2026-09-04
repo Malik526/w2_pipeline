@@ -89,6 +89,9 @@ Run Pipeline A against an evaluation manifest with:
 python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/generated/manifest.jsonl --variant-id clean_pdf --limit 5
 ```
 
+When `--output-json` is supplied, the runner writes the JSON benchmark result
+and a matching human-readable Markdown report with the same base filename.
+
 Pipeline A uses native PDF text when Phase 2 identifies usable embedded text.
 Images and image-only PDF pages route to Tesseract OCR. If the `tesseract`
 system binary is missing, OCR documents fail with an explicit
@@ -204,13 +207,13 @@ The 600-variant external robustness benchmark reached 89.27% aggregate field
 accuracy with 0 document failures, with strong clean/compressed performance,
 moderate rotation degradation, and substantial blur degradation.
 
-Human-readable Phase 4B results are summarized in:
+The enriched human-readable clean Phase 4B report is:
 
 ```text
-docs/results/phase4b-pipeline-a-benchmark.md
+data/evaluation/results/phase4b_external_clean_150.md
 ```
 
-Machine-readable result artifacts live in:
+Machine-readable result artifacts remain canonical:
 
 ```text
 data/evaluation/results/phase4b_external_clean_150.json

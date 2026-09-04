@@ -193,22 +193,26 @@ Completed Phase 4B benchmark hardening and results:
 src/w2_pipeline/extraction/ocr.py
 src/w2_pipeline/extraction/parser_2026.py
 src/w2_pipeline/evaluation/run_pipeline_a.py
+src/w2_pipeline/evaluation/reporting.py
 tests/extraction/
+tests/evaluation/test_reporting.py
 data/evaluation/results/
-docs/results/phase4b-pipeline-a-benchmark.md
+data/evaluation/results/phase4b_external_clean_150.md
 ```
 
 The Phase 4B work changed Tesseract OCR to use full-page segmentation by
 default, added a supplemental targeted OCR pass for the top identifier region,
 added OCR word-row reconstruction, deterministic full-page geometry/zone
 fallbacks for key 2026 W-2 fields, Box 13 layout detection, and per-field
-benchmark summary output.
+benchmark summary output. The follow-up reporting layer added structured
+field-failure serialization and same-base Markdown companion reports for saved
+benchmark JSON results.
 
 Verified Phase 4B external results:
 
 - external Symage clean renders, 150 documents: `field_accuracy =
-  0.9887878787878788`, `failure_rate = 0.0`, average 2.143 seconds/document,
-  route `ocr`
+  0.9887878787878788`, `failure_rate = 0.0`, average 2.223 seconds/document,
+  route `ocr`, with 37 structured incorrect field records
 - all prepared external variants, 600 documents: `field_accuracy =
   0.8926515151515152`, `failure_rate = 0.0`, average 2.131 seconds/document,
   route `ocr`

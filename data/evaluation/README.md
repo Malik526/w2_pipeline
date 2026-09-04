@@ -146,13 +146,24 @@ Recorded Phase 4B Pipeline A result artifacts live in:
 data/evaluation/results/
 ```
 
-The concise human-readable summary is:
+Current benchmark runners preserve JSON as the canonical machine-readable
+artifact. When `--output-json` is supplied, the Pipeline A runner also writes a
+matching Markdown report using the same base filename, such as:
 
 ```text
-docs/results/phase4b-pipeline-a-benchmark.md
+data/evaluation/results/phase4b_external_clean_150.json
+data/evaluation/results/phase4b_external_clean_150.md
 ```
+
+Markdown reports summarize the same benchmark represented by their JSON file,
+including summary metrics, per-field accuracy, and a capped failure-inspection
+table when structured field failures are present. Failure inspection values are
+intended for synthetic evaluation data; future real-data reports should redact
+sensitive values.
 
 The committed external result artifacts record a completed 150-document clean
 OCR benchmark and a completed 600-document clean/compressed/rotated/blurred OCR
-robustness benchmark. The JSON files are the canonical machine-readable
-benchmark records.
+robustness benchmark. The clean 150-document JSON now includes structured
+field failures and has a matching Markdown companion. The 600-variant JSON
+remains the canonical aggregate robustness artifact and was not rerun during
+the report-enrichment pass.

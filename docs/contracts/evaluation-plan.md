@@ -254,21 +254,27 @@ python -m w2_pipeline.evaluation.run_pipeline_a <manifest.jsonl>
 ```
 
 The command reports field accuracy, document failure count/rate, average
-duration, accuracy by variant, and accuracy by route.
+duration, accuracy by variant, accuracy by route, per-field accuracy, and
+structured incorrect field results. When `--output-json` is supplied, the JSON
+file remains canonical and the runner also writes a matching Markdown report
+with the same base filename.
 
 ## Phase 4B External Pipeline A Results
 
-Phase 4B adds per-field summary output to Pipeline A benchmark results and
-records completed external OCR benchmark artifacts under:
+Phase 4B adds per-field summary output and structured field-failure inspection
+to Pipeline A benchmark results. Completed external OCR benchmark artifacts are
+recorded under:
 
 ```text
 data/evaluation/results/
 ```
 
-Human-readable results are summarized in:
+Human-readable companion reports use the same base filename as their canonical
+JSON artifact. For example:
 
 ```text
-docs/results/phase4b-pipeline-a-benchmark.md
+data/evaluation/results/phase4b_external_clean_150.json
+data/evaluation/results/phase4b_external_clean_150.md
 ```
 
 The benchmark categories are intentionally separate:
@@ -291,6 +297,12 @@ Result JSON includes:
 - `accuracy_by_variant`
 - `accuracy_by_route`
 - `per_field_accuracy`
+- `field_failures`
+
+`field_failures` records the document ID, variant ID, canonical field path,
+expected value, predicted value, route, and failure kind for fields that the
+existing evaluator marked incorrect. These values are intended for synthetic
+evaluation reports; future real-data reporting should redact sensitive values.
 
 Review rate and cost per document remain future metrics. They are not
 implemented by the current local deterministic benchmark artifacts.

@@ -25,7 +25,14 @@ from w2_pipeline.evaluation.models import (
     DocumentEvaluationStatus,
     EvaluationFailureKind,
     EvaluationIssue,
+    FieldFailure,
     FieldEvaluation,
+)
+from w2_pipeline.evaluation.reporting import (
+    markdown_report_path_for_json,
+    render_benchmark_markdown,
+    summarize_document_evaluations,
+    write_markdown_report_for_json,
 )
 from w2_pipeline.evaluation.runner import W2Extractor, evaluate_manifest
 from w2_pipeline.evaluation.synthetic import (
@@ -49,6 +56,7 @@ __all__ = [
     "ExpectedQuality",
     "ExternalAnnotationBundle",
     "ExternalGroundTruthResult",
+    "FieldFailure",
     "FieldEvaluation",
     "HF_DATASET_NAME",
     "SYNTHETIC_GENERATOR_VERSION",
@@ -63,5 +71,9 @@ __all__ = [
     "flatten_w2_document",
     "generate_synthetic_w2_documents",
     "load_manifest_jsonl",
+    "markdown_report_path_for_json",
+    "render_benchmark_markdown",
+    "summarize_document_evaluations",
+    "write_markdown_report_for_json",
     "write_manifest_jsonl",
 ]

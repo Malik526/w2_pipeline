@@ -118,7 +118,7 @@ benchmarks. The external clean-render benchmark result is:
 documents: 150
 field_accuracy: 0.9887878787878788
 failure_rate: 0.0
-average_duration_seconds: 2.1432020549401445
+average_duration_seconds: 2.2230018675666874
 route: ocr
 ```
 

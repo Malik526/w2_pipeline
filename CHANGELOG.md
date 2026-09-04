@@ -2,6 +2,22 @@
 
 ## 2026-09-04
 
+### Evaluation - Human-Readable Benchmark Reports
+
+- Added reusable benchmark reporting utilities that serialize structured
+  field failures from existing evaluator comparisons and render Markdown
+  companion reports from benchmark JSON.
+- Updated the Pipeline A benchmark CLI so `--output-json` also writes the
+  matching `.md` report by default, with `--no-markdown-report` available for
+  JSON-only runs.
+- Enriched `phase4b_external_clean_150.json` with exact synthetic
+  expected-vs-predicted field failures and generated
+  `phase4b_external_clean_150.md` from that JSON.
+- Added reporting tests for percentage formatting, single- and multi-variant
+  reports, per-field tables, field failure serialization, mismatch rendering,
+  failure truncation, zero-failure reports, and JSON-to-Markdown filename
+  pairing.
+
 ### Phase 4B - External OCR Benchmark Closure
 
 - Added a concise human-readable Phase 4B benchmark report for Pipeline A

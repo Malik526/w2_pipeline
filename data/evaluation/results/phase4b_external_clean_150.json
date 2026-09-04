@@ -15,12 +15,384 @@
       "total_fields": 3300
     }
   },
-  "average_duration_seconds": 2.1432020549401445,
+  "average_duration_seconds": 2.2230018675666874,
   "correct_fields": 3263,
+  "document_conditions": [
+    "external_clean_render"
+  ],
   "documents": 150,
   "failed_documents": 0,
   "failure_rate": 0.0,
   "field_accuracy": 0.9887878787878788,
+  "field_failure_count": 37,
+  "field_failures": [
+    {
+      "document_id": "symage_900005-irs_w2_single_page_2026-p0",
+      "expected": "David G",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "G David",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "78-9941160",
+      "failure_kind": "missing",
+      "field_path": "employer.ein",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900024-irs_w2_single_page_2026-p0",
+      "expected": "Nicole H",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Nicole i H",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "Jes\u00fas D",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Jesus D",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": "Alexis S",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Alexis Ss",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900037-irs_w2_single_page_2026-p0",
+      "expected": "Julie D",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "dalle D",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900041-irs_w2_single_page_2026-p0",
+      "expected": "Sims",
+      "failure_kind": "mismatch",
+      "field_path": "employee.last_name",
+      "predicted": "Sims i",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": "John W",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "WwW John",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900050-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "expected": "\u00d3liver P",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Oliver P",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900055-irs_w2_single_page_2026-p0",
+      "expected": "Nicole",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Nicole i",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900055-irs_w2_single_page_2026-p0",
+      "expected": "Phillips",
+      "failure_kind": "mismatch",
+      "field_path": "employee.last_name",
+      "predicted": "Phillips ill",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "Alicia",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Alicia ici",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900060-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900062-irs_w2_single_page_2026-p0",
+      "expected": "Alexis C",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "C Alexis",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900063-irs_w2_single_page_2026-p0",
+      "expected": "3.08E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_5_medicare_wages_and_tips",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900063-irs_w2_single_page_2026-p0",
+      "expected": "446.6",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_6_medicare_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900065-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900068-irs_w2_single_page_2026-p0",
+      "expected": "Troy C",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "C Troy",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900075-irs_w2_single_page_2026-p0",
+      "expected": "8.15E+4",
+      "failure_kind": "mismatch",
+      "field_path": "federal_wages_and_taxes.box_3_social_security_wages",
+      "predicted": "81",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "Daniel R",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Daniel i R",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900083-irs_w2_single_page_2026-p0",
+      "expected": "Kelly C",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Kelly",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900088-irs_w2_single_page_2026-p0",
+      "expected": "Ethan W",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Ethan WwW",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900098-irs_w2_single_page_2026-p0",
+      "expected": "Denise S",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "S Denise",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900099-irs_w2_single_page_2026-p0",
+      "expected": "Megan C",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "C Megan",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900102-irs_w2_single_page_2026-p0",
+      "expected": "Ilse C",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Ilse",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": "Ad\u00e1n W",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Adan WwW",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": "Jeffrey A",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "veffrey A",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": "73-3368011",
+      "failure_kind": "missing",
+      "field_path": "employer.ein",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900122-irs_w2_single_page_2026-p0",
+      "expected": "Michelle G",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "G Michelle",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900123-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900123-irs_w2_single_page_2026-p0",
+      "expected": "1294.85",
+      "failure_kind": "mismatch",
+      "field_path": "federal_wages_and_taxes.box_6_medicare_tax_withheld",
+      "predicted": "1204.85",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900135-irs_w2_single_page_2026-p0",
+      "expected": "William I",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "William",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900143-irs_w2_single_page_2026-p0",
+      "expected": "William A",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "William Wi A",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900147-irs_w2_single_page_2026-p0",
+      "expected": "Robert C",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Robert",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900149-irs_w2_single_page_2026-p0",
+      "expected": "William G",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "G William",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    }
+  ],
   "per_field_accuracy": {
     "box_13.retirement_plan": {
       "correct": 145,
@@ -156,5 +528,9 @@
     }
   },
   "pipeline_id": "pipeline_a",
+  "source_datasets": [
+    "Symage/synthetic-us-forms-preview"
+  ],
+  "successful_documents": 150,
   "total_fields": 3300
 }

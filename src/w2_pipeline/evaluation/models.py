@@ -43,6 +43,19 @@ class FieldEvaluation(EvaluationModel):
     failure_kind: EvaluationFailureKind | None = None
 
 
+class FieldFailure(EvaluationModel):
+    """Structured incorrect field result for benchmark inspection reports."""
+
+    document_id: str = Field(min_length=1)
+    variant_id: str = Field(min_length=1)
+    field_path: str = Field(min_length=1)
+    expected: Any = None
+    predicted: Any = None
+    route: str | None = None
+    failure_kind: EvaluationFailureKind
+    source_dataset: str | None = None
+
+
 class EvaluationIssue(EvaluationModel):
     """Machine-readable issue raised while evaluating a document or field."""
 

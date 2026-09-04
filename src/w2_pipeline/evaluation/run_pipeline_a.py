@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
 import json
 from pathlib import Path
 
 from w2_pipeline.evaluation.manifest import DatasetManifestEntry, load_manifest_jsonl
-from w2_pipeline.evaluation.models import DocumentEvaluationStatus
+from w2_pipeline.evaluation.reporting import (
+    summarize_document_evaluations,
+    write_markdown_report_for_json,
+)
 from w2_pipeline.evaluation.runner import evaluate_manifest
 from w2_pipeline.extraction.pipeline_a import PipelineAExtractor
 
@@ -25,6 +27,11 @@ def main() -> None:
         help="Optional variant ID filter, such as external_clean_render or clean_pdf.",
     )
     parser.add_argument("--output-json", type=Path, default=None, help="Optional summary JSON path.")
+    parser.add_argument(
+        "--no-markdown-report",
+        action="store_true",
+        help="Do not write the matching .md report when --output-json is used.",
+    )
     args = parser.parse_args()
 
     manifest = load_manifest_jsonl(args.manifest)
@@ -35,11 +42,17 @@ def main() -> None:
         extractor=PipelineAExtractor(),
         pipeline_id="pipeline_a",
     )
-    summary = _summarize(result.document_evaluations)
+    summary = summarize_document_evaluations(
+        result.document_evaluations,
+        pipeline_id="pipeline_a",
+        entries=entries,
+    )
     print(json.dumps(summary, indent=2, sort_keys=True))
     if args.output_json is not None:
         args.output_json.parent.mkdir(parents=True, exist_ok=True)
         args.output_json.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+        if not args.no_markdown_report:
+            write_markdown_report_for_json(args.output_json)
 
 
 def _filter_entries(
@@ -52,78 +65,6 @@ def _filter_entries(
     if limit is not None:
         return filtered[:limit]
     return filtered
-
-
-def _summarize(evaluations):
-    total = len(evaluations)
-    failed = sum(evaluation.status != DocumentEvaluationStatus.SUCCESS for evaluation in evaluations)
-    total_fields = sum(evaluation.total_fields for evaluation in evaluations)
-    correct_fields = sum(evaluation.correct_fields for evaluation in evaluations)
-    durations = [
-        evaluation.duration_seconds
-        for evaluation in evaluations
-        if evaluation.duration_seconds is not None
-    ]
-    by_variant = defaultdict(lambda: {"documents": 0, "correct_fields": 0, "total_fields": 0})
-    by_route = defaultdict(lambda: {"documents": 0, "correct_fields": 0, "total_fields": 0})
-    by_field = defaultdict(lambda: {"correct": 0, "total": 0})
-
-    for evaluation in evaluations:
-        variant_bucket = by_variant[evaluation.variant_id]
-        variant_bucket["documents"] += 1
-        variant_bucket["correct_fields"] += evaluation.correct_fields
-        variant_bucket["total_fields"] += evaluation.total_fields
-        route_bucket = by_route[evaluation.extraction_route or "failed_or_unknown"]
-        route_bucket["documents"] += 1
-        route_bucket["correct_fields"] += evaluation.correct_fields
-        route_bucket["total_fields"] += evaluation.total_fields
-        for field_evaluation in evaluation.field_evaluations:
-            field_bucket = by_field[field_evaluation.field_path]
-            field_bucket["total"] += 1
-            if field_evaluation.correct:
-                field_bucket["correct"] += 1
-
-    return {
-        "pipeline_id": "pipeline_a",
-        "documents": total,
-        "failed_documents": failed,
-        "failure_rate": failed / total if total else 0.0,
-        "field_accuracy": correct_fields / total_fields if total_fields else 0.0,
-        "correct_fields": correct_fields,
-        "total_fields": total_fields,
-        "average_duration_seconds": sum(durations) / len(durations) if durations else 0.0,
-        "accuracy_by_variant": _accuracy_buckets(by_variant),
-        "accuracy_by_route": _accuracy_buckets(by_route),
-        "per_field_accuracy": _field_accuracy_buckets(by_field),
-    }
-
-
-def _accuracy_buckets(buckets):
-    return {
-        key: {
-            **value,
-            "field_accuracy": (
-                value["correct_fields"] / value["total_fields"]
-                if value["total_fields"]
-                else 0.0
-            ),
-        }
-        for key, value in sorted(buckets.items())
-    }
-
-
-def _field_accuracy_buckets(buckets):
-    return {
-        key: {
-            **value,
-            "incorrect": value["total"] - value["correct"],
-            "field_accuracy": value["correct"] / value["total"] if value["total"] else 0.0,
-        }
-        for key, value in sorted(
-            buckets.items(),
-            key=lambda item: (item[1]["correct"] / item[1]["total"] if item[1]["total"] else 0.0, item[0]),
-        )
-    }
 
 
 if __name__ == "__main__":
