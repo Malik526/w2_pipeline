@@ -442,3 +442,158 @@ def test_parser_recovers_targeted_field_from_supplemental_observation_when_prima
 
     assert warnings == []
     assert document.federal_wages_and_taxes.box_3_social_security_wages == Decimal("122000.00")
+
+
+def _rotated_style_observations(*name_and_label_observations: TextObservation) -> ObservationSet:
+    """Full-page-style OCR fixture (established >1000x1000 extent) with the
+    given employee-name-zone observations, matching the coordinate
+    convention already used for the employee-name fallback tests above."""
+
+    return ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *name_and_label_observations,
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 2400, 1535, 80),
+        ],
+    )
+
+
+def test_parser_leaves_clean_employee_name_unchanged() -> None:
+    """Box e label-word filtering must not affect a normal, uncorrupted
+    name-zone reading (no label text present)."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Steven", 168, 811, 100, 24),
+        ocr_obs("D", 282, 811, 20, 24),
+        ocr_obs("Armstrong", 733, 806, 151, 40),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="clean-name",
+        source_filename="clean.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "D"
+    assert document.employee.last_name == "Armstrong"
+
+
+def test_parser_strips_paddle_style_merged_box_e_label_with_middle_initial() -> None:
+    """PaddleOCR's line-level recognition: the name+initial arrive as one
+    merged observation, and the printed Box e label arrives as a second,
+    separate merged observation landing in the same rotated zone."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Steven D", 189, 815, 145, 24),
+        ocr_obs("e Employee's first name and initial", 197, 800, 460, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="paddle-rotated-with-initial",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "D"
+
+
+def test_parser_strips_paddle_style_merged_box_e_label_first_name_only() -> None:
+    """Same as above but with no middle initial in the name value."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Lori", 186, 815, 71, 24),
+        ocr_obs("e Employee's first name and initial", 197, 800, 460, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="paddle-rotated-no-initial",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Lori"
+    assert document.employee.middle_initial is None
+
+
+def test_parser_strips_box_e_label_with_accented_name() -> None:
+    """Accented characters in the name must survive the label-word filter
+    (only exact, ASCII-normalized label vocabulary is stripped)."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Jesús D", 189, 815, 145, 24),
+        ocr_obs("e Employee's first name and initial", 197, 800, 460, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="paddle-rotated-accented",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Jesús"
+    assert document.employee.middle_initial == "D"
+
+
+def test_parser_strips_tesseract_style_fragmented_box_e_label_tokens() -> None:
+    """Tesseract's word-level recognition: the name, initial, and each word
+    of the printed label arrive as separate observations, interleaved by
+    x-position within the zone rather than appearing as a clean run —
+    matching the real observed corruption shape ("Steven Employee's D
+    first name and")."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Steven", 168, 822, 100, 24),
+        ocr_obs("Employee’s", 280, 822, 130, 24),  # curly apostrophe, as Tesseract emits it
+        ocr_obs("D", 420, 822, 20, 24),
+        ocr_obs("first", 460, 822, 60, 24),
+        ocr_obs("name", 530, 822, 65, 24),
+        ocr_obs("and", 605, 822, 45, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="tesseract-rotated-fragmented",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "D"
+
+
+def test_parser_box_e_label_filter_does_not_regress_last_name_or_suffix() -> None:
+    """The label-word filter is scoped to the shared name-zone cleaning
+    helper; confirm last name and suffix zones still parse normally
+    alongside a rotated-style label-bleed on the first-name zone."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Steven D", 189, 815, 145, 24),
+        ocr_obs("e Employee's first name and initial", 197, 800, 460, 24),
+        ocr_obs("Armstrong", 733, 806, 151, 40),
+        ocr_obs("Jr", 1280, 808, 40, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="rotated-full-name",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "D"
+    assert document.employee.last_name == "Armstrong"
+    assert document.employee.suffix == "Jr"

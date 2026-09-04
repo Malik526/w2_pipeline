@@ -435,6 +435,55 @@
   one. Updated `docs/experiments/pipeline-a-extraction-history.md` and
   `docs/project-state.md` accordingly.
 
+### Phase 4E - Rotated Employee-Name Label-Bleed Fix (Implemented and Verified)
+
+- Implemented the investigation's recommended fix in
+  `src/w2_pipeline/extraction/parser_2026.py`: `_clean_layout_token`
+  (shared by the employee first-name/middle-initial, last-name, and
+  suffix OCR fallback zones) now filters Box e's known, static printed
+  label vocabulary (`_BOX_E_LABEL_WORDS`) at the **word level** — matching
+  words are stripped out of a multi-word observation and the survivors
+  rejoined, rather than only exact-matching a token's whole string as
+  before. Apostrophe variants (straight `'` vs. Tesseract's curly `’`)
+  are normalized before comparison.
+- Works identically whether the label arrives as one merged observation
+  (PaddleOCR's line-level recognition, e.g. `"e Employee's first name and
+  initial"`) or as several separate word tokens interleaved with the name
+  by x-position (Tesseract's word-level recognition, e.g. `"Steven"`,
+  `"Employee's"`, `"D"`, `"first"`, `"name"`, `"and"` as six distinct
+  observations). No OCR-backend branching was added anywhere. No OCR
+  settings, checkbox vision, ground truth, evaluator, or ratio-zone
+  constant were changed — the smallest fix the investigation recommended.
+- Added 6 focused tests to `tests/extraction/test_parser_2026.py`: a
+  clean name unaffected by the filter; a PaddleOCR-style merged label
+  with a middle initial (`"Steven D"` + `"e Employee's first name and
+  initial"` -> `first_name="Steven"`, `middle_initial="D"`); the same
+  without a middle initial (`"Lori"` -> `first_name="Lori"`); an accented
+  name surviving the filter untouched (`"Jesús"`); a Tesseract-style
+  fragmented/interleaved label recovering `"Steven"`/`"D"` correctly; and
+  a regression check confirming last name and suffix zones are
+  unaffected. Full suite: 149 tests passing (143 before this task, zero
+  regressions).
+- Real-pipeline smoke (not a benchmark): ran `PipelineAExtractor` directly
+  against the actual rotated source images for 3 representative
+  documents × 2 backends (`symage_900000` no-initial, `symage_900001`
+  with-initial, `symage_900026` accented-with-initial). 5/6 exact
+  matches. The one non-match (Tesseract on `symage_900026`, predicting
+  `"Jesus"` instead of `"Jesús"`) is confirmed **not** a regression:
+  Tesseract already misread the same accent on that document's clean
+  render (a separate, pre-existing limitation); the middle initial was
+  still correctly recovered on that document, confirming the label-bleed
+  component is fully resolved.
+- Per this task's explicit scope: no 150-document or 600-document
+  benchmark was run, no PSM 11 experiments were touched, and no Pipeline
+  B work was done. The historical 150/600-document benchmark artifacts
+  for both backends now predate this fix for `employee.first_name`/
+  `employee.middle_initial` — rerunning them to obtain corrected
+  authoritative numbers is the natural next mechanical step. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Current Phase, Immediate Next
+  Experiment, Current Known Weaknesses, Completed Phase History).
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

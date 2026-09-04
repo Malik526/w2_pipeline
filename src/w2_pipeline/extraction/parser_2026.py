@@ -457,15 +457,47 @@ def _looks_like_tiny_artifact(observation: TextObservation, *, max_height: float
     return len(text) <= 3 and height < 0.4 * max_height and width < 0.4 * max_height
 
 
+# Box e's static printed label ("e Employee's first name and initial"),
+# lowercased with apostrophes normalized. Under rotation this label's
+# normalized zone position can drift into the employee-name OCR fallback
+# zone alongside the actual name (see
+# docs/experiments/phase4e-paddle-rotation-name-investigation.md); this
+# denylist strips it back out regardless of whether an OCR backend
+# recognizes it as one merged observation (PaddleOCR's line-level
+# recognition) or as separate word tokens interleaved with the name
+# (Tesseract's word-level recognition). Includes the "e" box-letter marker
+# itself, since it can appear either as its own observation (already
+# caught by _SINGLE_CHAR_JUNK below) or as one word inside a longer
+# merged label string.
+_SINGLE_CHAR_JUNK = {"-", "—", "–", "°", "¢", ";", "=", "Cc", "c", "e", "f"}
+_BOX_E_LABEL_WORDS = {"e", "employee's", "employees", "first", "name", "and", "initial"}
+_APOSTROPHE_RE = re.compile(r"[‘’ʼ`]")
+
+
+def _is_box_e_label_word(word: str) -> bool:
+    normalized = _APOSTROPHE_RE.sub("'", word).strip(".,:;").lower()
+    return normalized in _BOX_E_LABEL_WORDS
+
+
 def _clean_layout_token(text: str) -> str | None:
     cleaned = text.strip().strip("|[]_~`\"'“”")
     if not cleaned:
         return None
-    if cleaned in {"-", "—", "–", "°", "¢", ";", "=", "Cc", "c", "e", "f"}:
+    if cleaned in _SINGLE_CHAR_JUNK:
         return None
     if cleaned.isdigit():
         return None
-    return cleaned
+    words = cleaned.split()
+    if len(words) == 1:
+        if _is_box_e_label_word(cleaned):
+            return None
+        return cleaned
+    survivors = [
+        word for word in words if word not in _SINGLE_CHAR_JUNK and not _is_box_e_label_word(word)
+    ]
+    if not survivors:
+        return None
+    return " ".join(survivors)
 
 
 def _first_regex_text_in_zone(

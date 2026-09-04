@@ -1518,3 +1518,83 @@ uniformly to one fixed template, not a general property of "any rotated
 document." No 150-document or 600-document run, no PaddleOCR settings
 change, no parser/adapter/checkbox-vision/ground-truth change, and no fix
 implementation were made, per this investigation's explicit scope.
+
+## Phase 4E Rotated Employee-Name Label-Bleed Fix (Implemented and Verified)
+
+Implemented the investigation's recommended fix: a targeted, backend-
+neutral filter for Box e's known, static printed label text
+("Employee's first name and initial"), added to `parser_2026.py`'s
+existing `_clean_layout_token` helper (shared by the employee first-name/
+middle-initial, last-name, and suffix OCR fallback zones). Two new module
+constants — `_BOX_E_LABEL_WORDS` (the label's constituent words,
+apostrophe-normalized and lowercased for comparison) and the existing
+`_SINGLE_CHAR_JUNK` set (already covered the bare `"e"` box-letter
+marker) — are now applied at the **word level** within `_clean_layout_token`,
+not just to a token's whole string: any observation is stripped of
+individual words matching either denylist before the survivors are
+rejoined, so the filter works identically whether the label arrives as
+one merged observation (PaddleOCR's line-level recognition, e.g. `"e
+Employee's first name and initial"`) or as several separate word tokens
+interleaved with the name by x-position (Tesseract's word-level
+recognition, e.g. `"Steven"`, `"Employee's"`, `"D"`, `"first"`, `"name"`,
+`"and"` as six distinct observations). No branching on OCR backend was
+added anywhere; the fix lives entirely in the shared parser path both
+backends already flow through.
+
+No OCR settings, checkbox vision, ground truth, or evaluator were
+touched, and no ratio-zone constant was recalibrated — exactly the
+"smallest fix" the investigation recommended, in preference to the
+larger, rejected alternative (renormalizing every zone constant against
+true image dimensions).
+
+**Tests**: 6 new focused tests in `test_parser_2026.py` covering exactly
+the scenarios specified: a clean, uncorrupted name unaffected by the new
+filter; a PaddleOCR-style merged label with a middle initial (`"Steven D"`
++ `"e Employee's first name and initial"` -> `first_name="Steven"`,
+`middle_initial="D"`); the same without a middle initial (`"Lori"` ->
+`first_name="Lori"`); an accented name surviving the filter untouched
+(`"Jesús D"` -> `first_name="Jesús"`, unaffected by ASCII-only label-word
+matching); a Tesseract-style fragmented/interleaved label (six separate
+observations, matching the real observed corruption order) recovering
+`"Steven"`/`"D"` correctly; and a regression check confirming last name
+and suffix zones are unaffected by the label-word filter. Full suite: 149
+tests passing (143 before this task, zero regressions, 6 new).
+
+**Real-pipeline smoke** (not a benchmark; 3 representative rotated
+documents × 2 backends, run directly through `PipelineAExtractor` against
+the actual rotated source images, not synthetic fixtures):
+
+| Document | Backend | `first_name` | `middle_initial` | Result |
+| --- | --- | --- | --- | --- |
+| `symage_900000` (no initial) | Tesseract | `Lori` | `None` | matches expected |
+| `symage_900000` | PaddleOCR GPU | `Lori` | `None` | matches expected |
+| `symage_900001` (initial `D`) | Tesseract | `Steven` | `D` | matches expected |
+| `symage_900001` | PaddleOCR GPU | `Steven` | `D` | matches expected |
+| `symage_900026` (accented, initial `D`) | Tesseract | `Jesus` | `D` | initial recovered; accent still dropped — see below |
+| `symage_900026` | PaddleOCR GPU | `Jesús` | `D` | matches expected |
+
+5 of 6 are exact matches. The one non-match (Tesseract, `symage_900026`)
+is **not a regression and not part of this fix's scope**: Tesseract
+already misread `"Jesús"` as `"Jesus"` (accent dropped) on the *clean*
+render of the same document, per the existing 600-document robustness
+result (`phase4e_tesseract_checkbox_vision_external_all_variants_600.json`,
+`external_clean_render` failure for this `document_id`) — a pre-existing,
+unrelated Tesseract accent-recognition limitation. Before this fix,
+Tesseract's rotated prediction for this document was `"Jesus Employee’s D
+first name and"` (both the accent drop *and* the label-bleed corruption,
+with the middle initial lost); after the fix it is exactly `"Jesus"` with
+`middle_initial="D"` correctly recovered — the label-bleed component is
+fully resolved, and only the separate, pre-existing accent limitation
+remains, exactly as expected.
+
+**Conclusion**: the fix resolves the rotated `employee.first_name`/
+`middle_initial` label-bleed corruption on both backends, verified
+directly against real rotated source images (not just synthetic unit
+fixtures), with zero regressions in the full test suite. Per this task's
+explicit scope, no 150-document or 600-document benchmark was run to
+requantify the aggregate effect, no PSM 11 experiments were touched, and
+Pipeline B was not started. The existing historical 150/600-document
+benchmark artifacts (both backends) now predate this fix for the
+`employee.first_name`/`middle_initial` fields specifically — rerunning
+those benchmarks to obtain corrected authoritative numbers is the natural
+next mechanical step, not performed as part of this implementation task.
