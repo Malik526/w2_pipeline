@@ -465,12 +465,16 @@ def _looks_like_tiny_artifact(observation: TextObservation, *, max_height: float
 # denylist strips it back out regardless of whether an OCR backend
 # recognizes it as one merged observation (PaddleOCR's line-level
 # recognition) or as separate word tokens interleaved with the name
-# (Tesseract's word-level recognition). Includes the "e" box-letter marker
-# itself, since it can appear either as its own observation (already
-# caught by _SINGLE_CHAR_JUNK below) or as one word inside a longer
-# merged label string.
+# (Tesseract's word-level recognition). Deliberately excludes the "e"
+# box-letter marker itself: that case is already handled by the
+# case-SENSITIVE _SINGLE_CHAR_JUNK check below (both for a standalone "e"
+# observation and, via the per-word membership check in the multi-word
+# branch, for "e" as one word inside a longer merged label string).
+# Matching "e" here too via case-INSENSITIVE comparison previously caused
+# a real bug: a legitimate capital "E" middle initial was normalized to
+# lowercase and incorrectly discarded as if it were the marker.
 _SINGLE_CHAR_JUNK = {"-", "—", "–", "°", "¢", ";", "=", "Cc", "c", "e", "f"}
-_BOX_E_LABEL_WORDS = {"e", "employee's", "employees", "first", "name", "and", "initial"}
+_BOX_E_LABEL_WORDS = {"employee's", "employees", "first", "name", "and", "initial"}
 _APOSTROPHE_RE = re.compile(r"[‘’ʼ`]")
 
 

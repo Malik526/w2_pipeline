@@ -9,7 +9,11 @@ from w2_pipeline.extraction.models import (
     ObservationSource,
     TextObservation,
 )
-from w2_pipeline.extraction.parser_2026 import parse_money, parse_w2_2026_observations
+from w2_pipeline.extraction.parser_2026 import (
+    _clean_layout_token,
+    parse_money,
+    parse_w2_2026_observations,
+)
 from w2_pipeline.ingestion.models import SourceDocumentType
 
 
@@ -597,3 +601,110 @@ def test_parser_box_e_label_filter_does_not_regress_last_name_or_suffix() -> Non
     assert document.employee.middle_initial == "D"
     assert document.employee.last_name == "Armstrong"
     assert document.employee.suffix == "Jr"
+
+
+def test_clean_layout_token_preserves_capital_e_middle_initial() -> None:
+    """Regression test for the capital-E bug: _is_box_e_label_word must not
+    lowercase-match a legitimate "E" middle initial against the "e"
+    box-letter marker."""
+
+    assert _clean_layout_token("E") == "E"
+
+
+def test_clean_layout_token_still_filters_lowercase_e_marker() -> None:
+    """The lowercase Box e marker itself must remain filtered, standalone
+    and as one word inside a longer merged label string."""
+
+    assert _clean_layout_token("e") is None
+    assert (
+        _clean_layout_token("e Employee's first name and initial") is None
+    )
+
+
+def test_parser_recovers_capital_e_middle_initial_from_paddle_style_merged_label() -> None:
+    """End-to-end: a rotated-style Paddle merge with a capital E initial
+    must recover both first_name and middle_initial correctly."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Steven E", 189, 815, 145, 24),
+        ocr_obs("e Employee's first name and initial", 197, 800, 460, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="paddle-rotated-capital-e-initial",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "E"
+
+
+@pytest.mark.parametrize("initial", ["D", "J", "K", "W", "M"])
+def test_parser_still_recovers_other_middle_initials_after_capital_e_fix(initial: str) -> None:
+    """Non-regression check: every other middle initial must still work
+    exactly as before the capital-E fix."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs(f"Steven {initial}", 189, 815, 145, 24),
+        ocr_obs("e Employee's first name and initial", 197, 800, 460, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id=f"paddle-rotated-initial-{initial}",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == initial
+
+
+def test_parser_paddle_merged_label_case_still_works_after_capital_e_fix() -> None:
+    """Non-regression check for the original PaddleOCR-style merged label
+    case (no middle initial) after the capital-E fix."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Lori", 186, 815, 71, 24),
+        ocr_obs("e Employee's first name and initial", 197, 800, 460, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="paddle-rotated-no-initial-after-e-fix",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Lori"
+    assert document.employee.middle_initial is None
+
+
+def test_parser_tesseract_fragmented_label_case_still_works_after_capital_e_fix() -> None:
+    """Non-regression check for the Tesseract-style fragmented/interleaved
+    label case after the capital-E fix."""
+
+    observation_set = _rotated_style_observations(
+        ocr_obs("Steven", 168, 822, 100, 24),
+        ocr_obs("Employee’s", 280, 822, 130, 24),
+        ocr_obs("D", 420, 822, 20, 24),
+        ocr_obs("first", 460, 822, 60, 24),
+        ocr_obs("name", 530, 822, 65, 24),
+        ocr_obs("and", 605, 822, 45, 24),
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="tesseract-rotated-fragmented-after-e-fix",
+        source_filename="rotated.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "D"

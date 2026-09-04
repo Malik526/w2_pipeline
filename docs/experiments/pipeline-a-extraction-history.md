@@ -1695,3 +1695,64 @@ result, not for clean/compressed/blurred, which were not rerun in this
 task). No clean/compressed/blurred variant, no full 600-document
 benchmark, no Tesseract, no PSM 11, and no Pipeline B work were performed,
 per this task's explicit scope.
+
+## Phase 4E Box e Filter Capital-E Regression Fix (Implemented and Verified)
+
+Fixed the capital-`"E"` middle-initial regression found by the preceding
+`rotated_png` rerun. Root cause was exactly as diagnosed: `_is_box_e_label_word`
+lowercased its input before checking membership in `_BOX_E_LABEL_WORDS`,
+which included lowercase `"e"` (the Box e box-letter marker) — so a
+legitimate capital `"E"` middle initial normalized to `"e"` and was
+incorrectly discarded as if it were the marker.
+
+**Fix**: removed the redundant `"e"` entry from `_BOX_E_LABEL_WORDS`
+(`parser_2026.py`). The lowercase marker case remains correctly handled
+by the pre-existing, case-*sensitive* `_SINGLE_CHAR_JUNK` check — both
+for a standalone `"e"` observation (caught before the word-split ever
+runs) and for `"e"` as one word inside a longer merged label string (the
+multi-word branch already excludes words present in `_SINGLE_CHAR_JUNK`,
+which is exact-match/case-sensitive and therefore never matches a capital
+`"E"`). No other line changed; no OCR-backend branching, no OCR-settings
+change, no zone recalibration, and no checkbox-vision change were made.
+
+Directly verified via `_clean_layout_token`:
+
+```text
+_clean_layout_token("E")  -> "E"    (capital initial preserved)
+_clean_layout_token("e")  -> None   (lowercase marker still filtered)
+_clean_layout_token("e Employee's first name and initial") -> None
+_clean_layout_token("Lori e Employee's first name and initial") -> "Lori"
+_clean_layout_token("Steven E e Employee's first name and initial") -> "Steven E"
+```
+
+**Tests**: 10 new focused tests in `test_parser_2026.py` — direct
+`_clean_layout_token` checks for `"E"` preservation and continued `"e"`
+filtering (both standalone and merged-label); an end-to-end PaddleOCR-
+style merged-label case with a capital-E initial recovering
+`first_name="Steven"`/`middle_initial="E"`; a parametrized non-regression
+check across `"D"`/`"J"`/`"K"`/`"W"`/`"M"` initials confirming every other
+letter still works; and two more non-regression checks reconfirming the
+original no-initial Paddle-merged case and the Tesseract-fragmented case
+from the prior fix task both still pass. Full suite: **159 tests passing
+(149 before this task, zero regressions, 10 new)**.
+
+**Real-pipeline verification** (not a benchmark; direct extraction calls
+against actual rotated source images): `symage_900023` (ground-truth
+`first_name="James"`, `middle_initial="E"` — the exact bug case) via
+PaddleOCR GPU now correctly extracts `first_name="James"`,
+`middle_initial="E"`. `symage_900001` (`"Steven"`/`"D"`, a non-`"E"`
+document) still correctly extracts `first_name="Steven"`,
+`middle_initial="D"`, confirming no regression from this change.
+
+**Conclusion**: the capital-`"E"` regression identified by the prior
+`rotated_png` rerun is fixed and verified, both at the unit level and
+against a real rotated source image. Per this task's explicit scope, no
+150-document or 600-document benchmark was run to requantify the
+`rotated_png` numbers with this fix layered on top of the earlier label-
+bleed fix — that combined effect (both fixes in place) has not yet been
+measured at scale; the prior `rotated_png` rerun's `employee.middle_initial`
+figure (144/150, 96.0%) is now understood to undercount the achievable
+result by exactly the 6 documents this fix addresses, so a corrected
+number (expected 150/150 for `employee.middle_initial` on this variant,
+pending confirmation) is the natural next mechanical step. No Tesseract
+benchmark, no PSM 11 work, and no Pipeline B work were performed.

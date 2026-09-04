@@ -522,6 +522,48 @@
   `docs/project-state.md` accordingly (Current Phase, Immediate Next
   Experiment, Current Known Weaknesses, Completed Phase History).
 
+### Phase 4E - Box e Filter Capital-E Regression Fix (Implemented and Verified)
+
+- Fixed the capital-`"E"` middle-initial regression found by the
+  preceding `rotated_png` rerun: `src/w2_pipeline/extraction/parser_2026.py`
+  no longer includes `"e"` in `_BOX_E_LABEL_WORDS`, so
+  `_is_box_e_label_word` no longer lowercase-matches a legitimate capital
+  `"E"` middle initial against the box-letter marker. The marker case
+  remains correctly handled by the pre-existing, case-sensitive
+  `_SINGLE_CHAR_JUNK` check alone. No other line changed; no OCR-backend
+  branching, no OCR-settings change, no zone recalibration, no
+  checkbox-vision change.
+- Verified directly: `_clean_layout_token("E") -> "E"`,
+  `_clean_layout_token("e") -> None`,
+  `_clean_layout_token("e Employee's first name and initial") -> None`,
+  `_clean_layout_token("Lori e Employee's first name and initial") ->
+  "Lori"`, `_clean_layout_token("Steven E e Employee's first name and
+  initial") -> "Steven E"`.
+- Added 10 focused tests to `tests/extraction/test_parser_2026.py`:
+  direct `_clean_layout_token` checks for `"E"` preservation and
+  continued `"e"` filtering (standalone and merged-label); an end-to-end
+  PaddleOCR-style merged-label case with a capital-E initial recovering
+  `first_name="Steven"`/`middle_initial="E"`; a parametrized non-
+  regression check across `"D"`/`"J"`/`"K"`/`"W"`/`"M"` initials; and two
+  more non-regression checks reconfirming the original no-initial and
+  Tesseract-fragmented cases from the prior fix task. Full suite: 159
+  tests passing (149 before this task, zero regressions).
+- Real-pipeline verification (not a benchmark): `symage_900023` (ground
+  truth `first_name="James"`, `middle_initial="E"` — the exact bug case)
+  via PaddleOCR GPU against the actual rotated source image now correctly
+  extracts both fields; `symage_900001` (`"Steven"`/`"D"`) confirmed
+  unaffected.
+- Per this task's explicit scope: no 150-document or 600-document
+  benchmark was run to requantify the `rotated_png` numbers with both Box
+  e fixes in place — the prior rerun's `employee.middle_initial` figure
+  (144/150, 96.0%) now undercounts by exactly the 6 documents this fix
+  addresses; a rerun to confirm the corrected number is the natural next
+  mechanical step. No Tesseract benchmark, no PSM 11 work, and no
+  Pipeline B work were performed. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Current Phase, Immediate Next
+  Experiment, Current Known Weaknesses, Completed Phase History).
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the
