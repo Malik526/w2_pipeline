@@ -242,3 +242,69 @@ Conclusion: PSM 11 is not a replacement for the incumbent main PSM 3
 configuration. Its field-specific improvements may be useful diagnostic
 evidence, but the complete Box 1/2 regression is too severe for default
 Pipeline A configuration.
+
+## Phase 4D.2 Tesseract PSM 12 Clean Benchmark
+
+Phase 4D.2 ran Pipeline A with main Tesseract PSM 12 and the same targeted
+supplemental PSM 6 SSN recovery used by the incumbent PSM 3 configuration and
+the PSM 11 experiment. The dataset, corrected Symage ground truth, parser,
+evaluator, schema, and external clean-render variant were held constant.
+
+```text
+date: 2026-09-04
+scope: external Symage clean renders, 150 documents
+artifact: data/evaluation/results/phase4d_psm12_external_clean_150.json
+markdown: data/evaluation/results/phase4d_psm12_external_clean_150.md
+pipeline_commit: 0fa75373600a684f4d01420db02fa065c4a80415
+main_psm: 12
+supplemental_psm: 6
+documents: 150
+successful_documents: 150
+failed_documents: 0
+field_accuracy: 0.504927536231884
+correct_fields: 1742
+total_fields: 3450
+field_failure_count: 1708
+average_duration_seconds: 2.3475697785066707
+```
+
+Key field results:
+
+```text
+employee.first_name: 0 / 150 correct, 0.0 accuracy
+employee.last_name: 0 / 150 correct, 0.0 accuracy
+employee.ssn: 0 / 150 correct, 0.0 accuracy
+employer.ein: 0 / 150 correct, 0.0 accuracy
+employee.middle_initial: 32 / 150 correct, 0.21333333333333335 accuracy
+box_13.retirement_plan: 60 / 150 correct, 0.4 accuracy
+federal_wages_and_taxes.box_1_wages_tips_other_compensation: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_2_federal_income_tax_withheld: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_3_social_security_wages: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_4_social_security_tax_withheld: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_5_medicare_wages_and_tips: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_6_medicare_tax_withheld: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_7_social_security_tips: 150 / 150 correct, 1.0 accuracy
+federal_wages_and_taxes.box_8_allocated_tips: 150 / 150 correct, 1.0 accuracy
+```
+
+Compared with both the Phase 4C incumbent (99.13%) and the Phase 4D.1 PSM 11
+experiment (91.04%), PSM 12 is a severe, broad regression rather than a
+targeted one. Unlike PSM 11, which isolated its failure to federal Boxes 1
+and 2 while improving several identity fields, PSM 12 zeroed employee first
+name, employee last name, employee SSN, employer EIN, and all six of federal
+Boxes 1 through 6, while employee middle initial (21.3%) and Box 13
+retirement-plan detection (40.0%) also degraded well below both the incumbent
+and PSM 11. Only Box 7, Box 8, Box 13's other two flags, and non-financial
+metadata fields remained fully correct. Overall field accuracy fell to
+`0.504927536231884`, roughly half of the incumbent, with `1,708` field
+failures versus `30` for the incumbent and `309` for PSM 11.
+
+Conclusion: PSM 12 is not a viable Pipeline A configuration, clean-render or
+otherwise. It regresses essentially every scored field group instead of
+trading targeted weaknesses for targeted gains the way PSM 11 did, and it does
+not surface a narrower diagnostic signal worth pursuing further. The incumbent
+main PSM 3 + supplemental PSM 6 configuration remains the best-performing
+Pipeline A configuration evaluated to date. Phase 4D's controlled PSM
+comparison is complete; the next planned Pipeline A experiment is Phase 4E,
+evaluating PaddleOCR as an alternate OCR backend behind the same observation
+boundary, parser, canonical schema, and evaluator.

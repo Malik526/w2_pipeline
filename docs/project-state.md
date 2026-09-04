@@ -4,11 +4,11 @@ Last updated: 2026-09-04
 
 ## Current Phase
 
-Phase 4D is active: controlled Tesseract main page-segmentation-mode
-experiments within Pipeline A. Phase 4D does not introduce a new pipeline and
-does not change canonical schema, ground truth semantics, parser logic,
-evaluator matching, or annotation isolation; only the main Tesseract PSM is the
-experimental variable.
+Phase 4D is complete: both controlled Tesseract main page-segmentation-mode
+experiments within Pipeline A have been run and documented. Phase 4D did not
+introduce a new pipeline and did not change canonical schema, ground truth
+semantics, parser logic, evaluator matching, or annotation isolation; only the
+main Tesseract PSM was the experimental variable.
 
 Most recently completed:
 
@@ -22,10 +22,17 @@ Most recently completed:
   clean-render set and documented the result. PSM 11 was **not** promoted to
   the incumbent configuration: it improved several weak fields but caused a
   complete regression on federal Boxes 1 and 2.
+- Phase 4D.2 evaluated main Tesseract PSM 12 (same supplemental PSM 6 pass)
+  against the same 150-document external clean-render set. PSM 12 was **not**
+  promoted to the incumbent configuration either: it was a severe, broad
+  regression, zeroing employee first/last name, employee SSN, employer EIN,
+  and all of federal Boxes 1-6 (overall field accuracy 50.49%, worse than
+  PSM 11's 91.04%).
 
-The current Pipeline A incumbent configuration is unchanged from Phase 4B:
-main Tesseract **PSM 3** plus the targeted supplemental **PSM 6** SSN-recovery
-pass.
+The current Pipeline A incumbent configuration remains unchanged from
+Phase 4B: main Tesseract **PSM 3** plus the targeted supplemental **PSM 6**
+SSN-recovery pass. Both Phase 4D PSM experiments confirmed it as the
+strongest configuration evaluated to date.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -110,7 +117,12 @@ docs/experiments/pipeline-a-extraction-history.md
   federal Box 1 and Box 2 extraction on all 150 clean-render documents despite
   improving employee first name, employee middle initial, employer EIN, Box 13
   retirement-plan detection, and federal Boxes 3/5/6.
-- PSM 12 has not yet been evaluated.
+- PSM 12 was evaluated in Phase 4D.2 and rejected as a default: it produced a
+  broad regression (50.49% field accuracy) that zeroed employee first name,
+  employee last name, employee SSN, employer EIN, and all of federal Boxes
+  1-6, worse overall than PSM 11.
+- Both Phase 4D main-PSM experiments are complete; no further PSM values are
+  currently planned for evaluation.
 
 ## Encoded Assumptions
 
@@ -138,8 +150,9 @@ docs/experiments/pipeline-a-extraction-history.md
 - Pipeline A's main full-page Tesseract PSM is configurable for controlled
   experiments. The default remains PSM 3, with PSM 11 and PSM 12 supported as
   Phase 4D experiment modes while targeted supplemental PSM 6 SSN recovery
-  remains enabled. Phase 4D.1 confirmed PSM 3 should remain the incumbent
-  after PSM 11 caused a complete Box 1/Box 2 regression.
+  remains enabled. Phase 4D.1 and Phase 4D.2 both confirmed PSM 3 should
+  remain the incumbent: PSM 11 caused a complete Box 1/Box 2 regression, and
+  PSM 12 caused a broader regression across identity fields and Boxes 1-6.
 - Tesseract is a system runtime dependency; when absent, OCR documents fail
   explicitly and benchmark failure isolation records the failure.
 - In the completed Phase 4B benchmark environment, Tesseract was present and
@@ -161,29 +174,30 @@ docs/experiments/pipeline-a-extraction-history.md
 ## Immediate Next Experiment
 
 ```text
-Phase 4D.2 - main Tesseract PSM 12 + targeted supplemental PSM 6
+Phase 4E - PaddleOCR alternate OCR backend within Pipeline A
 ```
 
-Run against the same 150-document external Symage clean-render set, holding
-dataset, ground truth, parser, evaluator, schema, and supplemental PSM 6
-behavior constant. This experiment has not been started; no PSM 12 result
-artifacts exist yet.
+Phase 4D's Tesseract main-PSM comparison is finished (PSM 3 incumbent
+confirmed against both PSM 11 and PSM 12). The next planned experiment is
+Phase 4E: evaluating PaddleOCR as an alternate OCR backend behind the same
+common observation boundary, parser, canonical schema, and evaluator used by
+the Tesseract-based configurations. Unlike the Phase 4D PSM experiments,
+Phase 4E requires implementation work first (a PaddleOCR adapter conforming
+to the existing `TextObservation` boundary) before a benchmark can be run; it
+has not been started.
 
-## Future Phases (after Phase 4D)
+## Future Phases (after Phase 4E)
 
 ```text
-Phase 4E - PaddleOCR alternate OCR backend within Pipeline A
-Phase 5  - Pipeline B: Document Vision / Schema-Constrained Extraction
+Phase 5 - Pipeline B: Document Vision / Schema-Constrained Extraction
 ```
 
-Phase 4E stays inside the Pipeline A architecture (OCR backend swapped behind
-the same common observation boundary, parser, canonical schema, and
-evaluator); it is not a new pipeline. Phase 5 is a genuinely different
-document-vision/VLM architecture and should implement a model-based challenger
-that produces the same canonical `W2Document` and runs against the existing
-evaluator without changing ground truth or exposing annotations. Phase 5 is
-compared against whichever Pipeline A configuration performs best across
-Phase 4D/4E, not automatically against the Phase 4B/4C PSM 3 baseline.
+Phase 5 is a genuinely different document-vision/VLM architecture and should
+implement a model-based challenger that produces the same canonical
+`W2Document` and runs against the existing evaluator without changing ground
+truth or exposing annotations. Phase 5 is compared against whichever Pipeline
+A configuration performs best across Phase 4D/4E, not automatically against
+the Phase 4B/4C PSM 3 baseline.
 
 ## Completed Phase History
 
@@ -359,6 +373,34 @@ documents, corrected ground truth:
   configuration despite its sparse-field gains. It remains useful diagnostic
   evidence but is not deployed as a default.
 
+Completed Phase 4D.2 PSM 12 experiment:
+
+```text
+data/evaluation/results/phase4d_psm12_external_clean_150.json
+data/evaluation/results/phase4d_psm12_external_clean_150.md
+```
+
+Main PSM 12 + targeted supplemental PSM 6, same 150 external clean-render
+documents, corrected ground truth:
+
+- `field_accuracy = 0.504927536231884` (1,742 / 3,450 correct),
+  `failed_documents = 0`, average 2.3475697785066707 seconds/document,
+  `field_failure_count = 1,708`.
+- Zeroed fields (0 / 150 correct): `employee.first_name`,
+  `employee.last_name`, `employee.ssn`, `employer.ein`, and all six of
+  `federal_wages_and_taxes.box_1_wages_tips_other_compensation` through
+  `box_6_medicare_tax_withheld`.
+- Also degraded well below the incumbent: `employee.middle_initial` (21.3%)
+  and `box_13.retirement_plan` (40.0%).
+- Only Box 7, Box 8, Box 13's other two flags, and non-financial metadata
+  fields stayed fully correct.
+- Conclusion: PSM 12 is not a viable Pipeline A configuration. Unlike PSM 11's
+  narrow Box 1/2 regression, PSM 12 regressed broadly across identity and
+  federal money fields with no offsetting gains, performing roughly half as
+  well overall as the PSM 3 incumbent and worse than PSM 11 on every degraded
+  field. Phase 4D's PSM comparison is complete; see "Immediate Next
+  Experiment" for Phase 4E.
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
@@ -371,10 +413,13 @@ documents, corrected ground truth:
 - PSM 11 trades the above name/EIN/Box 13 weaknesses for a total loss of
   federal Boxes 1 and 2, so it is documented as a known failure mode rather
   than adopted.
+- PSM 12 is a documented broad-failure mode: it trades none of the incumbent's
+  weaknesses away and additionally zeroes federal Boxes 1-6, employee last
+  name, and employer EIN, so it is rejected outright rather than considered a
+  partial trade-off.
 
 ## Unimplemented Capabilities
 
-- Phase 4D.2 (PSM 12) has not been run.
 - Phase 4E (PaddleOCR alternate OCR backend) has not been started.
 - Phase 5 (Pipeline B document-vision/VLM challenger) has not been started.
 - Review routing, confidence calibration, validation engines, persistence,

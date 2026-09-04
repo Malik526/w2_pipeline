@@ -2,6 +2,26 @@
 
 ## 2026-09-04
 
+### Phase 4D.2 - Tesseract PSM 12 Results
+
+- Added completed Phase 4D.2 PSM 12 clean-render benchmark artifacts:
+  `phase4d_psm12_external_clean_150.json` and `.md`.
+- Recorded main PSM 12 with targeted supplemental PSM 6 on the same 150
+  external clean Symage documents, producing 150 successful documents, 0
+  document failures, 1,742 / 3,450 correct fields, and `0.504927536231884`
+  field accuracy.
+- Documented the key result: PSM 12 is a broad regression, zeroing employee
+  first name, employee last name, employee SSN, employer EIN, and all of
+  federal Boxes 1-6, performing worse overall than both the PSM 3 incumbent
+  and the previously rejected PSM 11 experiment.
+- Updated `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` to record Phase 4D as complete, confirm PSM 3 as
+  the incumbent, and identify Phase 4E (PaddleOCR) as the next planned
+  experiment.
+- Removed the completed run's local `.pid`/`.log` run-control files per the
+  long-running benchmark cleanup policy; the `.log` duplicated the JSON
+  already saved and held no unique warnings or errors.
+
 ### Harness - Pipeline A Extraction Experiment Skill
 
 - Added the first project-local skill,
