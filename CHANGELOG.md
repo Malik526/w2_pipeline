@@ -2,6 +2,18 @@
 
 ## 2026-09-04
 
+### Phase 4C - Corrected Robustness Benchmark Results
+
+- Added the completed 600-document Phase 4C robustness artifacts for the
+  corrected Box e employee-name semantics benchmark:
+  `phase4c_external_all_variants_600_name_semantics.json` and `.md`.
+- Recorded `0.8846376811594203` aggregate field accuracy with 600 successful
+  documents, 0 document failures, 12,208 / 13,800 correct fields, and 1,592
+  structured field failures.
+- Documented variant accuracy after the semantic correction: clean render
+  `0.991304347826087`, compressed JPEG `0.9820289855072464`, rotated PNG
+  `0.8944927536231884`, and blurred PNG `0.6707246376811594`.
+
 ### Phase 4D - Tesseract PSM Experiment Preparation
 
 - Added Pipeline A OCR configuration support for controlled main Tesseract PSM

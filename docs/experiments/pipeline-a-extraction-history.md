@@ -115,6 +115,50 @@ clean documents. Remaining clean-render failures are concentrated in employee
 first name, employee middle initial, Box 13 retirement-plan detection,
 employer EIN, and a small number of federal money fields.
 
+## Phase 4C Corrected Box e Robustness Benchmark
+
+Phase 4C also reran the full 600-document prepared external robustness set
+after the employee-name semantic correction. This benchmark covered the same
+150 Symage documents across clean render, compressed JPEG, rotated PNG, and
+blurred PNG variants.
+
+```text
+date: 2026-09-04
+scope: external Symage clean/compressed/rotated/blurred variants, 600 documents
+artifact: data/evaluation/results/phase4c_external_all_variants_600_name_semantics.json
+markdown: data/evaluation/results/phase4c_external_all_variants_600_name_semantics.md
+pipeline_commit: ba71746aa0c3a44e0ab036b88099135821ff058d
+documents: 600
+successful_documents: 600
+failed_documents: 0
+field_accuracy: 0.8846376811594203
+correct_fields: 12208
+total_fields: 13800
+field_failure_count: 1592
+average_duration_seconds: 2.1994630620232782
+```
+
+Variant results:
+
+```text
+external_clean_render: 3420 / 3450 correct, 0.991304347826087 accuracy
+compressed_jpeg: 3388 / 3450 correct, 0.9820289855072464 accuracy
+rotated_png: 3086 / 3450 correct, 0.8944927536231884 accuracy
+blurred_png: 2314 / 3450 correct, 0.6707246376811594 accuracy
+```
+
+The corrected robustness benchmark lowered the aggregate field accuracy from
+the Phase 4B robustness baseline of `0.8926515151515152` to
+`0.8846376811594203`, largely because `employee.middle_initial` is now scored
+as its own field across every variant. The clean and compressed variants remain
+strong, rotation remains a moderate weakness, and blur remains the dominant
+degradation case. The weakest fields were employee first name, employee middle
+initial, Box 13 retirement-plan detection, employee last name, federal Box 3,
+employee SSN, employer EIN, and federal Boxes 5/6.
+
+The run was launched before the Phase 4D CLI/configuration commit landed; the
+saved JSON metadata records the actual launch commit for reproducibility.
+
 ## Phase 4D PSM 11/12 Experiment Preparation
 
 Phase 4D prepares controlled Tesseract sparse-text page segmentation
