@@ -1598,3 +1598,100 @@ benchmark artifacts (both backends) now predate this fix for the
 `employee.first_name`/`middle_initial` fields specifically — rerunning
 those benchmarks to obtain corrected authoritative numbers is the natural
 next mechanical step, not performed as part of this implementation task.
+
+## Phase 4E PaddleOCR GPU 150-Document `rotated_png` Rerun (Post Box-e-Label Fix) — Confirmed Fix, One New Bug Found
+
+Reran PaddleOCR GPU against the full 150-document `rotated_png` variant
+only (checkbox vision enabled, current parser including the Box e
+static-label filter from the immediately preceding fix commit
+`2dcfa64`), to confirm the fix at scale and specifically check
+`employee.first_name`, `employee.middle_initial`, and
+`box_13.retirement_plan`.
+
+```text
+data/evaluation/results/phase4e_paddleocr_gpu_box_e_fix_rotated_150.json
+data/evaluation/results/phase4e_paddleocr_gpu_box_e_fix_rotated_150.md
+```
+
+Compared against the historical PaddleOCR GPU rotated subset (filtering
+`phase4e_paddleocr_gpu_checkbox_vision_external_all_variants_600.json`'s
+`field_failures` to `variant_id == "rotated_png"` only: `3,122/3,450`
+correct, `90.49%`).
+
+- **`employee.first_name`: 0/150 (0%) -> 150/150 (100%). Fully resolved,
+  no exceptions.** Every one of the 150 historical label-bleed failures
+  is recovered; this field is now perfect on the rotated variant.
+- **`employee.middle_initial`: 32/150 (21.33%) -> 144/150 (96.0%).
+  Substantially improved (112 of 118 historical failures recovered) but
+  NOT fully resolved.** See the new-bug finding below — the 6 remaining
+  failures are not a leftover of the original label-bleed bug.
+- **`box_13.retirement_plan`: 90/150 (60.0%) -> 90/150 (60.0%).
+  Unchanged, as expected** — this is the separate, already-documented
+  checkbox-vision rotation-calibration limitation
+  (`RETIREMENT_PLAN_ZONE`, calibrated only against clean renders), out of
+  scope for the Box e label fix and untouched by it.
+- **Overall: `field_accuracy = 0.9808695652173913` (3,384/3,450), up from
+  `0.904927536231884` (3,122/3,450), a +7.6 percentage point improvement
+  on this variant.** `failed_documents = 0`. Average duration
+  `1.4269119057400652` seconds/document, close to (slightly above) the
+  historical PaddleOCR GPU aggregate rate across all four variants
+  (`1.349s`/doc from the original 600-document run) — no historical
+  rotated-only latency figure exists for a like-for-like comparison, but
+  the label-word filtering itself is negligible-cost text processing, not
+  an additional OCR pass, so no material latency regression is expected
+  or observed.
+- **Zero regressions anywhere**, confirmed by an exhaustive document-and-
+  field-level diff against the historical rotated result: 262 fields
+  recovered (150 `first_name` + 112 `middle_initial`), 0 fields newly
+  failing that previously passed, and all 66 remaining failures (60
+  `box_13.retirement_plan` + 6 `employee.middle_initial`) are present in
+  *both* the old and new results.
+
+**New finding — a real regression in the Box e label fix itself, not a
+pre-existing OCR limitation.** All 6 remaining `employee.middle_initial`
+failures share `expected: "E"` and `failure_kind: "missing"`. Cross-
+referencing the external dataset's ground truth confirms this is not
+coincidental: **exactly 6 of the 118 documents with any ground-truth
+middle initial have `middle_initial == "E"`, and those are precisely the
+6 that fail — every other letter (`"D"`, `"K"`, `"L"`, `"W"`, etc.)
+succeeds.** Root cause, confirmed directly (`_clean_layout_token("E") ->
+None`; `_clean_layout_token("D") -> "D"`): the fix's
+`_is_box_e_label_word` helper lowercases its input before checking
+membership in `_BOX_E_LABEL_WORDS`, which includes the lowercase `"e"`
+box-letter-marker token. This correctly matches a genuine lowercase `"e"`
+marker, but *also* incorrectly matches a legitimate capital `"E"` middle
+initial, treating it as the marker and discarding it. The pre-existing
+`_SINGLE_CHAR_JUNK` check that already handled the box-letter-marker case
+is case-*sensitive* (`cleaned in {..., "e", ...}`, `"E"` does not match)
+and was never the source of this bug — the newly added, case-*insensitive*
+`_BOX_E_LABEL_WORDS` path introduced it. This bug is not variant-specific
+(the same OCR-fallback code path runs identically on clean, compressed,
+and blurred documents), so it plausibly affects every variant containing
+a document with `middle_initial == "E"`, not just `rotated_png` — this
+was not verified for other variants as part of this task, which was
+scoped to `rotated_png` only.
+
+Per this task's explicit instruction not to hide or normalize evaluator
+differences: **these 6 failures must not be characterized as resolved,
+and must not be conflated with the original label-bleed bug or with a
+legitimate OCR limitation (such as Tesseract's separate, pre-existing
+accent-recognition weakness documented in the prior fix task).** They are
+a distinct, newly introduced, narrow-but-real regression with an
+obvious, low-risk fix: remove the redundant `"e"` entry from
+`_BOX_E_LABEL_WORDS`, since the box-letter-marker case is already
+correctly handled by the case-sensitive `_SINGLE_CHAR_JUNK` check. This
+was **not implemented as part of this task** (explicitly scoped to
+running and reporting the `rotated_png` benchmark only) and is flagged as
+a clear, high-priority follow-up recommendation.
+
+**Conclusion**: the Box e label fix works as intended and delivers a
+large, confirmed improvement on the rotated variant with zero
+regressions from its own intended scope, but this rerun surfaced a small,
+distinct, well-understood defect in the fix's implementation (not a
+pre-existing limitation) affecting the narrow case of a capital `"E"`
+middle initial. The historical PaddleOCR 600-document artifact remains
+untouched (superseded only for `rotated_png`-scope claims by this new
+result, not for clean/compressed/blurred, which were not rerun in this
+task). No clean/compressed/blurred variant, no full 600-document
+benchmark, no Tesseract, no PSM 11, and no Pipeline B work were performed,
+per this task's explicit scope.

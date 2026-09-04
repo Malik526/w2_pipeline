@@ -484,6 +484,44 @@
   `docs/project-state.md` accordingly (Current Phase, Immediate Next
   Experiment, Current Known Weaknesses, Completed Phase History).
 
+### Phase 4E - PaddleOCR GPU 150-Document `rotated_png` Rerun (Confirms Box-e Fix, Finds a New Bug)
+
+- Reran PaddleOCR GPU against the full 150-document `rotated_png`
+  variant only (checkbox vision enabled, current parser including the
+  Box e label fix) to confirm that fix at scale.
+- Added `data/evaluation/results/phase4e_paddleocr_gpu_box_e_fix_rotated_150.json`
+  and the matching `.md`; the historical 600-document PaddleOCR artifact
+  was not modified.
+- Result vs. the historical PaddleOCR GPU rotated subset (90.49%,
+  3,122/3,450): `employee.first_name` **0/150 -> 150/150 (100%, fully
+  resolved)**; `employee.middle_initial` 32/150 -> 144/150 (96.0%,
+  substantially improved, not fully resolved);
+  `box_13.retirement_plan` unchanged at 60.0% (a separate, already-
+  documented limitation, correctly unaffected); overall
+  `field_accuracy = 0.9808695652173913` (3,384/3,450), up from 90.49%,
+  average `1.427s`/document, `failed_documents = 0`. Zero regressions
+  anywhere, confirmed by an exhaustive document-and-field-level diff (262
+  fields recovered, 0 newly failing).
+- **New finding, reported plainly per this task's instruction not to hide
+  or normalize evaluator differences: a real, narrow regression in the
+  Box e label fix itself, not a pre-existing limitation.** All 6
+  remaining `employee.middle_initial` failures share `expected: "E"` —
+  confirmed to be exactly the 6 of 118 documents whose true middle
+  initial is `"E"`, and no other letter. Root cause:
+  `_is_box_e_label_word` lowercases its input before matching against
+  `_BOX_E_LABEL_WORDS` (which includes lowercase `"e"`, the box-letter
+  marker), so it also incorrectly discards a legitimate capital `"E"`
+  initial. Not variant-specific — plausibly also affects
+  clean/compressed/blurred documents with a `"E"` middle initial, not
+  verified as part of this `rotated_png`-scoped task. Recommended fix
+  (small, low-risk, **not implemented**, per this task's explicit scope):
+  remove the redundant `"e"` entry from `_BOX_E_LABEL_WORDS`.
+- No clean/compressed/blurred variant, no full 600-document benchmark, no
+  Tesseract, no PSM 11, and no Pipeline B work were performed. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Current Phase, Immediate Next
+  Experiment, Current Known Weaknesses, Completed Phase History).
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

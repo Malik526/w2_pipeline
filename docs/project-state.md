@@ -46,10 +46,23 @@ filter for Box e's known static label text — is implemented, covered by 6
 new tests (149 passing total), and verified against real rotated images
 for both backends via a direct-pipeline smoke (5/6 exact matches; the one
 non-match is Tesseract's separate, pre-existing accent-recognition
-limitation, unrelated to this fix). **The historical 150/600-document
-benchmark artifacts for both backends now predate this fix** for the
-`employee.first_name`/`employee.middle_initial` fields — rerunning them
-is the natural next mechanical step, not yet done. PaddleOCR GPU is ahead
+limitation, unrelated to this fix). A full 150-document PaddleOCR GPU
+rerun scoped to `rotated_png` only confirmed the fix at scale:
+`employee.first_name` 0/150 -> **150/150 (100%, fully resolved)**;
+`employee.middle_initial` 32/150 -> 144/150 (96.0%, substantially
+improved); `box_13.retirement_plan` unchanged at 60.0% (a separate,
+already-documented limitation); overall rotated-variant accuracy 90.49%
+-> 98.09%, zero regressions. **That rerun also surfaced a real, narrow
+regression in the fix itself** (not a pre-existing limitation): a capital
+`"E"` middle initial is incorrectly filtered as if it were the lowercase
+`"e"` box-letter marker, due to case-insensitive matching in the fix's
+new word-level denylist — confirmed to affect exactly the 6 of 118
+documents whose true middle initial is `"E"`, and no other letter. Not
+yet fixed; see "Immediate Next Experiment." **The historical 150/600-document
+benchmark artifacts for both backends still predate the Box e label
+fix for clean/compressed/blurred scope** (only `rotated_png` was rerun
+for PaddleOCR GPU) — rerunning the remaining variants and Tesseract is
+the natural next mechanical step, not yet done. PaddleOCR GPU is ahead
 of the Tesseract incumbent on aggregate accuracy across all four variants
 combined, not just on clean data, and the rotated-name weakness (now
 fixed pending reconfirmation at scale) was never a caveat specific to
@@ -410,14 +423,17 @@ track: fixed, diagnosed as recovering real incumbent failures, and
 confirmed at controlled clean-150 scale (+4 fields, zero regressions,
 +52% latency). It is not promoted -- the accuracy/latency trade-off is
 reported for the user to weigh, not decided here. The rotated
-employee-name label-bleed bug has been fully diagnosed AND FIXED
-(backend-neutral -- both Tesseract and PaddleOCR shared the identical
-bug, correcting a prior documentation error that reported it as
-PaddleOCR-only; fix verified via a real-pipeline smoke on both backends,
-149 tests passing) -- but the 150/600-document benchmark reruns needed to
-requantify both backends' numbers with the fix in place have NOT been
-run. What remains is: those reruns (the natural mechanical next step),
-the PaddleOCR-vs-Tesseract incumbent decision, and the PSM 11 promotion
+employee-name label-bleed bug has been diagnosed and fixed, and the fix
+is CONFIRMED AT SCALE on PaddleOCR GPU's rotated_png variant (0/150 ->
+150/150 on employee.first_name, 32/150 -> 144/150 on middle_initial,
+zero regressions) -- but that same rerun surfaced a NEW, small, distinct
+bug in the fix itself: a capital "E" middle initial is incorrectly
+filtered as the lowercase "e" box-letter marker (case-insensitive
+matching bug, confirmed to affect exactly the 6 documents whose true
+initial is "E"). This is not yet fixed. What remains is: fixing that new
+"E" bug (small, well-understood, not yet done), rerunning the remaining
+variants/backends to requantify with both fixes in place, the
+PaddleOCR-vs-Tesseract incumbent decision, and the PSM 11 promotion
 decision -- all the user's to decide or request next.
 ```
 
@@ -489,12 +505,36 @@ What remains a genuine decision rather than a rerun:
   accented name) is a separate, pre-existing accent-recognition
   limitation already present on that document's *clean* render, unrelated
   to this fix — the middle initial was still correctly recovered on that
-  same document. **The historical 150/600-document benchmark artifacts
-  for both backends now predate this fix for `employee.first_name`/
-  `employee.middle_initial`.** Rerunning them to obtain corrected
-  authoritative numbers is the natural next mechanical step, not yet
-  done — no 150-document or 600-document benchmark was run as part of
-  this implementation task, per its explicit scope.
+  same document. **Confirmed at scale**: a full 150-document PaddleOCR
+  GPU rerun scoped to `rotated_png` showed `employee.first_name` 0/150 ->
+  150/150 (100%, fully resolved) and `employee.middle_initial` 32/150 ->
+  144/150 (96.0%), zero regressions on any field, `box_13.retirement_plan`
+  correctly unaffected (still 60.0%, a separate limitation). **The
+  historical 150/600-document benchmark artifacts still predate the fix
+  for clean/compressed/blurred scope** (only `rotated_png` was rerun for
+  PaddleOCR GPU) — rerunning the remaining variants and Tesseract to
+  obtain corrected authoritative numbers is the natural next mechanical
+  step, not yet done.
+- **New, distinct bug found by the `rotated_png` rerun above — a capital
+  `"E"` middle initial is incorrectly discarded, NOT a pre-existing
+  limitation, NOT yet fixed.** All 6 residual `employee.middle_initial`
+  failures in the `rotated_png` rerun share `expected: "E"`; cross-
+  referenced against ground truth, this is exactly the 6 of 118
+  documents with any middle initial whose true initial is `"E"` — every
+  other letter succeeds. Root cause: the Box e label fix's
+  `_is_box_e_label_word` helper lowercases its input before checking
+  membership in `_BOX_E_LABEL_WORDS` (which includes lowercase `"e"`, the
+  box-letter marker), so it also matches — and incorrectly discards — a
+  legitimate capital `"E"` middle initial. The pre-existing, case-
+  *sensitive* `_SINGLE_CHAR_JUNK` check already handled the genuine
+  marker case correctly and was not the source of this bug. Not
+  variant-specific (the same fallback code path runs on every OCR-routed
+  document), so this likely also affects clean/compressed/blurred
+  documents whose middle initial is `"E"`, though that was not verified
+  as part of the `rotated_png`-scoped rerun task. Recommended fix (small,
+  low-risk, not yet implemented): remove the redundant `"e"` entry from
+  `_BOX_E_LABEL_WORDS`, relying on the existing case-sensitive check for
+  the marker case.
 - **The Tesseract and PaddleOCR robustness reruns both revealed the
   checkbox-vision fix's limit:** it fully resolves `box_13.retirement_plan`
   under clean and compressed-JPEG conditions on both backends, but only
@@ -1416,6 +1456,65 @@ benchmark artifacts for both backends now predate this fix for these two
 fields; rerunning them to obtain corrected authoritative numbers is the
 natural next mechanical step, not performed as part of this task.
 
+Completed Phase 4E PaddleOCR GPU 150-document `rotated_png` rerun (post
+Box-e-label fix) — confirmed fix at scale, one new bug found:
+
+```text
+data/evaluation/results/phase4e_paddleocr_gpu_box_e_fix_rotated_150.json
+data/evaluation/results/phase4e_paddleocr_gpu_box_e_fix_rotated_150.md
+```
+
+Reran PaddleOCR GPU against the full 150-document `rotated_png` variant
+only (checkbox vision enabled, current parser including the Box e fix),
+to confirm the fix at scale. Compared against the historical PaddleOCR
+GPU rotated subset (`phase4e_paddleocr_gpu_checkbox_vision_external_all_variants_600.json`
+filtered to `variant_id == "rotated_png"`: 3,122/3,450 = 90.49%).
+
+- `employee.first_name`: 0/150 (0%) -> **150/150 (100%), fully resolved,
+  no exceptions**.
+- `employee.middle_initial`: 32/150 (21.33%) -> 144/150 (96.0%),
+  substantially improved (112 of 118 historical failures recovered) but
+  not fully resolved — see the new-bug finding below.
+- `box_13.retirement_plan`: 90/150 (60.0%) -> 90/150 (60.0%), unchanged
+  as expected (separate checkbox-vision rotation-calibration limitation,
+  out of scope).
+- Overall: `field_accuracy = 0.9808695652173913` (3,384/3,450), up from
+  `0.904927536231884` (3,122/3,450), +7.6 percentage points on this
+  variant. `failed_documents = 0`. Average duration `1.427s`/document,
+  close to the historical PaddleOCR GPU aggregate rate (`1.349s`/doc
+  across all four variants; no rotated-only historical baseline exists
+  for an exact comparison).
+- Zero regressions anywhere, confirmed by an exhaustive document-and-
+  field-level diff: 262 fields recovered, 0 newly failing, all 66
+  remaining failures (60 `box_13.retirement_plan` + 6
+  `employee.middle_initial`) present in both the old and new results.
+
+**New finding: a real regression in the Box e label fix itself, not a
+pre-existing limitation.** All 6 remaining `employee.middle_initial`
+failures share `expected: "E"`; cross-referenced against ground truth,
+this is exactly the 6 of 118 documents with any middle initial whose true
+initial is `"E"` — every other letter succeeds. Root cause (confirmed
+directly: `_clean_layout_token("E")` returns `None`, `_clean_layout_token("D")`
+returns `"D"`): `_is_box_e_label_word` lowercases its input before
+checking membership in `_BOX_E_LABEL_WORDS`, which includes lowercase
+`"e"` (the box-letter marker) — this also incorrectly matches and
+discards a legitimate capital `"E"` initial. The pre-existing, case-
+sensitive `_SINGLE_CHAR_JUNK` check already handled the genuine marker
+case correctly and was not the source of this bug. Not variant-specific,
+so plausibly also affects clean/compressed/blurred documents with a `"E"`
+middle initial — not verified as part of this `rotated_png`-scoped task.
+Recommended fix (small, low-risk, **not implemented** per this task's
+explicit scope): remove the redundant `"e"` entry from
+`_BOX_E_LABEL_WORDS`.
+
+Per this task's explicit instruction not to hide or normalize evaluator
+differences: this finding is reported plainly as a new defect, distinct
+from (and not conflated with) the original label-bleed bug or Tesseract's
+separate accent-recognition limitation. No clean/compressed/blurred
+variant, no full 600-document benchmark, no Tesseract, no PSM 11, and no
+Pipeline B work were performed, per this task's explicit scope. The
+historical 600-document PaddleOCR artifact was not modified.
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
@@ -1492,9 +1591,31 @@ natural next mechanical step, not performed as part of this task.
   limitation, not this bug). See
   `docs/experiments/pipeline-a-extraction-history.md`'s "Rotated
   Employee-Name Label-Bleed Fix" entry for the implementation record.
-  **The historical 150/600-document benchmark numbers for both backends
-  predate this fix and have not been reconfirmed at scale** — that rerun
-  is the natural next mechanical step, not yet done.
+  **Confirmed at scale for PaddleOCR GPU's `rotated_png` variant**: a
+  full 150-document rerun showed `employee.first_name` 0/150 -> 150/150
+  (100%, fully resolved) and `employee.middle_initial` 32/150 -> 144/150
+  (96.0%), zero regressions, `box_13.retirement_plan` correctly
+  unaffected (60.0%, a separate limitation). **The historical benchmark
+  numbers for clean/compressed/blurred (both backends) and for Tesseract
+  on any variant still predate this fix and have not been reconfirmed at
+  scale** — that rerun is the natural next mechanical step, not yet done.
+- **New: a capital `"E"` middle initial is incorrectly discarded — a
+  real, narrow regression introduced by the Box e label fix itself, NOT
+  a pre-existing limitation, NOT yet fixed.** Found by the `rotated_png`
+  rerun above: all 6 residual `employee.middle_initial` failures there
+  share `expected: "E"`, confirmed to be exactly the 6 of 118 documents
+  with any middle initial whose true initial is `"E"` (every other
+  letter succeeds). Root cause: `_is_box_e_label_word` lowercases its
+  input before matching against `_BOX_E_LABEL_WORDS` (which includes
+  lowercase `"e"`, the box-letter marker), so it also incorrectly matches
+  and discards a legitimate capital `"E"` initial. Not variant-specific —
+  the same fallback code path runs on every OCR-routed document, so this
+  plausibly also affects clean/compressed/blurred documents with a `"E"`
+  middle initial (not verified, out of scope for the `rotated_png`-only
+  rerun task that found it). Recommended fix (small, low-risk, not yet
+  implemented): remove the redundant `"e"` entry from
+  `_BOX_E_LABEL_WORDS`; the pre-existing case-sensitive `_SINGLE_CHAR_JUNK`
+  check already correctly handles the genuine marker case on its own.
 - PSM 11 trades the above name/EIN/Box 13 weaknesses for a total loss of
   federal Boxes 1 and 2, so it is documented as a known failure mode rather
   than adopted.
