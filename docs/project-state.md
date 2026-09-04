@@ -259,17 +259,19 @@ docs/experiments/pipeline-a-extraction-history.md
   1-6, worse overall than PSM 11.
 - Both Phase 4D main-PSM experiments (PSM 11 and PSM 12 as *main* full-page
   replacements) are complete; no further main-PSM values are planned.
-  Separately, PSM 11 is now also available as a **targeted supplemental**
-  pass (`--tesseract-supplemental-psm 6,11`, alongside the incumbent main
-  PSM 3) restricted to exactly the six fields Phase 4D.1 showed it improves
+  Separately, PSM 11 is also available as a **targeted supplemental** pass
+  (`--tesseract-supplemental-psm 6,11`, alongside the incumbent main PSM 3)
+  restricted to the six fields Phase 4D.1 showed it improves
   (`employee.first_name`, `employee.middle_initial`, `employer.ein`, and
-  federal Boxes 3/5/6) — a fundamentally different, lower-risk use of PSM 11
-  than the rejected main-PSM-replacement experiment, since it can only fill
-  fields the PSM 3 primary pass left empty rather than replacing PSM 3's
-  output outright. This capability was added as readiness/implementation
-  work only; **no experiment using it has been run yet**. See "Targeted
-  Supplemental OCR Passes" in `docs/contracts/extraction-pipeline-a.md` for
-  the mechanism and the exact smoke-experiment command.
+  federal Boxes 3/5/6). The mechanism is implemented (see "Targeted
+  Supplemental OCR Passes" in `docs/contracts/extraction-pipeline-a.md`),
+  but a 5-document smoke test found a **disqualifying regression on
+  `employee.first_name`** (100% -> 0%, text duplication from the shared
+  name-zone OCR fallback) — `employer.ein` and Boxes 3/5/6 were unaffected.
+  **Not eligible for any larger-scale run** until the underlying
+  `_zone_text` join-based fallback is made resilient to overlapping
+  observation sources, or the name zone is dropped from PSM 11's target
+  set. See "Completed Phase History" for the full smoke result.
 - PaddleOCR is available as an alternate OCR backend via `--ocr-backend
   paddleocr` (`src/w2_pipeline/extraction/ocr_paddle.py`), selectable behind
   the same `OcrAdapter` contract Tesseract implements. It is **not** the
@@ -445,17 +447,30 @@ What remains a genuine decision rather than a rerun:
   proceeding to Phase 5 — now a considerably stronger case than before given
   both the clean-150 and 600-document robustness results, but still gated
   on an explicit user decision.
-- **A newly available, not-yet-run experiment**: Tesseract main PSM 3 +
-  targeted supplemental PSM 6 + targeted supplemental PSM 11 (restricted to
-  `employee.first_name`/`middle_initial`, `employer.ein`, and federal Boxes
-  3/5/6 only). This is now implemented and ready
-  (`--tesseract-supplemental-psm 6,11`; see "Targeted Supplemental OCR
-  Passes" in `docs/contracts/extraction-pipeline-a.md`) but was
-  deliberately not run as part of the implementation task that added it.
-  Since it can only fill fields PSM 3 already leaves empty, expected impact
-  is small relative to the Phase 4D.1 main-PSM-11 result (which changed the
-  *primary* extraction path for those fields); a 5-document smoke test is
-  the natural next mechanical step if this is pursued.
+- **Targeted supplemental PSM 11 smoke test: disqualifying regression
+  found, NOT eligible for the 150-document benchmark.** The 5-document
+  smoke (`--tesseract-supplemental-psm 6,11`,
+  `phase4e_tesseract_supplemental_psm11_smoke_5`) showed
+  `employee.first_name` regress from 100% (all 5 documents correct under
+  the PSM 3 + PSM 6 incumbent) to 0% (5/5 corrupted) via text duplication
+  — e.g. `"Steven"` became `"Steven Steven D"` — because the employee-name
+  OCR fallback (`_zone_text`) joins every token in its zone rather than
+  picking one, and PSM 11's supplemental pass and PSM 3's main pass both
+  land readings of the same name in that zone. `employer.ein` and federal
+  Boxes 3/5/6 (the other four approved target fields, which use
+  first-match rather than join-all fallback logic) all stayed 100%
+  correct, and the row-grouping/zone-targeting protections built during
+  the readiness work performed exactly as designed elsewhere (no leakage
+  into Box 13 or SSN, no primary-path corruption on money fields). Average
+  duration also rose 51% (`2.330s` -> `3.528s`/document) for a net
+  regression on this sample. See "Completed Phase History" and
+  `docs/experiments/pipeline-a-extraction-history.md` for full detail,
+  including the specific fix directions identified (not implemented, per
+  this smoke task's explicit stop-and-document scope) — either make
+  `_zone_text` resilient to overlapping observation sources, or narrow PSM
+  11 supplementation to just EIN/Box 3/5/6 and drop the name zone. This
+  configuration should not be attempted again at any larger scale until
+  one of those fixes lands.
 
 ## Future Phases (after Phase 4E)
 
@@ -1043,10 +1058,65 @@ Tesseract 600-document robustness result from the preceding rerun.
   the experiment skill's boundaries. No Tesseract PSM 11 or other
   configuration was run, per this task's explicit scope.
 
+Completed Phase 4E targeted supplemental PSM 11 smoke test — disqualifying
+regression found:
+
+```text
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_smoke_5.json
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_smoke_5.md
+```
+
+Ran the readiness-unlocked configuration for the first time: main PSM 3 +
+targeted supplemental PSM 6 + targeted supplemental PSM 11
+(`--tesseract-supplemental-psm 6,11`), 5 external clean-render documents,
+checkbox vision enabled.
+
+- `field_accuracy = 0.9565217391304348` (110/115), `failed_documents = 0`,
+  average `3.528s`/document (up 51% from the incumbent's `2.330s`/document).
+- All 5 field failures are `employee.first_name`, 0/5 correct (100%
+  failure). Cross-checked against the same 5 `document_id`s in the
+  Tesseract 600-document robustness rerun: all 5 were 100% correct under
+  the PSM 3 + PSM 6 incumbent alone — an unambiguous regression, not
+  sampling noise.
+- Root cause: text duplication, not a targeting or row-grouping failure.
+  The employee-name OCR fallback (`_zone_text` in `parser_2026.py`) joins
+  every token found in its zone rather than picking one, unlike the
+  first-match logic (`_first_regex_text_in_zone`/`_first_money_text_in_zone`)
+  used for EIN and money fields. Since PSM 11's supplemental pass and PSM
+  3's main pass both land readings of the same name in the shared zone,
+  `_zone_text` concatenates both (e.g. expected `"Steven"`, predicted
+  `"Steven Steven D"`).
+- `employer.ein` and federal Boxes 3/5/6 (the other four approved target
+  fields) all stayed 5/5 correct — confirming the row-grouping isolation
+  and zone-targeting built during the readiness work performed exactly as
+  designed for first-match-style fallbacks. Box 13 and SSN (explicitly
+  non-target fields) also stayed 5/5 correct, confirming PSM 11
+  supplementation did not leak outside its approved zones.
+- Conclusion: **this configuration is not marked eligible for the
+  150-document benchmark**, per this smoke task's explicit stop condition.
+  Two candidate fixes were identified but not implemented (out of scope for
+  a smoke-test task): make `_zone_text` resilient to multiple overlapping
+  observation sources in one zone, or narrow PSM 11 supplementation to only
+  `employer.ein`/Box 3/5/6 and drop the name zone entirely. Neither the
+  historical Tesseract artifacts nor the incumbent configuration were
+  touched.
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
   incumbent PSM 3 + PSM 6 configuration (93.33% / 94.0% on the clean set).
+- **New: the employee-name OCR fallback (`_zone_text` in
+  `parser_2026.py`) joins every observation in its target zone rather than
+  picking one, unlike the first-match fallback logic used for EIN/money
+  fields.** This is safe today only because nothing else currently
+  contributes overlapping observations to that zone. The targeted
+  supplemental PSM 11 smoke test demonstrated this breaks completely (100%
+  -> 0% on `employee.first_name`, text duplication) the moment a second
+  observation source (PSM 11's supplemental pass) also lands readings in
+  the same zone. Any future work that adds a second observation source
+  touching the employee-name zone must account for this before relying on
+  `_zone_text`; see "Completed Phase History" for the smoke test that
+  surfaced it.
 - Box 13 retirement-plan checkbox detection was a known weak field under the
   incumbent configuration (96.67% on the recorded 150-document clean
   benchmark). A backend-neutral visual checkbox detector has since been

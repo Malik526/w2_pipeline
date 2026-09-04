@@ -251,6 +251,42 @@
   promotion or default change was made. PaddleOCR and `checkbox_vision.py`
   were not touched.
 
+### Phase 4E - Targeted Supplemental PSM 11 Smoke Test (Disqualifying Regression Found)
+
+- Ran the readiness-unlocked configuration for the first time: main PSM 3 +
+  targeted supplemental PSM 6 + targeted supplemental PSM 11
+  (`--tesseract-supplemental-psm 6,11`), 5 external clean-render documents,
+  checkbox vision enabled.
+- Added `data/evaluation/results/phase4e_tesseract_supplemental_psm11_smoke_5.json`
+  and the matching `.md` report; no historical artifacts were touched.
+- Result: `field_accuracy = 0.9565217391304348` (110/115), average
+  `3.528s`/document (+51% vs. the incumbent's `2.330s`). All 5 field
+  failures are `employee.first_name` (0/5 correct). Cross-checked against
+  the same 5 documents in the Tesseract 600-document robustness rerun: all
+  5 were 100% correct under the PSM 3 + PSM 6 incumbent alone — a clean,
+  unambiguous regression.
+- Root cause: the employee-name OCR fallback (`_zone_text` in
+  `parser_2026.py`) joins every observation in its target zone rather than
+  picking one (unlike the first-match logic used for EIN/money fields).
+  PSM 11's supplemental pass and PSM 3's main pass both land readings of
+  the same name in the shared zone, so `_zone_text` concatenates both
+  (e.g. expected `"Steven"`, predicted `"Steven Steven D"`).
+- `employer.ein` and federal Boxes 3/5/6 (the other four approved target
+  fields) all stayed 5/5 correct, and Box 13/SSN (non-target fields) also
+  stayed 5/5 correct — confirming the readiness work's row-grouping
+  isolation and zone-targeting protections performed exactly as designed;
+  the regression is isolated to the name zone's join-based fallback logic.
+- **This configuration is NOT marked eligible for the 150-document
+  benchmark**, per this task's explicit stop-and-document instruction. Two
+  candidate fixes were identified but not implemented: make `_zone_text`
+  resilient to overlapping observation sources, or drop the name zone from
+  PSM 11's target set. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` (Immediate Next Experiment, Current Pipeline A
+  Configuration, Current Known Weaknesses, Completed Phase History)
+  accordingly. Did not run 150 or 600 documents, PaddleOCR, or any other
+  configuration, per this task's explicit scope.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the
