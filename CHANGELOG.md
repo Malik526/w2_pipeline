@@ -2,6 +2,18 @@
 
 ## 2026-09-04
 
+### Phase 4D.1 - Tesseract PSM 11 Results
+
+- Added completed Phase 4D.1 PSM 11 clean-render benchmark artifacts:
+  `phase4d_psm11_external_clean_150.json` and `.md`.
+- Recorded main PSM 11 with targeted supplemental PSM 6 on the same 150
+  external clean Symage documents, producing 150 successful documents, 0
+  document failures, 3,141 / 3,450 correct fields, and `0.9104347826086957`
+  field accuracy.
+- Documented the key result: PSM 11 improved several weak fields but missed
+  federal Boxes 1 and 2 on all 150 clean documents, so it should not replace
+  the incumbent main PSM 3 configuration.
+
 ### Phase 4C - Corrected Robustness Benchmark Results
 
 - Added the completed 600-document Phase 4C robustness artifacts for the

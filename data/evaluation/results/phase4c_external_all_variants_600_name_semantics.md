@@ -185,3 +185,6 @@ No document-level failures were recorded in this benchmark.
 Blurred documents had the lowest field accuracy at 67.07%.
 Employee first name was the lowest-accuracy field at 53.67%.
 These results do not establish production readiness by themselves.
+
+## conclusion 
+Canonical employee-name semantics were corrected by separating the optional middle initial. The full-schema robustness score is 88.46% because the benchmark now evaluates an additional 600 middle-initial fields. On the original comparable field set, accuracy improved from 89.27% to 89.59%. Clean-document comparable accuracy improved from 98.88% to 99.36%. Remaining robustness weakness is concentrated in blurred documents and rotated name/middle-initial extraction.

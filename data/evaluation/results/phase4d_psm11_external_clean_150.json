@@ -1,0 +1,2981 @@
+{
+  "accuracy_by_route": {
+    "ocr": {
+      "correct_fields": 3141,
+      "documents": 150,
+      "field_accuracy": 0.9104347826086957,
+      "total_fields": 3450
+    }
+  },
+  "accuracy_by_variant": {
+    "external_clean_render": {
+      "correct_fields": 3141,
+      "documents": 150,
+      "field_accuracy": 0.9104347826086957,
+      "total_fields": 3450
+    }
+  },
+  "average_duration_seconds": 2.1542158065199692,
+  "benchmark_metadata": {
+    "git_commit": "ced96cabdd27e5e766024153e5351308498356c6",
+    "ocr_backend": "tesseract",
+    "ocr_configuration": {
+      "main_page_segmentation_mode": 11,
+      "page_segmentation_mode": 11,
+      "supplemental_page_segmentation_modes": [
+        6
+      ]
+    },
+    "pipeline_id": "pipeline_a",
+    "run_timestamp": "2026-09-04T04:30:28.259119+00:00",
+    "schema_version": 2026,
+    "source_datasets": [
+      "Symage/synthetic-us-forms-preview"
+    ],
+    "variant_filter": "external_clean_render",
+    "variant_scope": [
+      "external_clean_render"
+    ]
+  },
+  "correct_fields": 3141,
+  "document_conditions": [
+    "external_clean_render"
+  ],
+  "documents": 150,
+  "failed_documents": 0,
+  "failure_rate": 0.0,
+  "field_accuracy": 0.9104347826086957,
+  "field_failure_count": 309,
+  "field_failures": [
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "1.032E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "14996.38",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900001-irs_w2_single_page_2026-p0",
+      "expected": "114858",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900001-irs_w2_single_page_2026-p0",
+      "expected": "21930.26",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900002-irs_w2_single_page_2026-p0",
+      "expected": "85911",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900002-irs_w2_single_page_2026-p0",
+      "expected": "8327.12",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900003-irs_w2_single_page_2026-p0",
+      "expected": "1.44E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900003-irs_w2_single_page_2026-p0",
+      "expected": "148.86",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900004-irs_w2_single_page_2026-p0",
+      "expected": "4.94E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900004-irs_w2_single_page_2026-p0",
+      "expected": "4736.23",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900005-irs_w2_single_page_2026-p0",
+      "expected": "83419",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900005-irs_w2_single_page_2026-p0",
+      "expected": "6391.76",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900006-irs_w2_single_page_2026-p0",
+      "expected": "6.91E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900006-irs_w2_single_page_2026-p0",
+      "expected": "8272.28",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900007-irs_w2_single_page_2026-p0",
+      "expected": "86734",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900007-irs_w2_single_page_2026-p0",
+      "expected": "9705.85",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900008-irs_w2_single_page_2026-p0",
+      "expected": "137467",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900008-irs_w2_single_page_2026-p0",
+      "expected": "40324.92",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900009-irs_w2_single_page_2026-p0",
+      "expected": "8.4E+3",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900009-irs_w2_single_page_2026-p0",
+      "expected": "100.5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900010-irs_w2_single_page_2026-p0",
+      "expected": "23622",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900010-irs_w2_single_page_2026-p0",
+      "expected": "293.91",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900011-irs_w2_single_page_2026-p0",
+      "expected": "5.73E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900011-irs_w2_single_page_2026-p0",
+      "expected": "4925.58",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900012-irs_w2_single_page_2026-p0",
+      "expected": "9729",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900012-irs_w2_single_page_2026-p0",
+      "expected": "157.96",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900013-irs_w2_single_page_2026-p0",
+      "expected": "1.696E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900013-irs_w2_single_page_2026-p0",
+      "expected": "28593.62",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900014-irs_w2_single_page_2026-p0",
+      "expected": "3964",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900014-irs_w2_single_page_2026-p0",
+      "expected": "41.15",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900015-irs_w2_single_page_2026-p0",
+      "expected": "1.94E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900015-irs_w2_single_page_2026-p0",
+      "expected": "649.5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900016-irs_w2_single_page_2026-p0",
+      "expected": "8.02E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900016-irs_w2_single_page_2026-p0",
+      "expected": "11689.99",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900017-irs_w2_single_page_2026-p0",
+      "expected": "8147",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900017-irs_w2_single_page_2026-p0",
+      "expected": "131.56",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900018-irs_w2_single_page_2026-p0",
+      "expected": "10071",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900018-irs_w2_single_page_2026-p0",
+      "expected": "150.31",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900019-irs_w2_single_page_2026-p0",
+      "expected": "29095",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900019-irs_w2_single_page_2026-p0",
+      "expected": "194.01",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900020-irs_w2_single_page_2026-p0",
+      "expected": "23214",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900020-irs_w2_single_page_2026-p0",
+      "expected": "1302",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "28885",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "2531.81",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900022-irs_w2_single_page_2026-p0",
+      "expected": "4.18E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900022-irs_w2_single_page_2026-p0",
+      "expected": "1654.22",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900023-irs_w2_single_page_2026-p0",
+      "expected": "57973",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900023-irs_w2_single_page_2026-p0",
+      "expected": "7239.09",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900024-irs_w2_single_page_2026-p0",
+      "expected": "7.93E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900024-irs_w2_single_page_2026-p0",
+      "expected": "8118.92",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900025-irs_w2_single_page_2026-p0",
+      "expected": "3.08E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900025-irs_w2_single_page_2026-p0",
+      "expected": "2239.4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "Jes\u00fas",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Jesus",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "286167",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "71375.67",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": "14397",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": "174.93",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900028-irs_w2_single_page_2026-p0",
+      "expected": "41177",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900028-irs_w2_single_page_2026-p0",
+      "expected": "3436.05",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900029-irs_w2_single_page_2026-p0",
+      "expected": "8.4E+3",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900029-irs_w2_single_page_2026-p0",
+      "expected": "103.25",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900030-irs_w2_single_page_2026-p0",
+      "expected": "35424",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900030-irs_w2_single_page_2026-p0",
+      "expected": "1573.02",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900031-irs_w2_single_page_2026-p0",
+      "expected": "51149",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900031-irs_w2_single_page_2026-p0",
+      "expected": "4675.6",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900032-irs_w2_single_page_2026-p0",
+      "expected": "12861",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900032-irs_w2_single_page_2026-p0",
+      "expected": "173.33",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "6.83E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "6062.27",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900034-irs_w2_single_page_2026-p0",
+      "expected": "3.4E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900034-irs_w2_single_page_2026-p0",
+      "expected": "2993.38",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900035-irs_w2_single_page_2026-p0",
+      "expected": "531-59-0815",
+      "failure_kind": "missing",
+      "field_path": "employee.ssn",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900035-irs_w2_single_page_2026-p0",
+      "expected": "4.851E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900035-irs_w2_single_page_2026-p0",
+      "expected": "2520.68",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900036-irs_w2_single_page_2026-p0",
+      "expected": "10026",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900036-irs_w2_single_page_2026-p0",
+      "expected": "125.72",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900037-irs_w2_single_page_2026-p0",
+      "expected": "31011",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900037-irs_w2_single_page_2026-p0",
+      "expected": "2597.44",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900038-irs_w2_single_page_2026-p0",
+      "expected": "5.09E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900038-irs_w2_single_page_2026-p0",
+      "expected": "2324.42",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "5.9E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "3672.86",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900040-irs_w2_single_page_2026-p0",
+      "expected": "24038",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900040-irs_w2_single_page_2026-p0",
+      "expected": "293.33",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900041-irs_w2_single_page_2026-p0",
+      "expected": "5.39E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900041-irs_w2_single_page_2026-p0",
+      "expected": "3666.95",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900042-irs_w2_single_page_2026-p0",
+      "expected": "7.3E+3",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900042-irs_w2_single_page_2026-p0",
+      "expected": "101",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900043-irs_w2_single_page_2026-p0",
+      "expected": "21481",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900043-irs_w2_single_page_2026-p0",
+      "expected": "761.52",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900044-irs_w2_single_page_2026-p0",
+      "expected": "51486",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900044-irs_w2_single_page_2026-p0",
+      "expected": "7002.13",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "53806",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "5580.72",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": "21942",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": "1046.35",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900047-irs_w2_single_page_2026-p0",
+      "expected": "3.358E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900047-irs_w2_single_page_2026-p0",
+      "expected": "1377.58",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900048-irs_w2_single_page_2026-p0",
+      "expected": "16849",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900048-irs_w2_single_page_2026-p0",
+      "expected": "358.77",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "85454",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "8277.98",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900050-irs_w2_single_page_2026-p0",
+      "expected": "34349",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900050-irs_w2_single_page_2026-p0",
+      "expected": "1010.38",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900051-irs_w2_single_page_2026-p0",
+      "expected": "18582",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900051-irs_w2_single_page_2026-p0",
+      "expected": "664.65",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "expected": "\u00d3liver",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Oliver",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "expected": "2.44E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "expected": "1397.97",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900053-irs_w2_single_page_2026-p0",
+      "expected": "95402",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900053-irs_w2_single_page_2026-p0",
+      "expected": "13381.52",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900054-irs_w2_single_page_2026-p0",
+      "expected": "16573",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900054-irs_w2_single_page_2026-p0",
+      "expected": "616.29",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900055-irs_w2_single_page_2026-p0",
+      "expected": "5.69E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900055-irs_w2_single_page_2026-p0",
+      "expected": "5390.37",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900056-irs_w2_single_page_2026-p0",
+      "expected": "30797",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900056-irs_w2_single_page_2026-p0",
+      "expected": "2119.28",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900057-irs_w2_single_page_2026-p0",
+      "expected": "13212",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900057-irs_w2_single_page_2026-p0",
+      "expected": "196.98",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "1.05E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "134.53",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900059-irs_w2_single_page_2026-p0",
+      "expected": "140379",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900059-irs_w2_single_page_2026-p0",
+      "expected": "25261.45",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900060-irs_w2_single_page_2026-p0",
+      "expected": "57618",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900060-irs_w2_single_page_2026-p0",
+      "expected": "5057.06",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "expected": "1.766E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "expected": "33669.64",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900062-irs_w2_single_page_2026-p0",
+      "expected": "2.583E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900062-irs_w2_single_page_2026-p0",
+      "expected": "44824.77",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900063-irs_w2_single_page_2026-p0",
+      "expected": "3.08E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900063-irs_w2_single_page_2026-p0",
+      "expected": "2412.26",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900064-irs_w2_single_page_2026-p0",
+      "expected": "153715",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900064-irs_w2_single_page_2026-p0",
+      "expected": "35518.25",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900065-irs_w2_single_page_2026-p0",
+      "expected": "76192",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900065-irs_w2_single_page_2026-p0",
+      "expected": "9307.64",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900066-irs_w2_single_page_2026-p0",
+      "expected": "22689",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900066-irs_w2_single_page_2026-p0",
+      "expected": "934.56",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900067-irs_w2_single_page_2026-p0",
+      "expected": "63585",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900067-irs_w2_single_page_2026-p0",
+      "expected": "7581.99",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900068-irs_w2_single_page_2026-p0",
+      "expected": "7391",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900068-irs_w2_single_page_2026-p0",
+      "expected": "83.7",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900069-irs_w2_single_page_2026-p0",
+      "expected": "2.36E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900069-irs_w2_single_page_2026-p0",
+      "expected": "1062.51",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900070-irs_w2_single_page_2026-p0",
+      "expected": "3.09E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900070-irs_w2_single_page_2026-p0",
+      "expected": "2057.84",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900071-irs_w2_single_page_2026-p0",
+      "expected": "35665",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900071-irs_w2_single_page_2026-p0",
+      "expected": "2762.24",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900072-irs_w2_single_page_2026-p0",
+      "expected": "58051",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900072-irs_w2_single_page_2026-p0",
+      "expected": "7447.07",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900073-irs_w2_single_page_2026-p0",
+      "expected": "1.137E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900073-irs_w2_single_page_2026-p0",
+      "expected": "20609.36",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900074-irs_w2_single_page_2026-p0",
+      "expected": "4.35E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900074-irs_w2_single_page_2026-p0",
+      "expected": "3279.15",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900075-irs_w2_single_page_2026-p0",
+      "expected": "8.15E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900075-irs_w2_single_page_2026-p0",
+      "expected": "9921.19",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900076-irs_w2_single_page_2026-p0",
+      "expected": "2.92E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900076-irs_w2_single_page_2026-p0",
+      "expected": "847",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "171-97-3499",
+      "failure_kind": "missing",
+      "field_path": "employee.ssn",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "92958",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "10579.28",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900078-irs_w2_single_page_2026-p0",
+      "expected": "77497",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900078-irs_w2_single_page_2026-p0",
+      "expected": "10809.35",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900079-irs_w2_single_page_2026-p0",
+      "expected": "3.69E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900079-irs_w2_single_page_2026-p0",
+      "expected": "695.63",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900080-irs_w2_single_page_2026-p0",
+      "expected": "3.82E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900080-irs_w2_single_page_2026-p0",
+      "expected": "3852.91",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "3.7E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "1066.6",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "1.68E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "284.83",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900083-irs_w2_single_page_2026-p0",
+      "expected": "1.091E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900083-irs_w2_single_page_2026-p0",
+      "expected": "11457.56",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900084-irs_w2_single_page_2026-p0",
+      "expected": "61153",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900084-irs_w2_single_page_2026-p0",
+      "expected": "4942.09",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900085-irs_w2_single_page_2026-p0",
+      "expected": "3.5E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900085-irs_w2_single_page_2026-p0",
+      "expected": "578.89",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900086-irs_w2_single_page_2026-p0",
+      "expected": "44335",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900086-irs_w2_single_page_2026-p0",
+      "expected": "3136.91",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "55542",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "4802.39",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900088-irs_w2_single_page_2026-p0",
+      "expected": "4.5E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900088-irs_w2_single_page_2026-p0",
+      "expected": "3936.84",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900089-irs_w2_single_page_2026-p0",
+      "expected": "22444",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900089-irs_w2_single_page_2026-p0",
+      "expected": "326.93",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900090-irs_w2_single_page_2026-p0",
+      "expected": "78432",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900090-irs_w2_single_page_2026-p0",
+      "expected": "17297.52",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900091-irs_w2_single_page_2026-p0",
+      "expected": "8.15E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900091-irs_w2_single_page_2026-p0",
+      "expected": "7096.82",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900092-irs_w2_single_page_2026-p0",
+      "expected": "73944",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900092-irs_w2_single_page_2026-p0",
+      "expected": "6420.44",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900093-irs_w2_single_page_2026-p0",
+      "expected": "258-51-0064",
+      "failure_kind": "missing",
+      "field_path": "employee.ssn",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900093-irs_w2_single_page_2026-p0",
+      "expected": "12603",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900093-irs_w2_single_page_2026-p0",
+      "expected": "11.03",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900094-irs_w2_single_page_2026-p0",
+      "expected": "6.49E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900094-irs_w2_single_page_2026-p0",
+      "expected": "5723.27",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900095-irs_w2_single_page_2026-p0",
+      "expected": "3.41E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900095-irs_w2_single_page_2026-p0",
+      "expected": "698.15",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900096-irs_w2_single_page_2026-p0",
+      "expected": "2.88E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900096-irs_w2_single_page_2026-p0",
+      "expected": "410.32",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900097-irs_w2_single_page_2026-p0",
+      "expected": "20582",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900097-irs_w2_single_page_2026-p0",
+      "expected": "272.04",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900098-irs_w2_single_page_2026-p0",
+      "expected": "3.93E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900098-irs_w2_single_page_2026-p0",
+      "expected": "3074.05",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900099-irs_w2_single_page_2026-p0",
+      "expected": "2.69E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900099-irs_w2_single_page_2026-p0",
+      "expected": "244.72",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900100-irs_w2_single_page_2026-p0",
+      "expected": "70374",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900100-irs_w2_single_page_2026-p0",
+      "expected": "5421.83",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900101-irs_w2_single_page_2026-p0",
+      "expected": "214246",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900101-irs_w2_single_page_2026-p0",
+      "expected": "35533.49",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900102-irs_w2_single_page_2026-p0",
+      "expected": "95421",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900102-irs_w2_single_page_2026-p0",
+      "expected": "9672.35",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": "Ad\u00e1n",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Adan",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": "1.164E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": "19536.46",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900104-irs_w2_single_page_2026-p0",
+      "expected": "81592",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900104-irs_w2_single_page_2026-p0",
+      "expected": "10194.27",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900105-irs_w2_single_page_2026-p0",
+      "expected": "59105",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900105-irs_w2_single_page_2026-p0",
+      "expected": "3944.64",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900106-irs_w2_single_page_2026-p0",
+      "expected": "42848",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900106-irs_w2_single_page_2026-p0",
+      "expected": "2752.89",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900107-irs_w2_single_page_2026-p0",
+      "expected": "20988",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900107-irs_w2_single_page_2026-p0",
+      "expected": "295.73",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900108-irs_w2_single_page_2026-p0",
+      "expected": "4.87E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900108-irs_w2_single_page_2026-p0",
+      "expected": "4282.02",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900109-irs_w2_single_page_2026-p0",
+      "expected": "5.52E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900109-irs_w2_single_page_2026-p0",
+      "expected": "4447.77",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900110-irs_w2_single_page_2026-p0",
+      "expected": "81462",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900110-irs_w2_single_page_2026-p0",
+      "expected": "12953.34",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900111-irs_w2_single_page_2026-p0",
+      "expected": "21762",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900111-irs_w2_single_page_2026-p0",
+      "expected": "324.84",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900112-irs_w2_single_page_2026-p0",
+      "expected": "98298",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900112-irs_w2_single_page_2026-p0",
+      "expected": "16678.65",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900113-irs_w2_single_page_2026-p0",
+      "expected": "1.42E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900113-irs_w2_single_page_2026-p0",
+      "expected": "179.69",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900114-irs_w2_single_page_2026-p0",
+      "expected": "121275",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900114-irs_w2_single_page_2026-p0",
+      "expected": "15087.26",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900115-irs_w2_single_page_2026-p0",
+      "expected": "1.264E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900115-irs_w2_single_page_2026-p0",
+      "expected": "21621.34",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900116-irs_w2_single_page_2026-p0",
+      "expected": "74255",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900116-irs_w2_single_page_2026-p0",
+      "expected": "10574.32",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900117-irs_w2_single_page_2026-p0",
+      "expected": "4.3E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900117-irs_w2_single_page_2026-p0",
+      "expected": "4137.97",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900118-irs_w2_single_page_2026-p0",
+      "expected": "4.15E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900118-irs_w2_single_page_2026-p0",
+      "expected": "1171.54",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": "33576",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": "693.68",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900120-irs_w2_single_page_2026-p0",
+      "expected": "3.68E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900120-irs_w2_single_page_2026-p0",
+      "expected": "736.41",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900121-irs_w2_single_page_2026-p0",
+      "expected": "115068",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900121-irs_w2_single_page_2026-p0",
+      "expected": "9921.69",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900122-irs_w2_single_page_2026-p0",
+      "expected": "167-53-5377",
+      "failure_kind": "missing",
+      "field_path": "employee.ssn",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900122-irs_w2_single_page_2026-p0",
+      "expected": "189681",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900122-irs_w2_single_page_2026-p0",
+      "expected": "45940.26",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900123-irs_w2_single_page_2026-p0",
+      "expected": "82757",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900123-irs_w2_single_page_2026-p0",
+      "expected": "9344.23",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900124-irs_w2_single_page_2026-p0",
+      "expected": "50068",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900124-irs_w2_single_page_2026-p0",
+      "expected": "2907.21",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "52726",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "3198.38",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900126-irs_w2_single_page_2026-p0",
+      "expected": "28875",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900126-irs_w2_single_page_2026-p0",
+      "expected": "320.67",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900127-irs_w2_single_page_2026-p0",
+      "expected": "697-01-2941",
+      "failure_kind": "missing",
+      "field_path": "employee.ssn",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900127-irs_w2_single_page_2026-p0",
+      "expected": "2.059E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900127-irs_w2_single_page_2026-p0",
+      "expected": "55381.93",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900128-irs_w2_single_page_2026-p0",
+      "expected": "34103",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900128-irs_w2_single_page_2026-p0",
+      "expected": "731.9",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900129-irs_w2_single_page_2026-p0",
+      "expected": "9.91E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900129-irs_w2_single_page_2026-p0",
+      "expected": "17316.82",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900130-irs_w2_single_page_2026-p0",
+      "expected": "5.25E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900130-irs_w2_single_page_2026-p0",
+      "expected": "6229.55",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900131-irs_w2_single_page_2026-p0",
+      "expected": "8.91E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900131-irs_w2_single_page_2026-p0",
+      "expected": "7013.07",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900132-irs_w2_single_page_2026-p0",
+      "expected": "77553",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900132-irs_w2_single_page_2026-p0",
+      "expected": "6564.33",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900133-irs_w2_single_page_2026-p0",
+      "expected": "3.12E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900133-irs_w2_single_page_2026-p0",
+      "expected": "2237.09",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900134-irs_w2_single_page_2026-p0",
+      "expected": "54882",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900134-irs_w2_single_page_2026-p0",
+      "expected": "7246.84",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900135-irs_w2_single_page_2026-p0",
+      "expected": "I",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900135-irs_w2_single_page_2026-p0",
+      "expected": "17446",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900135-irs_w2_single_page_2026-p0",
+      "expected": "582.5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900136-irs_w2_single_page_2026-p0",
+      "expected": "101821",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900136-irs_w2_single_page_2026-p0",
+      "expected": "10842.07",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "30782",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "2239.72",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900138-irs_w2_single_page_2026-p0",
+      "expected": "7.55E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900138-irs_w2_single_page_2026-p0",
+      "expected": "6782.78",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900139-irs_w2_single_page_2026-p0",
+      "expected": "43923",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900139-irs_w2_single_page_2026-p0",
+      "expected": "3961.62",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900140-irs_w2_single_page_2026-p0",
+      "expected": "31074",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900140-irs_w2_single_page_2026-p0",
+      "expected": "275.47",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900141-irs_w2_single_page_2026-p0",
+      "expected": "6424",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900141-irs_w2_single_page_2026-p0",
+      "expected": "82.33",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900142-irs_w2_single_page_2026-p0",
+      "expected": "6.55E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900142-irs_w2_single_page_2026-p0",
+      "expected": "8213.28",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900143-irs_w2_single_page_2026-p0",
+      "expected": "6.58E+4",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900143-irs_w2_single_page_2026-p0",
+      "expected": "8593.84",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900144-irs_w2_single_page_2026-p0",
+      "expected": "18893",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900144-irs_w2_single_page_2026-p0",
+      "expected": "551.28",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900145-irs_w2_single_page_2026-p0",
+      "expected": "1.724E+5",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900145-irs_w2_single_page_2026-p0",
+      "expected": "39487.76",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "37501",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "1514.38",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900147-irs_w2_single_page_2026-p0",
+      "expected": "30197",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900147-irs_w2_single_page_2026-p0",
+      "expected": "344.89",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900148-irs_w2_single_page_2026-p0",
+      "expected": "207002",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900148-irs_w2_single_page_2026-p0",
+      "expected": "49995.95",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900149-irs_w2_single_page_2026-p0",
+      "expected": "8.08E+3",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900149-irs_w2_single_page_2026-p0",
+      "expected": "125.17",
+      "failure_kind": "missing",
+      "field_path": "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    }
+  ],
+  "per_field_accuracy": {
+    "box_13.retirement_plan": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "box_13.statutory_employee": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "box_13.third_party_sick_pay": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.first_name": {
+      "correct": 147,
+      "field_accuracy": 0.98,
+      "incorrect": 3,
+      "total": 150
+    },
+    "employee.last_name": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.middle_initial": {
+      "correct": 149,
+      "field_accuracy": 0.9933333333333333,
+      "incorrect": 1,
+      "total": 150
+    },
+    "employee.ssn": {
+      "correct": 145,
+      "field_accuracy": 0.9666666666666667,
+      "incorrect": 5,
+      "total": 150
+    },
+    "employee.suffix": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.control_number": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.ein": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "correct": 0,
+      "field_accuracy": 0.0,
+      "incorrect": 150,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "correct": 0,
+      "field_accuracy": 0.0,
+      "incorrect": 150,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.document_type": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.schema_version": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.tax_year": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    }
+  },
+  "pipeline_id": "pipeline_a",
+  "source_datasets": [
+    "Symage/synthetic-us-forms-preview"
+  ],
+  "successful_documents": 150,
+  "total_fields": 3450
+}

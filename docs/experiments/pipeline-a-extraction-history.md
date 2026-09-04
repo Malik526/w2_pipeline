@@ -190,3 +190,55 @@ At preparation time, the Phase 4C 600-document robustness benchmark was still
 running detached, so the Phase 4D 150-document PSM runs were not launched. Run
 PSM 11 first after the 600 run exits, then inspect and commit its artifacts
 before launching PSM 12. Do not run the two PSM experiments concurrently.
+
+## Phase 4D.1 Tesseract PSM 11 Clean Benchmark
+
+Phase 4D.1 ran Pipeline A with main Tesseract PSM 11 and the same targeted
+supplemental PSM 6 SSN recovery used by the incumbent PSM 3 configuration.
+The dataset, corrected Symage ground truth, parser, evaluator, schema, and
+external clean-render variant were held constant.
+
+```text
+date: 2026-09-04
+scope: external Symage clean renders, 150 documents
+artifact: data/evaluation/results/phase4d_psm11_external_clean_150.json
+markdown: data/evaluation/results/phase4d_psm11_external_clean_150.md
+pipeline_commit: ced96cabdd27e5e766024153e5351308498356c6
+main_psm: 11
+supplemental_psm: 6
+documents: 150
+successful_documents: 150
+failed_documents: 0
+field_accuracy: 0.9104347826086957
+correct_fields: 3141
+total_fields: 3450
+field_failure_count: 309
+average_duration_seconds: 2.1542158065199692
+```
+
+Key field results:
+
+```text
+employee.first_name: 147 / 150 correct, 0.98 accuracy
+employee.middle_initial: 149 / 150 correct, 0.9933333333333333 accuracy
+employee.ssn: 145 / 150 correct, 0.9666666666666667 accuracy
+employer.ein: 150 / 150 correct, 1.0 accuracy
+box_13.retirement_plan: 150 / 150 correct, 1.0 accuracy
+federal_wages_and_taxes.box_1_wages_tips_other_compensation: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_2_federal_income_tax_withheld: 0 / 150 correct, 0.0 accuracy
+federal_wages_and_taxes.box_3_social_security_wages: 150 / 150 correct, 1.0 accuracy
+federal_wages_and_taxes.box_5_medicare_wages_and_tips: 150 / 150 correct, 1.0 accuracy
+federal_wages_and_taxes.box_6_medicare_tax_withheld: 150 / 150 correct, 1.0 accuracy
+```
+
+Compared with the Phase 4C incumbent clean benchmark, PSM 11 improved employee
+first name, employee middle initial, employer EIN, Box 13 retirement-plan
+detection, and federal Boxes 3/5/6. However, it failed to extract federal
+Boxes 1 and 2 on every clean-render document, dropping overall field accuracy
+from `0.991304347826087` to `0.9104347826086957` and increasing field failures
+from `30` to `309`.
+
+Conclusion: PSM 11 is not a replacement for the incumbent main PSM 3
+configuration. Its field-specific improvements may be useful diagnostic
+evidence, but the complete Box 1/2 regression is too severe for default
+Pipeline A configuration.
