@@ -75,3 +75,42 @@ The correction:
 Historical Phase 4B result artifacts should not be used for corrected Box e
 name-accuracy claims. Reruns after this correction must regenerate local
 external ground truth from annotations before executing Pipeline A.
+
+## Phase 4C Corrected Box e Clean Benchmark
+
+Phase 4C reran the 150-document external clean-render benchmark after
+regenerating local Symage ground truth from evaluator-side annotations with
+corrected Box e employee-name semantics.
+
+```text
+date: 2026-09-04
+scope: external Symage clean renders, 150 documents
+artifact: data/evaluation/results/phase4c_external_clean_150_name_semantics.json
+markdown: data/evaluation/results/phase4c_external_clean_150_name_semantics.md
+pipeline_commit: fc4d2f6c2ad0f5573a457901c19dd0de0eb30ece
+documents: 150
+successful_documents: 150
+failed_documents: 0
+field_accuracy: 0.991304347826087
+correct_fields: 3420
+total_fields: 3450
+field_failure_count: 30
+average_duration_seconds: 2.0517181199200363
+```
+
+Employee Box e field results:
+
+```text
+employee.first_name: 140 / 150 correct, 0.9333333333333333 accuracy
+employee.middle_initial: 141 / 150 correct, 0.94 accuracy
+employee.last_name: 150 / 150 correct, 1.0 accuracy
+employee.suffix: 150 / 150 correct, 1.0 accuracy
+```
+
+The corrected clean benchmark improved overall field accuracy from the Phase
+4B clean baseline of `0.9887878787878788` to `0.991304347826087`, while also
+expanding the evaluated field count from `3,300` to `3,450` because
+`employee.middle_initial` is now scored independently for all 150 external
+clean documents. Remaining clean-render failures are concentrated in employee
+first name, employee middle initial, Box 13 retirement-plan detection,
+employer EIN, and a small number of federal money fields.
