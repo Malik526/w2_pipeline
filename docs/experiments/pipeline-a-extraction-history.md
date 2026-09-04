@@ -970,3 +970,82 @@ data/evaluation/results/phase4e_tesseract_checkbox_vision_external_all_variants_
   weakness is an open decision for later, not addressed by this rerun. The
   equivalent PaddleOCR GPU 600-document robustness rerun remains outstanding
   and was explicitly out of scope for this task.
+
+## Phase 4E PaddleOCR GPU 600-Document Robustness Rerun (Post Checkbox Vision Fix)
+
+Formal rerun of PaddleOCR GPU's 600-document external robustness benchmark
+(all four variants: clean render, compressed JPEG, rotated PNG, blurred
+PNG; `--ocr-backend paddleocr --paddle-device gpu`) with the Box 13 visual
+checkbox detector in place. This is PaddleOCR GPU's **first-ever**
+600-document robustness data point — no prior PaddleOCR run at this scope
+existed to compare against for the compressed/rotated/blurred variants
+(only the clean-150 subset had a historical PaddleOCR number), so results
+below are compared against the PaddleOCR clean-150 post-fix result and
+against the Tesseract 600-document robustness result from the immediately
+preceding rerun, not against a PaddleOCR "before" baseline for the degraded
+variants.
+
+```text
+data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_all_variants_600.json
+data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_all_variants_600.md
+```
+
+- `field_accuracy = 0.976231884057971` (13,472/13,800 correct),
+  `failed_documents = 0`, `field_failure_count = 328`, average
+  `1.329903785876671` seconds/document (essentially matching the clean-150
+  post-fix rate of `1.439s`/doc — no meaningful robustness slowdown, unlike
+  Tesseract's variant-dependent runtime).
+- **Every one of the 328 failures is on the `rotated_png` variant.** Clean
+  render, compressed JPEG, and blurred PNG are all `field_accuracy = 1.0`
+  (3,450/3,450 each, zero failures) — a materially different robustness
+  profile than Tesseract, whose worst variant is blurred (67.71%) not
+  rotated.
+- `rotated_png` breakdown (`field_accuracy = 0.904927536231884`,
+  3,122/3,450): failures are concentrated in exactly three fields —
+  `employee.first_name` (0/150 correct, complete failure),
+  `employee.middle_initial` (32/150 correct, 21.3%), and
+  `box_13.retirement_plan` (90/150 correct, 60.0%). No other field shows any
+  failure under any variant.
+- **The `employee.first_name`/`middle_initial` rotated failures are a new
+  finding unrelated to the checkbox-vision fix.** Inspecting the failure
+  records shows PaddleOCR's rotated-image text detection appends the
+  printed field-label text to the extracted name (e.g. expected `"Lori"`,
+  predicted `"Lori e Employee's first name and initial"`) — a label-bleed
+  artifact in name-zone word reconstruction specific to rotated PaddleOCR
+  text detection, not a Box 13 or checkbox-vision issue. This is Pipeline
+  A's first robustness-scale evidence of this failure mode on PaddleOCR;
+  Tesseract's rotated `employee.first_name` weakness (53.67% aggregate) has
+  a different, non-zero failure pattern and is not caused by the same
+  mechanism.
+- **The `box_13.retirement_plan` rotated failures are identical, document
+  for document, to Tesseract's**: cross-checking `document_id` sets, the
+  same exact 60 documents fail `retirement_plan` under rotation on both
+  backends (`60/60` overlap, zero backend-specific difference). This
+  confirms the visual checkbox detector genuinely runs identically
+  regardless of OCR backend — it operates on the same source image pixels
+  — and that its rotation weakness is a property of the fixed
+  `RETIREMENT_PLAN_ZONE` calibration (calibrated only against clean
+  renders), not of either backend's OCR behavior.
+- Versus the Tesseract 600-document robustness result (88.98% aggregate,
+  worst variant blurred at 67.71%): PaddleOCR GPU's aggregate accuracy is
+  substantially higher (97.62% vs. 88.98%) and its worst variant (rotated,
+  90.49%) is far better than Tesseract's worst (blurred, 67.71%).
+  PaddleOCR GPU is perfect on blur where Tesseract is weakest, and
+  comparable to (marginally better than) Tesseract on rotation (90.49% vs.
+  89.97%) despite the identical Box 13 rotation weakness both share.
+- Conclusion: PaddleOCR GPU's robustness profile, now measured for the
+  first time, is stronger than Tesseract's across the board on this
+  600-document set — higher aggregate accuracy, no failure at all on
+  compressed or blurred images, and a comparable (not worse) rotated-image
+  result. Its one significant new weakness — complete `employee.first_name`
+  failure under rotation from a label-bleed text-reconstruction artifact —
+  is unrelated to checkbox vision and is a newly discovered, previously
+  unmeasured limitation, not a regression from anything. This result does
+  **not** change the incumbent configuration or promote PaddleOCR to
+  incumbent; no promotion decision was made as part of this rerun, per the
+  experiment skill's boundaries. It further strengthens the case raised
+  after the clean-150 PaddleOCR GPU rerun, while also surfacing a
+  rotation-specific text-reconstruction issue that would need its own
+  investigation before PaddleOCR GPU could be considered a clean win across
+  all four variants. No Tesseract PSM 11 (or any other configuration) was
+  run as part of this task, per its explicit scope.

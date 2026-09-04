@@ -145,6 +145,55 @@
   fix is left as an open decision. The equivalent PaddleOCR GPU
   600-document robustness rerun was not run and remains outstanding.
 
+### Phase 4E - PaddleOCR GPU 600-Document Robustness Rerun (Post Checkbox Vision)
+
+- Reran PaddleOCR GPU's 600-document external robustness benchmark (all
+  four variants: clean render, compressed JPEG, rotated PNG, blurred PNG;
+  `--ocr-backend paddleocr --paddle-device gpu`) with the Box 13 visual
+  checkbox detector in place — PaddleOCR GPU's first-ever 600-document
+  robustness data point, closing the last outstanding item from the
+  checkbox-vision fix's rerun sequence.
+- Added `data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_all_variants_600.json`
+  and the matching `.md` report as new artifacts; no prior PaddleOCR
+  600-document result existed to preserve, and all other historical result
+  files were left unmodified.
+- Result: `field_accuracy = 0.976231884057971` (13,472/13,800 correct),
+  `failed_documents = 0`, average `1.330s`/document. **Every one of the 328
+  failures is on the `rotated_png` variant** — clean render, compressed
+  JPEG, and blurred PNG are all perfect (`field_accuracy = 1.0`), including
+  blur, which is Tesseract's worst variant (67.71%).
+- `rotated_png` breakdown (90.49%): failures are concentrated in
+  `employee.first_name` (0/150, complete failure), `employee.middle_initial`
+  (32/150, 21.3%), and `box_13.retirement_plan` (90/150, 60.0%).
+- **New finding, unrelated to checkbox vision:** every rotated
+  `employee.first_name` failure shows the printed field-label text bled
+  into the predicted name (e.g. expected `"Lori"`, predicted `"Lori e
+  Employee's first name and initial"`) — a label-bleed artifact in
+  PaddleOCR's rotated-image name-zone word reconstruction, newly surfaced
+  by this rerun since no prior PaddleOCR robustness benchmark existed to
+  catch it. Not yet investigated or fixed.
+- **`box_13.retirement_plan` rotated failures are identical, document for
+  document, to Tesseract's** (same exact 60 documents, confirmed by
+  cross-checking `document_id` sets) — the visual checkbox detector runs
+  identically regardless of backend, so this confirms its rotation
+  weakness is a property of the fixed calibration zone, not either
+  backend's OCR behavior.
+- Versus Tesseract's 600-document result (88.98% aggregate, worst variant
+  blurred at 67.71%): PaddleOCR GPU is substantially ahead overall (97.62%)
+  and its worst variant (rotated, 90.49%) beats Tesseract's worst by a wide
+  margin, while being comparable to (marginally better than) Tesseract's
+  own rotated result (89.97%).
+- This does **not** promote PaddleOCR GPU to incumbent or change the
+  incumbent configuration — no promotion decision was made as part of this
+  rerun, per the experiment skill's boundaries; that decision, along with
+  whether the newly discovered rotation label-bleed artifact needs a fix,
+  remains explicitly the user's to make. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Immediate Next Experiment, Current
+  Known Weaknesses, Current Pipeline A Configuration, Unimplemented
+  Capabilities). No Tesseract PSM 11 or other configuration was run, per
+  this task's explicit scope.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the
