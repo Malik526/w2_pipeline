@@ -2,6 +2,24 @@
 
 ## 2026-09-04
 
+### Docs - Project State Reconciliation
+
+- Updated `docs/project-state.md` so the current-state framing reflects Phase
+  4D as the active phase instead of stopping the narrative at Phase 4B.
+- Added explicit "Current Pipeline A Configuration," "Immediate Next
+  Experiment," "Future Phases," "Current Known Weaknesses," and "Unimplemented
+  Capabilities" sections answering where the project stands today.
+- Recorded the Phase 4C corrected clean-150 (`0.991304347826087`) and
+  robustness-600 (`0.8846376811594203`) benchmark results as the current
+  authoritative external Pipeline A numbers, and marked the pre-correction
+  Phase 4B numbers as historical/superseded for name-accuracy claims.
+- Recorded the Phase 4D.1 PSM 11 result and conclusion (rejected as incumbent
+  due to total Box 1/Box 2 regression) in the current-state summary.
+- Corrected the "Next Phase" pointer, which previously jumped straight to
+  Phase 5, to identify Phase 4D.2 (PSM 12) as the immediate next experiment,
+  with Phase 4E (PaddleOCR) and Phase 5 (Pipeline B) as later future phases.
+- No code changes; no benchmarks were run as part of this reconciliation.
+
 ### Phase 4D.1 - Tesseract PSM 11 Results
 
 - Added completed Phase 4D.1 PSM 11 clean-render benchmark artifacts:

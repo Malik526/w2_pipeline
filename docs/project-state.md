@@ -4,11 +4,28 @@ Last updated: 2026-09-04
 
 ## Current Phase
 
-Phase 4 is established: Pipeline A Deterministic Native Text/OCR Extraction
-Baseline. Phase 4B external benchmark hardening and result reconciliation are
-complete. A post-Phase 4B correction now aligns employee Box e name semantics
-with the official form split between first name, middle initial, last name, and
-suffix.
+Phase 4D is active: controlled Tesseract main page-segmentation-mode
+experiments within Pipeline A. Phase 4D does not introduce a new pipeline and
+does not change canonical schema, ground truth semantics, parser logic,
+evaluator matching, or annotation isolation; only the main Tesseract PSM is the
+experimental variable.
+
+Most recently completed:
+
+- Phase 4C corrected the Box e employee-name semantic error end to end (ground
+  truth regeneration plus reruns) and reran both the 150-document external
+  clean benchmark and the 600-document external robustness benchmark against
+  the corrected semantics. Both reruns are complete and are now the
+  authoritative external Pipeline A benchmark numbers.
+- Phase 4D.1 evaluated main Tesseract PSM 11 (with the same targeted
+  supplemental PSM 6 SSN recovery pass) against the 150-document external
+  clean-render set and documented the result. PSM 11 was **not** promoted to
+  the incumbent configuration: it improved several weak fields but caused a
+  complete regression on federal Boxes 1 and 2.
+
+The current Pipeline A incumbent configuration is unchanged from Phase 4B:
+main Tesseract **PSM 3** plus the targeted supplemental **PSM 6** SSN-recovery
+pass.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -26,7 +43,11 @@ fallback, deterministic 2026 W-2 parsing rules, route-aware benchmark
 integration, and baseline benchmark commands. Phase 4B installed and exercised
 the OCR route end to end, hardened Tesseract/parser behavior against external
 W-2 images, added per-field benchmark reporting, and recorded external clean
-and degraded benchmark result artifacts.
+and degraded benchmark result artifacts. Phase 4C corrected employee Box e
+name semantics in both the extractor and the external ground truth, then
+reran the clean and robustness external benchmarks. Phase 4D added configurable
+main-PSM support to Pipeline A and the benchmark CLI, and Phase 4D.1 evaluated
+PSM 11 as the first controlled sparse-text experiment.
 
 ## Authoritative Reference
 
@@ -70,6 +91,27 @@ src/w2_pipeline/extraction/
 docs/contracts/extraction-pipeline-a.md
 ```
 
+Experiment narrative (what was tested and learned, as opposed to current
+state):
+
+```text
+docs/experiments/pipeline-a-extraction-history.md
+```
+
+## Current Pipeline A Configuration
+
+- Incumbent/default: main Tesseract **PSM 3** + targeted supplemental
+  **PSM 6** (top identifier region, SSN recovery).
+- Configurable experiment modes via `--tesseract-psm`: `3` (default), `11`,
+  and `12`. The supplemental PSM 6 pass is always enabled regardless of the
+  selected main PSM, so experiments isolate the main full-page segmentation
+  mode only.
+- PSM 11 was evaluated in Phase 4D.1 and rejected as a default: it zeroed
+  federal Box 1 and Box 2 extraction on all 150 clean-render documents despite
+  improving employee first name, employee middle initial, employer EIN, Box 13
+  retirement-plan detection, and federal Boxes 3/5/6.
+- PSM 12 has not yet been evaluated.
+
 ## Encoded Assumptions
 
 - The working user is an accounting or tax-preparation firm processing W-2s
@@ -96,30 +138,54 @@ docs/contracts/extraction-pipeline-a.md
 - Pipeline A's main full-page Tesseract PSM is configurable for controlled
   experiments. The default remains PSM 3, with PSM 11 and PSM 12 supported as
   Phase 4D experiment modes while targeted supplemental PSM 6 SSN recovery
-  remains enabled.
+  remains enabled. Phase 4D.1 confirmed PSM 3 should remain the incumbent
+  after PSM 11 caused a complete Box 1/Box 2 regression.
 - Tesseract is a system runtime dependency; when absent, OCR documents fail
   explicitly and benchmark failure isolation records the failure.
 - In the completed Phase 4B benchmark environment, Tesseract was present and
-  Pipeline A completed external OCR runs with 0 document failures.
+  Pipeline A completed external OCR runs with 0 document failures. Phase 4C
+  and Phase 4D.1 reruns also completed with 0 document failures.
 - Pipeline A is strong on clean and compressed external W-2 images, degrades
   moderately under rotation, and degrades substantially under blur.
 - Employee Box e `Employee's first name and initial` maps to
   `employee.first_name` plus `employee.middle_initial`; last name and suffix
-  remain independent canonical fields.
+  remain independent canonical fields. This correction is implemented in both
+  the Symage ground-truth adapter and Pipeline A's OCR name-zone parsing, and
+  the Phase 4C reruns are the first external benchmark numbers computed under
+  the corrected semantics.
 - Evaluation compares employee-name strings exactly. Accents are not folded or
   transliterated during field accuracy scoring.
 - Confidence scores remain exploratory.
 - Real taxpayer data must not be committed.
 
-## Next Phase
+## Immediate Next Experiment
 
 ```text
-Phase 5 - Pipeline B: Document Vision / Schema-Constrained Extraction
+Phase 4D.2 - main Tesseract PSM 12 + targeted supplemental PSM 6
 ```
 
-Phase 5 should implement a model-based challenger that produces the same
-canonical `W2Document` and runs against the existing evaluator without changing
-ground truth or exposing annotations.
+Run against the same 150-document external Symage clean-render set, holding
+dataset, ground truth, parser, evaluator, schema, and supplemental PSM 6
+behavior constant. This experiment has not been started; no PSM 12 result
+artifacts exist yet.
+
+## Future Phases (after Phase 4D)
+
+```text
+Phase 4E - PaddleOCR alternate OCR backend within Pipeline A
+Phase 5  - Pipeline B: Document Vision / Schema-Constrained Extraction
+```
+
+Phase 4E stays inside the Pipeline A architecture (OCR backend swapped behind
+the same common observation boundary, parser, canonical schema, and
+evaluator); it is not a new pipeline. Phase 5 is a genuinely different
+document-vision/VLM architecture and should implement a model-based challenger
+that produces the same canonical `W2Document` and runs against the existing
+evaluator without changing ground truth or exposing annotations. Phase 5 is
+compared against whichever Pipeline A configuration performs best across
+Phase 4D/4E, not automatically against the Phase 4B/4C PSM 3 baseline.
+
+## Completed Phase History
 
 Completed Phase 1 brief:
 
@@ -219,7 +285,8 @@ benchmark summary output. The follow-up reporting layer added structured
 field-failure serialization and same-base Markdown companion reports for saved
 benchmark JSON results.
 
-Verified Phase 4B external results:
+Phase 4B external results (historical; predate the Phase 4C Box e semantic
+correction below and are superseded for any employee-name accuracy claim):
 
 - external Symage clean renders, 150 documents: `field_accuracy =
   0.9887878787878788`, `failure_rate = 0.0`, average 2.223 seconds/document,
@@ -230,11 +297,6 @@ Verified Phase 4B external results:
 - variant accuracy: clean 98.88%, compressed JPEG 97.97%, rotated PNG 92.45%,
   blurred PNG 67.76%
 
-Major known weaknesses are employee first-name extraction, Box 13 retirement
-plan checkbox detection, and blur sensitivity. The next extraction experiment
-has not been finalized; possible next work includes a targeted PaddleOCR
-comparison or a Pipeline B document-vision challenger.
-
 Post-Phase 4B employee-name correction:
 
 - Symage external ground truth now splits `Employee's first name and initial`
@@ -244,9 +306,80 @@ Post-Phase 4B employee-name correction:
   OCR fragments only when normal-size neighboring name tokens are present.
 - Benchmark reports now include metadata for run timestamp, source datasets,
   variant scope, schema version, Git commit, and OCR configuration.
-- Historical Phase 4B result artifacts predate this semantic correction. Any
-  name-accuracy claim based on the external Symage benchmark should use a
-  freshly regenerated ground-truth dataset and rerun result.
+- Historical Phase 4B result artifacts predate this semantic correction and
+  should not be used for corrected Box e name-accuracy claims; the Phase 4C
+  reruns below are the corrected numbers.
+
+Completed Phase 4C corrected Box e benchmark reruns:
+
+```text
+data/evaluation/results/phase4c_external_clean_150_name_semantics.json
+data/evaluation/results/phase4c_external_clean_150_name_semantics.md
+data/evaluation/results/phase4c_external_all_variants_600_name_semantics.json
+data/evaluation/results/phase4c_external_all_variants_600_name_semantics.md
+```
+
+These are the current authoritative external Pipeline A benchmark results
+(main PSM 3 + supplemental PSM 6 incumbent, corrected Box e semantics):
+
+- external Symage clean renders, 150 documents: `field_accuracy =
+  0.991304347826087` (3,420 / 3,450 correct), `failed_documents = 0`, average
+  2.0517181199200363 seconds/document. Employee Box e breakdown:
+  `employee.first_name` 93.33%, `employee.middle_initial` 94.0%,
+  `employee.last_name` 100%, `employee.suffix` 100%.
+- all prepared external variants, 600 documents: `field_accuracy =
+  0.8846376811594203` (12,208 / 13,800 correct), `failed_documents = 0`,
+  average 2.1994630620232782 seconds/document.
+- variant accuracy: clean render 99.13%, compressed JPEG 98.20%, rotated PNG
+  89.45%, blurred PNG 67.07%.
+
+The corrected numbers are lower than the Phase 4B pre-correction numbers
+primarily because `employee.middle_initial` is now scored as its own field
+path across every document/variant, not because extraction quality regressed.
+
+Completed Phase 4D.1 PSM 11 experiment:
+
+```text
+data/evaluation/results/phase4d_psm11_external_clean_150.json
+data/evaluation/results/phase4d_psm11_external_clean_150.md
+```
+
+Main PSM 11 + targeted supplemental PSM 6, same 150 external clean-render
+documents, corrected ground truth:
+
+- `field_accuracy = 0.9104347826086957` (3,141 / 3,450 correct),
+  `failed_documents = 0`, average 2.1542158065199692 seconds/document.
+- Improved fields versus the Phase 4C PSM 3 incumbent: `employee.first_name`
+  98.0%, `employee.middle_initial` 99.33%, `employer.ein` 100.0%,
+  `box_13.retirement_plan` 100.0%, and federal Boxes 3/5/6 at 100.0%.
+- Regressed fields: federal `box_1_wages_tips_other_compensation` and
+  `box_2_federal_income_tax_withheld` both dropped to `0 / 150` correct
+  (complete extraction failure on every clean-render document).
+- Conclusion: PSM 11 is not a viable replacement for the incumbent main PSM 3
+  configuration despite its sparse-field gains. It remains useful diagnostic
+  evidence but is not deployed as a default.
+
+## Current Known Weaknesses
+
+- Employee first name and middle initial remain the weakest fields under the
+  incumbent PSM 3 + PSM 6 configuration (93.33% / 94.0% on the clean set).
+- Box 13 retirement-plan checkbox detection remains a known weak field under
+  the incumbent configuration.
+- Employer EIN and employee SSN degrade under rotated/blurred variants.
+- Blur is the dominant degradation case (67.07% aggregate field accuracy on
+  the blurred variant); rotation is a moderate degradation case (89.45%).
+- PSM 11 trades the above name/EIN/Box 13 weaknesses for a total loss of
+  federal Boxes 1 and 2, so it is documented as a known failure mode rather
+  than adopted.
+
+## Unimplemented Capabilities
+
+- Phase 4D.2 (PSM 12) has not been run.
+- Phase 4E (PaddleOCR alternate OCR backend) has not been started.
+- Phase 5 (Pipeline B document-vision/VLM challenger) has not been started.
+- Review routing, confidence calibration, validation engines, persistence,
+  FastAPI/API layer, frontend, CSV export, and cost tracking remain
+  unimplemented future-phase work.
 
 ## Open Issues
 
