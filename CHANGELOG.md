@@ -73,6 +73,41 @@
   150-document rerun and the 600-document robustness rerun remain
   outstanding.
 
+### Phase 4E - PaddleOCR GPU 150-Document Rerun (Post Checkbox Vision)
+
+- Reran PaddleOCR GPU's 150-document external clean-render benchmark
+  (`--ocr-backend paddleocr --paddle-device gpu`, unchanged configuration)
+  with the Box 13 visual checkbox detector in place, closing out the second
+  half of the "Immediate Next Experiment" pointer (Tesseract's side was
+  completed immediately prior, above).
+- Added `data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_clean_150.json`
+  and the matching `.md` report as new artifacts; the prior
+  `phase4e_paddleocr_gpu_external_clean_150.json`/`.md` and all other
+  historical result files were left unmodified.
+- Result: `field_accuracy = 1.0` (3,450/3,450 correct, up from
+  3,360/3,450), `failed_documents = 0`, `field_failure_count = 0`, average
+  `1.439s`/document (up from `1.349s`, the added cost of the pixel-based
+  checkbox pass). The only field that changed versus the historical Phase 4E
+  result is `box_13.retirement_plan`, 40.0% -> 100.0% — every one of the 90
+  historical failures was this field, and all are now resolved with zero
+  regressions elsewhere.
+- **Versus the same-day Tesseract post-checkbox-vision result** (99.28% at
+  `2.330s`/doc): PaddleOCR GPU now scores higher accuracy (100.0%) at lower
+  latency (1.439s/doc, ~38% faster), including 100% on every field that
+  remains Tesseract's weakest. This closes and inverts PaddleOCR GPU's
+  historical headline weakness (lower accuracy than Tesseract) — it is now
+  strictly ahead of the incumbent on this clean-150 benchmark on both
+  accuracy and speed.
+- This does **not** change the incumbent configuration by itself — no
+  promotion decision was made as part of this rerun, per the experiment
+  skill's boundaries. It substantially strengthens the case for that
+  decision, which remains explicitly the user's to make. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Immediate Next Experiment, Current
+  Known Weaknesses, Current Pipeline A Configuration). The 600-document
+  robustness rerun (either backend) was deliberately not run as part of this
+  task.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

@@ -846,3 +846,60 @@ data/evaluation/results/phase4e_tesseract_checkbox_vision_external_clean_150.md
   remains the incumbent. The equivalent PaddleOCR GPU rerun
   (`phase4e_paddleocr_gpu_external_clean_150`-equivalent) remains outstanding
   — see `docs/project-state.md`'s "Immediate Next Experiment."
+
+## Phase 4E PaddleOCR GPU 150-Document Rerun (Post Checkbox Vision Fix)
+
+Formal rerun of PaddleOCR GPU's 150-document external clean-render benchmark
+with the Box 13 visual checkbox detector in place, closing out the
+"Immediate Next Experiment" pointer's second half (the Tesseract side was
+completed immediately prior — see above). Same 150 documents, same corrected
+ground truth/parser/evaluator/schema as the historical Phase 4E PaddleOCR GPU
+result — only the checkbox-vision code path changed. Configuration held
+constant: `--ocr-backend paddleocr --paddle-device gpu`.
+
+```text
+data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_clean_150.json
+data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_clean_150.md
+```
+
+- `field_accuracy = 1.0` (3,450 / 3,450 correct), `failed_documents = 0`,
+  `field_failure_count = 0`, average `1.439184085346657` seconds/document.
+- Comparison against the historical PaddleOCR GPU result
+  (`phase4e_paddleocr_gpu_external_clean_150`, `field_accuracy =
+  0.9739130434782609`, 3,360/3,450, 90 field failures, average `1.349s`/doc):
+  the **only** field that changed is `box_13.retirement_plan`, which moved
+  from 40.0% (60/150) to 100.0% (150/150) — every one of the 90 historical
+  failures was this single field, and all 90 are now resolved. Every other
+  field was already 100% correct in the historical run and remains so; there
+  is no field anywhere in the 3,450-field surface below 100%. Average
+  duration rose slightly (`1.349s` -> `1.439s`/doc, +6.7%), the added cost of
+  the pixel-based checkbox pass, consistent in direction with the Tesseract
+  rerun's overhead.
+- Comparison against the same-day Tesseract post-checkbox-vision result
+  (`phase4e_tesseract_checkbox_vision_external_clean_150`, `field_accuracy =
+  0.9927536231884058`, 3,425/3,450, average `2.330s`/doc): PaddleOCR GPU now
+  scores **higher** overall accuracy (100.0% vs. 99.28%) at **lower**
+  latency (1.44s vs. 2.33s/doc, ~38% faster). PaddleOCR GPU has zero field
+  failures anywhere in the 150-document set, including on the seven fields
+  that remain Tesseract's weakest (`employee.first_name` 93.33%,
+  `employee.middle_initial` 94.0%, `employer.ein` 98.67%,
+  `box_6_medicare_tax_withheld` 98.67%, `box_3_social_security_wages`
+  99.33%, `box_5_medicare_wages_and_tips` 99.33%) — PaddleOCR GPU is 100%
+  correct on every one of those.
+- Conclusion: the checkbox-vision fix, which was root-caused and implemented
+  specifically to close PaddleOCR GPU's `box_13.retirement_plan` gap,
+  confirms exactly as predicted at full 150-document scale: a perfect,
+  regression-free result. With this fix in place, PaddleOCR GPU's historical
+  headline weakness (lower overall accuracy than Tesseract, 97.39% vs.
+  99.13%/99.28%) is fully closed and inverted — PaddleOCR GPU is now strictly
+  better than the Tesseract incumbent on this clean-150 benchmark on both
+  accuracy and speed. This does not by itself change the incumbent: no
+  promotion decision was made as part of this rerun, per the experiment
+  skill's boundaries (report the result, let the user decide) — but it
+  substantially strengthens the case raised as an open question after the
+  original 150-document PaddleOCR GPU benchmark. The 600-document robustness
+  benchmark (compressed/rotated/blurred) with the fix in place has
+  deliberately not been run as part of this task and remains the next
+  mechanical step if the incumbent question is pursued further; the visual
+  detector's ink-coverage threshold is still calibrated only against clean
+  renders and unvalidated under degraded image quality.
