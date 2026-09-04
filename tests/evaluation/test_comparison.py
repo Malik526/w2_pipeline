@@ -79,6 +79,63 @@ def test_null_vs_null_is_correct() -> None:
     assert control_field.correct is True
 
 
+def test_employee_middle_initial_is_scored_separately_from_first_name() -> None:
+    expected, predicted = _sample_pair()
+    expected.employee.first_name = "William"
+    expected.employee.middle_initial = "G"
+    expected.employee.last_name = "Hernandez"
+    predicted.employee.first_name = "William"
+    predicted.employee.middle_initial = None
+    predicted.employee.last_name = "Hernandez"
+
+    evaluation = compare_w2_documents(
+        expected=expected,
+        predicted=predicted,
+        sample_id="w2_2026_0004",
+        variant_id="clean_pdf",
+        evaluated_field_paths=[
+            "employee.first_name",
+            "employee.middle_initial",
+            "employee.last_name",
+        ],
+    )
+
+    first = next(
+        field for field in evaluation.field_evaluations if field.field_path == "employee.first_name"
+    )
+    middle = next(
+        field
+        for field in evaluation.field_evaluations
+        if field.field_path == "employee.middle_initial"
+    )
+    last = next(
+        field for field in evaluation.field_evaluations if field.field_path == "employee.last_name"
+    )
+
+    assert first.correct is True
+    assert middle.correct is False
+    assert middle.failure_kind == EvaluationFailureKind.MISSING
+    assert last.correct is True
+
+
+def test_employee_name_accents_are_exact_semantic_mismatches() -> None:
+    expected, predicted = _sample_pair()
+    expected.employee.first_name = "Jesús"
+    predicted.employee.first_name = "Jesus"
+
+    evaluation = compare_w2_documents(
+        expected=expected,
+        predicted=predicted,
+        sample_id="w2_2026_0004",
+        variant_id="clean_pdf",
+        evaluated_field_paths=["employee.first_name"],
+    )
+
+    failure = evaluation.failures[0]
+    assert failure.field_path == "employee.first_name"
+    assert failure.kind == EvaluationFailureKind.MISMATCH
+
+
 def test_decimal_mismatch_is_detected_without_float_conversion() -> None:
     expected, predicted = _sample_pair()
     predicted.federal_wages_and_taxes.box_1_wages_tips_other_compensation += Decimal("0.01")

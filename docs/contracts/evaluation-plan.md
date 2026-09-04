@@ -173,6 +173,13 @@ Failures are classified explicitly:
 Strings are normalized only by trimming surrounding whitespace. Decimal values
 remain `Decimal` values and are compared without float conversion.
 
+Employee Box e name values are scored at canonical-field granularity.
+`employee.first_name`, `employee.middle_initial`, `employee.last_name`, and
+`employee.suffix` are independent field paths when annotated by the benchmark
+source. A prediction can therefore receive credit for the first name while
+missing the middle initial, or vice versa. Accents are not folded during
+comparison; `Jesús` and `Jesus` are exact mismatches.
+
 ## Phase 3B External Synthetic Benchmark
 
 Phase 3B extends the Phase 3 harness without replacing the internal synthetic
@@ -234,6 +241,13 @@ The external mapping produces canonical `W2Document` ground truth and records
 canonical field, that field is excluded from scoring for that external item
 rather than being treated as an extraction failure.
 
+For the Symage W-2 subset, the FUNSD question `Employee's first name and
+initial` maps to both `employee.first_name` and `employee.middle_initial`: the
+adapter splits a trailing uppercase single-letter token into the middle
+initial when present, and records a nullable `employee.middle_initial` field in
+`evaluated_field_paths` even for first-name-only examples. `Last name` and
+`Suff.` map to `employee.last_name` and `employee.suffix` respectively.
+
 ## Phase 4 Pipeline A Benchmark Integration
 
 Phase 4 adds Pipeline A as the first evaluated extractor. Pipeline A plugs into
@@ -258,6 +272,12 @@ duration, accuracy by variant, accuracy by route, per-field accuracy, and
 structured incorrect field results. When `--output-json` is supplied, the JSON
 file remains canonical and the runner also writes a matching Markdown report
 with the same base filename.
+
+Saved benchmark summaries include `benchmark_metadata` with the run timestamp,
+pipeline identifier, canonical schema version, source dataset list, variant
+scope, Git commit when available, and Pipeline A OCR configuration. This
+metadata is part of result interpretation and should be preserved when
+committing intentional benchmark artifacts.
 
 ## Phase 4B External Pipeline A Results
 

@@ -153,6 +153,21 @@ def test_minimal_optional_nullable_payload_passes() -> None:
     assert document.field_observations[0].status == FieldStatus.EXTRACTION_FAILED
 
 
+def test_employee_middle_initial_and_suffix_are_independent_optional_fields() -> None:
+    payload = valid_w2_payload()
+    payload["employee"]["first_name"] = "Jordan"
+    payload["employee"]["middle_initial"] = None
+    payload["employee"]["last_name"] = "Lee"
+    payload["employee"]["suffix"] = "Jr"
+
+    document = W2Document.model_validate(payload)
+
+    assert document.employee.first_name == "Jordan"
+    assert document.employee.middle_initial is None
+    assert document.employee.last_name == "Lee"
+    assert document.employee.suffix == "Jr"
+
+
 @pytest.mark.parametrize(
     "field_name",
     [

@@ -23,6 +23,7 @@ from w2_pipeline.contracts.w2 import (
     W2Document,
     W2Metadata,
 )
+from w2_pipeline.contracts.employee_name import split_first_name_and_initial
 from w2_pipeline.evaluation.manifest import (
     DatasetManifestEntry,
     DatasetSource,
@@ -134,6 +135,13 @@ class SymageW2Adapter:
             field_path = _map_scalar_field(question)
             if field_path is None:
                 unmapped_questions.append(question)
+                continue
+            if field_path == "employee.first_name":
+                first_name, middle_initial = split_first_name_and_initial(answer)
+                employee.first_name = first_name
+                employee.middle_initial = middle_initial
+                evaluated_field_paths.add("employee.first_name")
+                evaluated_field_paths.add("employee.middle_initial")
                 continue
             converted = _convert_value(field_path, answer)
             _assign_field(employee, employer, federal, box_13, field_path, converted)
@@ -583,6 +591,7 @@ def _assign_field(
 _KNOWN_CANONICAL_PATHS = {
     "employee.ssn",
     "employee.first_name",
+    "employee.middle_initial",
     "employee.last_name",
     "employee.suffix",
     "employer.ein",

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import subprocess
 
 from w2_pipeline.evaluation.manifest import DatasetManifestEntry, load_manifest_jsonl
 from w2_pipeline.evaluation.reporting import (
@@ -36,16 +37,18 @@ def main() -> None:
 
     manifest = load_manifest_jsonl(args.manifest)
     entries = _filter_entries(manifest.entries, variant_id=args.variant_id, limit=args.limit)
+    extractor = PipelineAExtractor()
     result = evaluate_manifest(
         entries=entries,
         manifest_base_dir=args.manifest.parent,
-        extractor=PipelineAExtractor(),
+        extractor=extractor,
         pipeline_id="pipeline_a",
     )
     summary = summarize_document_evaluations(
         result.document_evaluations,
         pipeline_id="pipeline_a",
         entries=entries,
+        benchmark_metadata=_pipeline_a_metadata(extractor, variant_id=args.variant_id),
     )
     print(json.dumps(summary, indent=2, sort_keys=True))
     if args.output_json is not None:
@@ -65,6 +68,36 @@ def _filter_entries(
     if limit is not None:
         return filtered[:limit]
     return filtered
+
+
+def _pipeline_a_metadata(extractor: PipelineAExtractor, *, variant_id: str | None) -> dict:
+    ocr_adapter = extractor.observation_acquirer.ocr_adapter
+    return {
+        "git_commit": _git_commit(),
+        "ocr_backend": "tesseract",
+        "ocr_configuration": {
+            "page_segmentation_mode": ocr_adapter.page_segmentation_mode,
+            "supplemental_page_segmentation_modes": list(
+                ocr_adapter.supplemental_page_segmentation_modes
+            ),
+        },
+        "variant_filter": variant_id,
+    }
+
+
+def _git_commit() -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0:
+        return None
+    return completed.stdout.strip() or None
 
 
 if __name__ == "__main__":

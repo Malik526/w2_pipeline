@@ -81,6 +81,10 @@ def test_summarize_document_evaluations_serializes_field_failures() -> None:
     )
 
     assert summary["field_failure_count"] == 1
+    assert summary["benchmark_metadata"]["pipeline_id"] == "pipeline_x"
+    assert summary["benchmark_metadata"]["schema_version"] == 2026
+    assert summary["benchmark_metadata"]["source_datasets"] == ["Symage/synthetic-us-forms-preview"]
+    assert summary["benchmark_metadata"]["variant_scope"] == ["external_clean_render"]
     assert summary["field_failures"] == [
         {
             "document_id": "doc-1",
@@ -102,6 +106,13 @@ def test_markdown_report_formats_percentages_and_single_variant_summary() -> Non
                 fields=[
                     FieldEvaluation(field_path="employee.first_name", expected="Jordan", predicted="Jordan", correct=True),
                     FieldEvaluation(
+                        field_path="employee.middle_initial",
+                        expected="Q",
+                        predicted="O",
+                        correct=False,
+                        failure_kind=EvaluationFailureKind.MISMATCH,
+                    ),
+                    FieldEvaluation(
                         field_path="employee.last_name",
                         expected="Lee",
                         predicted="Li",
@@ -118,9 +129,11 @@ def test_markdown_report_formats_percentages_and_single_variant_summary() -> Non
     markdown = render_benchmark_markdown(summary, benchmark_name="Tiny Benchmark")
 
     assert "# Tiny Benchmark" in markdown
-    assert "| Field accuracy | 66.67% |" in markdown
+    assert "| Field accuracy | 50.00% |" in markdown
     assert "## Accuracy by Variant" not in markdown
+    assert "| Employee middle initial | `employee.middle_initial` | 0 | 1 | 0.00% |" in markdown
     assert "| Employee last name | `employee.last_name` | 0 | 1 | 0.00% |" in markdown
+    assert "| doc-1 | Clean render | Employee middle initial (`employee.middle_initial`) | Q | O | ocr |" in markdown
     assert "| doc-1 | Clean render | Employee last name (`employee.last_name`) | Lee | Li | ocr |" in markdown
 
 

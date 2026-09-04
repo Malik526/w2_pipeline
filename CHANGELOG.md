@@ -2,6 +2,21 @@
 
 ## 2026-09-04
 
+### Evaluation - Employee Name Semantics
+
+- Corrected Symage external ground truth mapping for Box e so
+  `Employee's first name and initial` is split into `employee.first_name` and
+  `employee.middle_initial` instead of storing the initial inside first name.
+- Updated Pipeline A OCR employee-name parsing to order Box e words
+  left-to-right, split trailing uppercase initials, keep last name and suffix
+  independent, and filter tiny OCR artifacts in name zones.
+- Added benchmark metadata to saved Pipeline A summaries, including run
+  timestamp, schema version, source datasets, variant scope, Git commit, and
+  OCR configuration.
+- Documented that employee-name accents are compared exactly and that
+  historical Phase 4B benchmarks should be rerun before making corrected
+  Box e name-accuracy claims.
+
 ### Harness - Long-Running Benchmark Policy
 
 - Added project-local guidance requiring long-running deterministic tests,

@@ -63,6 +63,13 @@ The initial 2026 W-2 parser uses explicit deterministic rules:
 - OCR word-row reconstruction for Tesseract word observations
 - OCR full-page geometry/zone fallbacks for employee name/SSN, employer EIN,
   federal money boxes, and Box 13 checkbox markers
+- Box e employee-name parsing that reads the first-name-and-initial region
+  left-to-right, splits a trailing uppercase single-letter token into
+  `employee.middle_initial`, and keeps `employee.last_name` and
+  `employee.suffix` as independent visual subfields
+- conservative tiny OCR artifact filtering in the Box e name zones when a
+  much smaller one- to three-character fragment appears alongside normal-size
+  name text
 - repeated Box 12 code/value rows
 - Box 13 checkbox text markers
 - Box 14a amount or text values
@@ -72,6 +79,10 @@ The initial 2026 W-2 parser uses explicit deterministic rules:
 Box 9 is not populated by the internal 2026 fixture generator. The canonical
 schema still contains the Phase 1 field, but the Phase 4 fixture correction
 prevents the renderer from inventing unsupported Box 9 content.
+
+Pipeline A does not transliterate or normalize employee-name accents. Strings
+are preserved as recognized and compared exactly by the evaluator; for
+example, `Jesús` and `Jesus` remain different semantic values.
 
 ## Benchmark Isolation
 
@@ -147,3 +158,10 @@ Known weaknesses include employee first-name extraction, Box 13 retirement-plan
 checkbox detection, employee SSN/employer EIN under degraded variants, and
 blurred federal Boxes 1-6. These results establish a deterministic measured
 baseline, not a final production extraction architecture.
+
+After Phase 4B, Box e employee-name semantics were corrected so
+`employee.first_name` no longer absorbs the middle initial. Historical Phase
+4B results remain useful as OCR baselines, but any benchmark intended to
+evaluate employee-name field accuracy must be rerun against regenerated
+external ground truth with `employee.middle_initial` included in
+`evaluated_field_paths`.

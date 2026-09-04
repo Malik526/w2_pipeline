@@ -21,6 +21,10 @@ from w2_pipeline.contracts.w2 import (
     W2Document,
     W2Metadata,
 )
+from w2_pipeline.contracts.employee_name import (
+    parse_employee_name,
+    split_first_name_and_initial,
+)
 from w2_pipeline.extraction.models import (
     AcquisitionRoute,
     ExtractionWarning,
@@ -170,14 +174,14 @@ def _parse_employee(
 ) -> Employee:
     left_lines = _observations_in_x_range(observations, max_x=300)
     name_value = _value_after_label(left_lines, "Name")
-    first_name, middle_initial, last_name, suffix = _parse_person_name(name_value)
+    parsed_name = parse_employee_name(name_value)
     city, state, postal_code = _parse_city_state_zip(_value_after_label(left_lines, "City/State/ZIP"))
     employee = Employee(
         ssn=_first_match(_value_after_label(left_lines, "SSN"), _SSN_RE),
-        first_name=first_name,
-        middle_initial=middle_initial,
-        last_name=last_name,
-        suffix=suffix,
+        first_name=parsed_name.first_name,
+        middle_initial=parsed_name.middle_initial,
+        last_name=parsed_name.last_name,
+        suffix=parsed_name.suffix,
         address=Address(
             address_line_1=_empty_to_none(_value_after_label(left_lines, "Address 1")),
             address_line_2=_empty_to_none(_value_after_label(left_lines, "Address 2")),
@@ -311,11 +315,29 @@ def _apply_ocr_employee_layout_fallbacks(
     if employee.ssn is None:
         updates["ssn"] = _first_regex_text_in_zone(observations, _SSN_RE, (0.25, 0.55, 0.10, 0.17))
     if employee.first_name is None:
-        updates["first_name"] = _zone_text(observations, (0.04, 0.28, 0.505, 0.550))
+        first_name, middle_initial = split_first_name_and_initial(
+            _zone_text(
+                observations,
+                (0.04, 0.28, 0.505, 0.550),
+                discard_tiny_artifacts=True,
+            )
+            or ""
+        )
+        updates["first_name"] = first_name
+        if employee.middle_initial is None:
+            updates["middle_initial"] = middle_initial
     if employee.last_name is None:
-        updates["last_name"] = _zone_text(observations, (0.28, 0.53, 0.505, 0.555))
+        updates["last_name"] = _zone_text(
+            observations,
+            (0.28, 0.50, 0.505, 0.555),
+            discard_tiny_artifacts=True,
+        )
     if employee.suffix is None:
-        updates["suffix"] = _zone_text(observations, (0.50, 0.58, 0.505, 0.555))
+        updates["suffix"] = _zone_text(
+            observations,
+            (0.50, 0.58, 0.505, 0.555),
+            discard_tiny_artifacts=True,
+        )
     return employee.model_copy(update=updates)
 
 
@@ -377,16 +399,39 @@ def _observations_in_zone(
 def _zone_text(
     observations: list[TextObservation],
     zone: tuple[float, float, float, float],
+    *,
+    discard_tiny_artifacts: bool = False,
 ) -> str | None:
+    zone_observations = sorted(
+        _observations_in_zone(observations, zone),
+        key=lambda observation: observation.bbox.x0,
+    )
+    if discard_tiny_artifacts:
+        zone_observations = _discard_tiny_artifacts(zone_observations)
     tokens = [
         cleaned
-        for observation in sorted(
-            _observations_in_zone(observations, zone),
-            key=lambda observation: (observation.bbox.y0, observation.bbox.x0),
-        )
+        for observation in zone_observations
         if (cleaned := _clean_layout_token(observation.text)) is not None
     ]
     return " ".join(tokens) or None
+
+
+def _discard_tiny_artifacts(observations: list[TextObservation]) -> list[TextObservation]:
+    if not observations:
+        return []
+    max_height = max(observation.bbox.y1 - observation.bbox.y0 for observation in observations)
+    return [
+        observation
+        for observation in observations
+        if not _looks_like_tiny_artifact(observation, max_height=max_height)
+    ]
+
+
+def _looks_like_tiny_artifact(observation: TextObservation, *, max_height: float) -> bool:
+    text = observation.text.strip()
+    height = observation.bbox.y1 - observation.bbox.y0
+    width = observation.bbox.x1 - observation.bbox.x0
+    return len(text) <= 3 and height < 0.4 * max_height and width < 0.4 * max_height
 
 
 def _clean_layout_token(text: str) -> str | None:
@@ -550,26 +595,6 @@ def _value_after_prefix(lines: list[str], prefix: str) -> str:
         if line.startswith(label):
             return line[len(label) :].strip()
     return ""
-
-
-def _parse_person_name(value: str) -> tuple[str | None, str | None, str | None, str | None]:
-    parts = value.split()
-    if not parts:
-        return None, None, None, None
-    if len(parts) == 1:
-        return parts[0], None, None, None
-    if len(parts) == 2:
-        return parts[0], None, parts[1], None
-    if len(parts[-1]) <= 4 and parts[-1].rstrip(".").upper() in {"JR", "SR", "II", "III", "IV"}:
-        suffix = parts[-1]
-        name_parts = parts[:-1]
-    else:
-        suffix = None
-        name_parts = parts
-    first_name = name_parts[0]
-    middle_initial = name_parts[1] if len(name_parts[1]) == 1 else None
-    last_name = " ".join(name_parts[2:] if middle_initial else name_parts[1:])
-    return first_name, middle_initial, last_name or None, suffix
 
 
 def _parse_city_state_zip(value: str) -> tuple[str | None, str | None, str | None]:

@@ -168,6 +168,13 @@ field failures and has a matching Markdown companion. The 600-variant JSON
 remains the canonical aggregate robustness artifact and was not rerun during
 the report-enrichment pass.
 
+After the Box e employee-name semantics correction, external ground truth must
+be regenerated before rerunning Symage benchmarks so
+`Employee's first name and initial` is split into `employee.first_name` and
+`employee.middle_initial`. New saved Pipeline A benchmark JSON includes
+`benchmark_metadata` with the run timestamp, schema version, source dataset,
+variant scope, Git commit, and OCR configuration.
+
 ## Long-Running Benchmark Commands
 
 Project-local agent policy requires any deterministic test, benchmark, model

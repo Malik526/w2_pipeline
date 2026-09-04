@@ -66,7 +66,23 @@ The supporting models are:
 ## Field Coverage
 
 Employee fields cover SSN, first name, middle initial, last name, suffix, and
-address.
+address. On the official 2026 Form W-2, Box e presents the employee name as
+three visual subfields:
+
+```text
+Employee's first name and initial | Last name | Suff.
+```
+
+The canonical `Employee` model keeps those semantics as four fields:
+
+- `first_name` stores only the first-name portion of the first visual subfield.
+- `middle_initial` stores the single-letter initial from that same visual
+  subfield when present.
+- `last_name` stores the separate Box e last-name subfield.
+- `suffix` stores the separate Box e suffix subfield.
+
+This is a semantic mapping clarification, not a schema-version change; the
+`middle_initial` and `suffix` fields already existed in schema version `2026`.
 
 Employer fields cover EIN, name, address, and control number.
 

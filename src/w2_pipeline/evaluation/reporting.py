@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
 import json
@@ -64,6 +64,7 @@ def summarize_document_evaluations(
     pipeline_id: str,
     entries: Sequence[DatasetManifestEntry] | None = None,
     include_failure_values: bool = True,
+    benchmark_metadata: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Serialize aggregate benchmark metrics and inspectable field failures."""
 
@@ -116,6 +117,11 @@ def summarize_document_evaluations(
         "correct_fields": correct_fields,
         "total_fields": total_fields,
         "average_duration_seconds": sum(durations) / len(durations) if durations else 0.0,
+        "benchmark_metadata": _benchmark_metadata(
+            pipeline_id=pipeline_id,
+            entries=entries,
+            extra=benchmark_metadata,
+        ),
         "source_datasets": _source_datasets(entries),
         "document_conditions": _document_conditions(evaluations),
         "accuracy_by_variant": _accuracy_buckets(by_variant),
@@ -134,6 +140,24 @@ def summarize_document_evaluations(
             )
         ],
     }
+
+
+def _benchmark_metadata(
+    *,
+    pipeline_id: str,
+    entries: Sequence[DatasetManifestEntry] | None,
+    extra: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    metadata: dict[str, Any] = {
+        "run_timestamp": datetime.now(timezone.utc).isoformat(),
+        "pipeline_id": pipeline_id,
+        "schema_version": 2026,
+        "source_datasets": _source_datasets(entries),
+        "variant_scope": _document_conditions_from_entries(entries),
+    }
+    if extra:
+        metadata.update(extra)
+    return metadata
 
 
 def markdown_report_path_for_json(json_path: str | Path) -> Path:
@@ -279,6 +303,12 @@ def _source_datasets(entries: Sequence[DatasetManifestEntry] | None) -> list[str
 
 def _document_conditions(evaluations: Sequence[DocumentEvaluation]) -> list[str]:
     return sorted({evaluation.variant_id for evaluation in evaluations})
+
+
+def _document_conditions_from_entries(entries: Sequence[DatasetManifestEntry] | None) -> list[str]:
+    if entries is None:
+        return []
+    return sorted({entry.variant_id for entry in entries})
 
 
 def _json_safe_value(value: Any) -> Any:

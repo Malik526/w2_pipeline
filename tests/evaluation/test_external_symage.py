@@ -26,13 +26,20 @@ from w2_pipeline.evaluation.manifest import (
 from w2_pipeline.evaluation.runner import evaluate_manifest
 
 
-def _entity(entity_id: int, text: str, label: str, linking: list[list[int]] | None = None) -> dict:
+def _entity(
+    entity_id: int,
+    text: str,
+    label: str,
+    linking: list[list[int]] | None = None,
+    *,
+    words: list[str] | None = None,
+) -> dict:
     return {
         "id": entity_id,
         "text": text,
         "label": label,
         "box": [0, 0, 10, 10],
-        "words": [],
+        "words": words or [],
         "linking": linking or [],
     }
 
@@ -41,16 +48,22 @@ def sample_record() -> dict:
     form = [
         _entity(0, "Employee's social security number", "question", [[0, 1]]),
         _entity(1, "242-48-4959", "answer"),
-        _entity(2, "Employer identification number (EIN)", "question", [[2, 3]]),
-        _entity(3, "75-5696876", "answer"),
-        _entity(4, "Wages, tips, other compensation", "question", [[4, 5]]),
-        _entity(5, "52,001.42", "answer"),
-        _entity(6, "Federal income tax withheld", "question", [[6, 7]]),
-        _entity(7, "8,100.00", "answer"),
-        _entity(8, "Retirement plan", "question", [[8, 9]]),
-        _entity(9, "X", "answer"),
-        _entity(10, "Dataset-only unsupported field", "question", [[10, 11]]),
-        _entity(11, "answer text", "answer"),
+        _entity(2, "Employee's first name and initial", "question", [[2, 3]]),
+        _entity(3, "Jordan Q", "answer", words=["Jordan", "Q"]),
+        _entity(4, "Last name", "question", [[4, 5]]),
+        _entity(5, "Lee", "answer"),
+        _entity(6, "Suff.", "question", [[6, 7]]),
+        _entity(7, "Jr", "answer"),
+        _entity(8, "Employer identification number (EIN)", "question", [[8, 9]]),
+        _entity(9, "75-5696876", "answer"),
+        _entity(10, "Wages, tips, other compensation", "question", [[10, 11]]),
+        _entity(11, "52,001.42", "answer"),
+        _entity(12, "Federal income tax withheld", "question", [[12, 13]]),
+        _entity(13, "8,100.00", "answer"),
+        _entity(14, "Retirement plan", "question", [[14, 15]]),
+        _entity(15, "X", "answer"),
+        _entity(16, "Dataset-only unsupported field", "question", [[16, 17]]),
+        _entity(17, "answer text", "answer"),
     ]
     return {
         "id": "900001-irs_w2_single_page_2026-p0",
@@ -73,6 +86,10 @@ def test_external_adapter_maps_funsd_annotations_to_canonical_ground_truth() -> 
     document = result.document
     assert isinstance(document, W2Document)
     assert document.employee.ssn == "242-48-4959"
+    assert document.employee.first_name == "Jordan"
+    assert document.employee.middle_initial == "Q"
+    assert document.employee.last_name == "Lee"
+    assert document.employee.suffix == "Jr"
     assert document.employer.ein == "75-5696876"
     assert (
         document.federal_wages_and_taxes.box_1_wages_tips_other_compensation
@@ -80,8 +97,34 @@ def test_external_adapter_maps_funsd_annotations_to_canonical_ground_truth() -> 
     )
     assert document.box_13.retirement_plan is True
     assert "employee.ssn" in result.evaluated_field_paths
-    assert "employee.first_name" in result.coverage_gaps
+    assert "employee.first_name" in result.evaluated_field_paths
+    assert "employee.middle_initial" in result.evaluated_field_paths
     assert "dataset only unsupported field" in result.unmapped_questions
+
+
+@pytest.mark.parametrize(
+    ("answer", "expected_first", "expected_initial"),
+    [
+        ("Nicole", "Nicole", None),
+        ("Jesús D", "Jesús", "D"),
+        ("Óliver", "Óliver", None),
+    ],
+)
+def test_external_adapter_splits_box_e_first_name_and_initial_variants(
+    answer: str,
+    expected_first: str,
+    expected_initial: str | None,
+) -> None:
+    record = sample_record()
+    form = json.loads(record["funsd_json"])
+    form[3]["text"] = answer
+    form[3]["words"] = answer.split()
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert result.document.employee.first_name == expected_first
+    assert result.document.employee.middle_initial == expected_initial
 
 
 def test_extraction_input_rejects_answer_bearing_annotations() -> None:
@@ -176,7 +219,7 @@ def test_external_partial_ground_truth_does_not_penalize_unannotated_fields(tmp_
     )
     expected = prepared.ground_truth.document
     predicted = expected.model_copy(deep=True)
-    predicted.employee.first_name = "ShouldNotMatter"
+    predicted.employee.address.city = "ShouldNotMatter"
 
     class PartialExtractor:
         def extract(self, extraction_input: ExtractionInput) -> W2Document:
@@ -189,7 +232,7 @@ def test_external_partial_ground_truth_does_not_penalize_unannotated_fields(tmp_
         pipeline_id="partial",
     )
 
-    assert "employee.first_name" not in prepared.manifest_entries[0].evaluated_field_paths
+    assert "employee.address.city" not in prepared.manifest_entries[0].evaluated_field_paths
     assert result.field_accuracy == 1.0
 
 

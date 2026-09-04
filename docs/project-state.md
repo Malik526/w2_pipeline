@@ -6,7 +6,9 @@ Last updated: 2026-09-04
 
 Phase 4 is established: Pipeline A Deterministic Native Text/OCR Extraction
 Baseline. Phase 4B external benchmark hardening and result reconciliation are
-complete.
+complete. A post-Phase 4B correction now aligns employee Box e name semantics
+with the official form split between first name, middle initial, last name, and
+suffix.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -97,6 +99,11 @@ docs/contracts/extraction-pipeline-a.md
   Pipeline A completed external OCR runs with 0 document failures.
 - Pipeline A is strong on clean and compressed external W-2 images, degrades
   moderately under rotation, and degrades substantially under blur.
+- Employee Box e `Employee's first name and initial` maps to
+  `employee.first_name` plus `employee.middle_initial`; last name and suffix
+  remain independent canonical fields.
+- Evaluation compares employee-name strings exactly. Accents are not folded or
+  transliterated during field accuracy scoring.
 - Confidence scores remain exploratory.
 - Real taxpayer data must not be committed.
 
@@ -223,6 +230,19 @@ Major known weaknesses are employee first-name extraction, Box 13 retirement
 plan checkbox detection, and blur sensitivity. The next extraction experiment
 has not been finalized; possible next work includes a targeted PaddleOCR
 comparison or a Pipeline B document-vision challenger.
+
+Post-Phase 4B employee-name correction:
+
+- Symage external ground truth now splits `Employee's first name and initial`
+  into `employee.first_name` and `employee.middle_initial`.
+- Pipeline A OCR Box e fallback now orders name-zone words left-to-right,
+  splits trailing uppercase initials, and filters tiny one- to three-character
+  OCR fragments only when normal-size neighboring name tokens are present.
+- Benchmark reports now include metadata for run timestamp, source datasets,
+  variant scope, schema version, Git commit, and OCR configuration.
+- Historical Phase 4B result artifacts predate this semantic correction. Any
+  name-accuracy claim based on the external Symage benchmark should use a
+  freshly regenerated ground-truth dataset and rerun result.
 
 ## Open Issues
 

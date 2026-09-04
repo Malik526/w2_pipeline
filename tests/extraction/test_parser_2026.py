@@ -210,8 +210,8 @@ def test_parser_extracts_external_style_ocr_word_observations() -> None:
 
     assert warnings == []
     assert document.employee.ssn == "242-48-4959"
-    assert document.employee.first_name == "Steven D"
-    assert document.employee.middle_initial is None
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "D"
     assert document.employee.last_name == "Armstrong"
     assert document.employer.ein == "75-5696876"
     assert document.federal_wages_and_taxes.box_1_wages_tips_other_compensation == Decimal("114858.00")
@@ -221,3 +221,106 @@ def test_parser_extracts_external_style_ocr_word_observations() -> None:
     assert document.federal_wages_and_taxes.box_5_medicare_wages_and_tips == Decimal("122000.00")
     assert document.federal_wages_and_taxes.box_6_medicare_tax_withheld == Decimal("1769.00")
     assert document.box_13.retirement_plan is True
+
+
+def test_parser_reads_ocr_box_e_left_to_right_when_initial_is_slightly_higher() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            ocr_obs("G", 282, 810, 20, 24),
+            ocr_obs("David", 168, 811, 100, 24),
+            ocr_obs("Rodriguez", 733, 806, 151, 40),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 2400, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="external-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "David"
+    assert document.employee.middle_initial == "G"
+    assert document.employee.last_name == "Rodriguez"
+
+
+def test_parser_keeps_ocr_box_e_first_name_without_middle_initial() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            ocr_obs("Robert", 168, 811, 100, 24),
+            ocr_obs("Hernandez", 733, 806, 151, 40),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 2400, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="external-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Robert"
+    assert document.employee.middle_initial is None
+    assert document.employee.last_name == "Hernandez"
+
+
+def test_parser_filters_tiny_ocr_artifacts_in_employee_name_zones() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            ocr_obs("Nicole", 168, 811, 100, 24),
+            ocr_obs("i", 276, 823, 3, 4),
+            ocr_obs("H", 282, 811, 20, 24),
+            ocr_obs("Phillips", 733, 806, 151, 40),
+            ocr_obs("ill", 889, 824, 4, 5),
+            ocr_obs("Jr", 1280, 808, 40, 24),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 2400, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="external-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Nicole"
+    assert document.employee.middle_initial == "H"
+    assert document.employee.last_name == "Phillips"
+    assert document.employee.suffix == "Jr"
+
+
+def test_parser_preserves_accented_ocr_employee_name_text() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            ocr_obs("Jesús", 168, 811, 100, 24),
+            ocr_obs("D", 282, 811, 20, 24),
+            ocr_obs("García", 733, 806, 151, 40),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 2400, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="external-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employee.first_name == "Jesús"
+    assert document.employee.middle_initial == "D"
+    assert document.employee.last_name == "García"
