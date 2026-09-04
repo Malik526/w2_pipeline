@@ -2,6 +2,47 @@
 
 ## 2026-09-04
 
+### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
+
+- Investigated why PaddleOCR GPU's entire 90-field failure surface in the
+  150-document benchmark is `box_13.retirement_plan`. Diagnostic only: no
+  parser logic, Paddle configuration, or accuracy settings were changed, and
+  no new benchmark was run.
+- First established from the existing result that PaddleOCR predicted
+  `retirement_plan = false` on all 150 documents with zero exceptions —
+  exactly the 90 ground-truth-`true` documents failed, none of the 60
+  "correct" predictions come from a `true`-labeled document. 0% recall on
+  the positive class, not scattered recognition noise.
+- Captured raw, unmodified `extract_image()` observations (no ground truth
+  or annotations passed to the extractor) for both backends on three
+  representative documents (`symage_900001`, `symage_900002`: ground truth
+  `true`; `symage_900003`: ground truth `false`, for contrast). Found that
+  Tesseract detects a small, template-fixed-position observation inside the
+  checkbox geometry zone and garbles it into stray text (`"[V"`, `"4"`),
+  while PaddleOCR detects **zero observations anywhere in or near that
+  zone** on either `true`-labeled document — the checkbox glyph is entirely
+  absent from PaddleOCR's output, not merged, misrecognized, or mispositioned.
+- Ruled out coordinate/geometry conversion bugs, observation-ordering/
+  word-row-reconstruction bugs, and adapter conversion bugs by comparing
+  label positions and reconstructed lines between backends, which agree
+  closely.
+- Root cause: PaddleOCR's PP-OCRv6 text **detection** model correctly (by
+  design) does not treat a small non-linguistic checkbox glyph as a text
+  region worth recognizing, while Tesseract's classical connected-component
+  segmentation is far less selective and happens to garble the same glyph
+  into some token. The parser's `_has_checkbox_mark` fallback
+  (`src/w2_pipeline/extraction/parser_2026.py`) is not the backend-neutral
+  geometric signal it's framed as — its `mark_tokens` allow-list was
+  evidently reverse-engineered from Tesseract's specific misreadings of this
+  glyph (`"[v"` and `"4"` both appear in the allow-list and were both
+  observed verbatim). No token-list adjustment can fix this: Paddle places
+  zero observations in the zone to match against.
+- Updated `docs/experiments/pipeline-a-extraction-history.md` with the full
+  investigation and `docs/project-state.md`'s known-weaknesses and
+  immediate-next-experiment sections to record the finding and its
+  implications for a possible future hybrid strategy, without implementing
+  one.
+
 ### Phase 4E - PaddleOCR GPU 150-Document Benchmark
 
 - Ran the Phase 4E PaddleOCR backend with `--paddle-device gpu` against the

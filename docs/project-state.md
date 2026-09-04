@@ -257,12 +257,30 @@ document does not resolve that decision. Plausible next steps, none started:
   with PaddleOCR GPU to see whether its narrow clean-render failure mode
   holds up under degradation the way the Tesseract incumbent's does, before
   any incumbent conversation happens on more than the clean variant alone.
-- Investigate why PaddleOCR misses `box_13.retirement_plan` specifically
-  (parser zone/label handling vs. model recognition quality) as a targeted
-  diagnostic, without changing the incumbent parser as a side effect.
-- Treat this as evidence for a possible future hybrid strategy (analogous to
-  Tesseract's own supplemental PSM 6 pass) rather than a single-backend
-  replacement — explicitly not implemented or decided here.
+  Given the now-understood root cause (below), PaddleOCR's
+  `box_13.retirement_plan` recall is likely to remain near zero regardless of
+  variant, since the checkbox mark is never detected as text at all; the
+  open question for a 600-document run is how the other fields degrade, not
+  this one.
+- **Done, diagnostic only** (see `docs/experiments/pipeline-a-extraction-history.md`,
+  "Phase 4E PaddleOCR `box_13.retirement_plan` Failure Investigation"):
+  PaddleOCR's PP-OCRv6 text detector never emits any observation for the
+  rendered checkbox glyph — 0% recall across every one of the 90
+  `true`-labeled documents, confirmed via raw-observation inspection, not
+  merely inferred from the aggregate. Tesseract only "detects" it because its
+  classical segmentation garbles the same glyph into stray text (`"[V"`,
+  `"4"`) that happens to land in the parser's `mark_tokens` allow-list — a
+  fallback that is implicitly Tesseract-shaped, not backend-neutral. No
+  parser or Paddle configuration change was made; this is a finding, not a
+  fix.
+- Given that finding, a possible future hybrid strategy is more concrete now
+  than a generic idea: PaddleOCR is 100% correct on every field besides
+  `box_13.retirement_plan` (including the fields Tesseract itself struggles
+  with), so a hybrid could in principle use Paddle for identity/money fields
+  and a different, detection-agnostic signal (e.g. pixel-density analysis of
+  the checkbox zone, not dependent on any backend's text detection) for that
+  one field — analogous to Tesseract's own supplemental PSM 6 pass. Not
+  implemented or decided here.
 - Decide PaddleOCR GPU is not worth further investment given the lower
   headline accuracy, and proceed to Phase 5 without further Paddle work.
 
@@ -642,12 +660,19 @@ as the Phase 4C Tesseract incumbent result:
   seconds/document, ~34% faster than Tesseract).
 - PaddleOCR GPU's known weakness, at 150-document clean-render scale, is
   entirely concentrated in one field: `box_13.retirement_plan` (40.0%
-  accuracy, vs. Tesseract's 96.67% on the same field). Every other scored
+  accuracy, vs. Tesseract's 96.67% on the same field; PaddleOCR is 0/90 on
+  every document where the box is actually checked). Every other scored
   field is 100% correct across all 150 documents, including the fields
-  Tesseract is weakest on (employee first/middle name, employer EIN).
-  PaddleOCR GPU's behavior under the 600-document robustness variants
-  (compressed/rotated/blurred) is unknown; only the clean-render variant has
-  been benchmarked at scale.
+  Tesseract is weakest on (employee first/middle name, employer EIN). Root
+  cause is understood (see the experiment history's failure-investigation
+  entry): PaddleOCR's text detector never perceives the rendered checkbox
+  mark as a text region at all, so it is not a recognition-quality issue and
+  not fixable by tuning Paddle's recognition settings; Tesseract only
+  "catches" it because its noisier segmentation garbles the same glyph into
+  stray text that happens to satisfy the parser's (implicitly
+  Tesseract-shaped) mark-token allow-list. PaddleOCR GPU's behavior under
+  the 600-document robustness variants (compressed/rotated/blurred) is
+  unknown; only the clean-render variant has been benchmarked at scale.
 
 ## Unimplemented Capabilities
 

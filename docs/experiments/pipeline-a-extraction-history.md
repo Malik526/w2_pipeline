@@ -615,3 +615,106 @@ future fix than several unrelated ones) is a product/architecture judgment
 call, not a decision made by this experiment run. This finding, not a
 recommendation, is recorded for that future decision. No further Paddle
 tuning or hybrid-backend design was attempted as part of this task.
+
+## Phase 4E PaddleOCR `box_13.retirement_plan` Failure Investigation
+
+A follow-up investigation determined why PaddleOCR GPU's 90 field failures
+were entirely concentrated in `box_13.retirement_plan`. This was a diagnostic
+task only: no parser logic, Paddle configuration, or accuracy settings were
+changed, and no new 150- or 600-document benchmark was run.
+
+**First finding, from the existing 150-document result alone (no new run
+needed):** the ground truth for the 150-document clean set has 90 documents
+with `retirement_plan = true` and 59 with `retirement_plan = false` (1 of the
+150 ground-truth files uses a differently formatted document ID and was not
+inspected). PaddleOCR's 90 field failures are exactly the 90 true-labeled
+documents; none of its 60 "correct" predictions come from a true-labeled
+document. In other words, PaddleOCR predicted `retirement_plan = false` on
+**every single document**, with zero exceptions — 0% recall on the positive
+class, not a scattered or borderline recognition-quality issue.
+
+**Diagnostic sample.** Raw observations (`extract_image`, no ground truth or
+annotations passed to the extractor) were captured for both backends on
+three documents: `symage_900001` and `symage_900002` (ground truth `true`,
+both are among PaddleOCR's 90 failures) and `symage_900003` (ground truth
+`false`, a trivial true-negative for both backends, included for contrast).
+These were chosen as representative rather than cherry-picked: the first two
+sequential `true`-labeled documents in the manifest, plus the first
+sequential `false`-labeled one.
+
+**What the raw observations show.** For both `true`-labeled documents,
+Tesseract detects a small, isolated observation inside the retirement-plan
+checkbox geometry zone (`0.655-0.705` x, `0.535-0.585` y of the page) at
+almost identical pixel coordinates in both documents (`(1601,850)-(1637,894)`
+and `(1606,850)-(1641,894)`) — evidently the same template-fixed checkbox
+glyph. Tesseract recognizes that glyph as garbled text: `"[V"` on one
+document, `"4"` on the other. **PaddleOCR detects zero observations anywhere
+in that zone, or anywhere in the wider Box 13 row band around it, on either
+document.** The checkbox glyph is not merged into a neighboring label, not
+recognized as different text, not shifted outside the expected zone — it is
+simply absent from PaddleOCR's output entirely. For the `false`-labeled
+contrast document, neither backend detects anything in the zone, as
+expected (there is genuinely no mark to find).
+
+Everything else in the raw observations is consistent between backends and
+rules out several candidate causes:
+
+- **Not a coordinate/geometry conversion bug**: label positions agree almost
+  exactly between backends (e.g. `"Retirement"` at `(1592-1595,801-804)` for
+  Tesseract vs. `(1601,805)` for Paddle on the same document — same region,
+  well within normal OCR jitter). The zone-ratio math (`_observations_in_zone`,
+  driven by `_layout_extent`) is backend-agnostic and both backends' page
+  extents match to within a few pixels.
+- **Not an observation-ordering or word-row-reconstruction bug**: both
+  backends' reconstructed lines around Box 13 are sensible and correctly
+  ordered (e.g. `"...13 Statutory Retirement Third-party..."` for Tesseract,
+  `"...13 Statutory Retirement sick pay Third-party..."` for Paddle).
+- **Not an adapter conversion bug**: `PaddleOcrAdapter.extract_image` was
+  inspected directly (`src/w2_pipeline/extraction/ocr_paddle.py`) — it maps
+  every entry in PaddleOCR's own `rec_texts`/`rec_boxes` payload to a
+  `TextObservation`, with no filtering that could silently drop the checkbox
+  glyph if PaddleOCR had actually recognized it as a text region.
+
+**Root cause.** This is a genuine backend behavioral difference at the text
+**detection** stage, not a bug anywhere in this project's code. PP-OCRv6's
+detection model is a learned model tuned to find coherent, plausible text
+regions/lines in a document image, and correctly (by its own design) does
+not treat a small non-linguistic checkbox glyph as a text region worth
+recognizing. Tesseract's classical connected-component segmentation is far
+less selective — it treats almost any small isolated ink blob as *some*
+character worth attempting to classify, right or wrong, which is exactly why
+it produces garbled misreads like `"[V"` or `"4"` for this glyph rather than
+detecting nothing.
+
+Compounding this, `_has_checkbox_mark`'s `mark_tokens` allow-list
+(`{"x", "v", "✓", "✔", "[v", "v]", "[x", "x]", "4"}`,
+`src/w2_pipeline/extraction/parser_2026.py`) is not a backend-neutral
+geometric signal despite its name and framing as a "layout fallback" — it is
+implicitly shaped by Tesseract's specific misrecognition patterns for this
+exact glyph (`"[V"` -> `"[v"` and `"4"` both appear in the allow-list, and
+both were observed verbatim in this investigation's Tesseract output). This
+matches the investigation brief's candidate causes "checkbox mark not
+represented as OCR text" (true for Paddle's detection stage) and "parser
+dependence on Tesseract-specific tokenization" (true for the existing
+fallback's design) simultaneously — they are two sides of the same root
+cause, not competing explanations. Critically, **no adjustment to the
+token-matching logic could fix this on its own**: the fallback only ever
+evaluates observations that exist in the zone, and Paddle places zero
+observations there to evaluate. A fix would need to either give the parser
+a genuinely detection-agnostic signal (e.g. pixel-density analysis of the
+zone rather than depending on any backend having "read" the mark as text) or
+accept that different OCR backends may need different mark-detection
+strategies — either is a parser/architecture change, deliberately out of
+scope for this investigation task.
+
+**Conclusion.** PaddleOCR GPU's `box_13.retirement_plan` weakness is fully
+explained: PP-OCRv6's text detector does not perceive the rendered checkbox
+mark as text at all, so no downstream token-matching heuristic — Tesseract's
+current one or a redesigned one — can recover it without a different
+detection strategy. This is not a defect in the Paddle adapter, the common
+observation model, or the word-row reconstruction; it is an inherent
+consequence of PaddleOCR's detection model being more precise (in the
+general case, a desirable property) than Tesseract's noisier segmentation,
+combined with the current parser fallback having been implicitly
+Tesseract-shaped rather than backend-neutral. No fix was implemented in this
+task, per its explicit scope.
