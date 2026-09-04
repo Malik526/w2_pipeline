@@ -321,6 +321,41 @@
   `docs/project-state.md` accordingly. Did not run 150 or 600 documents,
   PaddleOCR, or any other configuration.
 
+### Phase 4E - Targeted Supplemental PSM 11 Recovery Diagnostic (Meaningful Recovery Demonstrated)
+
+- Ran a targeted diagnostic, not an accuracy benchmark: selected, from the
+  150-document Tesseract incumbent result, every document where PSM 3 +
+  PSM 6 failed at least one of PSM 11's four target fields
+  (`employer.ein`, Boxes 3/5/6) — 6 known failures across 5 documents —
+  and reran exactly those documents with PSM 11 enabled
+  (`--tesseract-supplemental-psm 6,11`) via a temporary manifest (built
+  and deleted for this run only).
+- Added `data/evaluation/results/phase4e_tesseract_supplemental_psm11_recovery_diagnostic_5.json`
+  and the matching `.md`; all historical artifacts, including both prior
+  PSM 11 smokes, were left untouched.
+- Result (aggregate `field_accuracy = 0.9652173913043478`, deliberately
+  **not representative** of anything but this biased sample): **4 of 6
+  (66.7%) known target-field failures recovered** — `employer.ein` on two
+  documents and `box_5`/`box_6` on one document, all previously
+  `"missing"`, all now exact matches. The 2 unrecovered failures were both
+  `"mismatch"`-kind (the primary path already produced a wrong,
+  non-`None` value), which the existing `None`-only fallback gate cannot
+  address regardless of what PSM 11 reads — a clean, fully explained
+  pattern: 100% recovery on `"missing"`-kind failures, 0% on
+  `"mismatch"`-kind.
+- Zero leakage confirmed under this harder sample: one document's two
+  pre-existing, unrelated failures outside PSM 11's target set
+  (`employee.first_name`/`middle_initial`) were bit-for-bit unchanged.
+- Per the decision rule for this task, this is meaningful recovery.
+  **Targeted supplemental PSM 11 (`employer.ein` + Boxes 3/5/6) is marked
+  justified for a controlled clean-150 benchmark**, which was **not** run
+  as part of this diagnostic task — it remains the mechanical next step.
+  The incumbent configuration is unchanged; no promotion was made.
+  Updated `docs/contracts/extraction-pipeline-a.md`,
+  `docs/experiments/pipeline-a-extraction-history.md`, and
+  `docs/project-state.md` accordingly. Did not run the full 150 or 600
+  documents, PaddleOCR, or any other configuration.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

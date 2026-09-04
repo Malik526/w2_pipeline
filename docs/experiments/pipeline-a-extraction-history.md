@@ -1259,3 +1259,102 @@ data/evaluation/results/phase4e_tesseract_supplemental_psm11_no_name_zone_smoke_
   or 600-document run, no PaddleOCR run, and no other configuration change
   were made; the incumbent and all historical artifacts (including the
   disqualified smoke) are preserved unchanged.
+
+## Phase 4E Targeted Supplemental PSM 11 Recovery Diagnostic — Meaningful Recovery Demonstrated
+
+**This is a targeted diagnostic, not an accuracy benchmark, and its
+aggregate `field_accuracy` figure below is not representative of anything
+other than this specific, deliberately biased 5-document sample.** The
+prior retry smoke used a random 5-document sample that happened to contain
+zero primary-path failures on PSM 11's four target fields, so it could not
+show whether targeted supplementation recovers anything. This diagnostic
+instead selects, from the authoritative 150-document Tesseract incumbent
+result (`phase4e_tesseract_checkbox_vision_external_clean_150`), every
+document where the PSM 3 + PSM 6 incumbent failed at least one of PSM 11's
+four target fields (`employer.ein`,
+`federal_wages_and_taxes.box_3_social_security_wages`,
+`box_5_medicare_wages_and_tips`, `box_6_medicare_tax_withheld`), then reran
+exactly those documents with PSM 11 supplementation enabled
+(`--tesseract-supplemental-psm 6,11`, checkbox vision unchanged) to see
+whether the known failures get recovered.
+
+Sample construction: 6 known target-field failures across 5 documents in
+the 150-document incumbent result —
+`symage_900021` (`employer.ein`, missing), `symage_900063` (`box_5`
+missing and `box_6` missing), `symage_900075` (`box_3` mismatch, predicted
+`"81"` vs. expected `"8.15E+4"`), `symage_900119` (`employer.ein`,
+missing), `symage_900123` (`box_6` mismatch, predicted `"1204.85"` vs.
+expected `"1294.85"`). A temporary 5-entry manifest containing only these
+documents was built for the run and deleted immediately afterward (not a
+retained artifact — only the run's JSON/MD outputs are).
+
+```text
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_recovery_diagnostic_5.json
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_recovery_diagnostic_5.md
+```
+
+**Per-known-failure result:**
+
+| Document | Field | Incumbent expected | Incumbent predicted | PSM3+6+11 predicted | Recovered |
+| --- | --- | --- | --- | --- | --- |
+| `symage_900021` | `employer.ein` | `78-9941160` | *(missing)* | `78-9941160` | **YES** |
+| `symage_900063` | `box_5_medicare_wages_and_tips` | `3.08E+4` | *(missing)* | `3.08E+4` | **YES** |
+| `symage_900063` | `box_6_medicare_tax_withheld` | `446.6` | *(missing)* | `446.6` | **YES** |
+| `symage_900075` | `box_3_social_security_wages` | `8.15E+4` | `81` | `81` | no |
+| `symage_900119` | `employer.ein` | `73-3368011` | *(missing)* | `73-3368011` | **YES** |
+| `symage_900123` | `box_6_medicare_tax_withheld` | `1294.85` | `1204.85` | `1204.85` | no |
+
+**4 of 6 (66.7%) known target-field failures recovered.** The pattern is
+mechanistically clean and fully explained by the existing (unmodified)
+fallback gating: `_apply_ocr_federal_layout_fallbacks`/
+`_first_ein_from_ocr_layout` only run `if field_name is None or
+getattr(federal, field_name) is not None: continue` — i.e. they only ever
+fill a field that the primary path left `None`. **All 4 recovered failures
+were `failure_kind: "missing"`** (the primary path found nothing, leaving
+the field open for PSM 11 to fill via the zone-based fallback). **Both
+unrecovered failures were `failure_kind: "mismatch"`** (the primary path
+already produced an incorrect but non-`None` value, e.g. `"81"` instead of
+`"8.15E+4"` — likely a decimal-scientific-notation misread — so the
+fallback gate never fires at all, regardless of what PSM 11 might have
+read correctly). This is a **100% recovery rate on the achievable subset
+(missing-kind failures) and a structurally-expected 0% on mismatch-kind
+failures**, not a partial or inconsistent signal.
+
+**Zero regressions, including outside the target scope.** `symage_900119`
+also has two pre-existing, unrelated incumbent failures
+(`employee.first_name` mismatch, `employee.middle_initial` missing) —
+these are outside PSM 11's target set (the name zone was deliberately
+removed after the earlier disqualifying smoke) and were confirmed
+**bit-for-bit unchanged** in the diagnostic run (same failure kind, same
+predicted values), confirming PSM 11 supplementation still does not leak
+outside its four approved zones even under this more adversarial sample.
+No target field that the incumbent already got right regressed (not
+directly testable by this diagnostic's construction, since the sample was
+selected from failures only, but consistent with both prior smokes
+finding zero such regressions).
+
+- Diagnostic-run aggregate (**not representative — reported only for
+  completeness, per this task's explicit instruction not to treat it as a
+  benchmark number**): `field_accuracy = 0.9652173913043478` (111/115),
+  average `3.640s`/document. This number is artificially low because the
+  sample was deliberately drawn from known-failure documents, not a random
+  or representative slice.
+- Conclusion: **meaningful recovery demonstrated.** Per the decision rule
+  for this task, targeted supplemental PSM 11 (restricted to
+  `employer.ein`/Box 3/5/6) is **marked justified for a controlled
+  clean-150 benchmark** — the natural next mechanical step, not run as
+  part of this diagnostic task. Sizing that benchmark's expected effect:
+  the full 150-document incumbent result has exactly 6 known failures on
+  these four target fields out of its 25 total field failures (not an
+  extrapolation — this diagnostic's sample *is* every such failure in that
+  result). If the demonstrated 4/6 (66.7%) recovery rate holds at full
+  scale, a clean-150 rerun with PSM 11 enabled would gain a handful of
+  fields out of 3,450 — a small but real effect, comparable in magnitude
+  to the checkbox-vision fix's clean-150 effect (+5 fields) — but that
+  generalization is an assumption to confirm with the actual rerun, not a
+  result already established by this 5-document diagnostic. The incumbent
+  configuration itself remains unchanged; this diagnostic does not promote
+  anything on its own. No 150-document or 600-document run (beyond reading
+  the existing historical result), no PaddleOCR run, and no other
+  configuration change were made; all historical artifacts, including
+  both prior PSM 11 smokes, are preserved unchanged.

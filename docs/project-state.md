@@ -381,10 +381,13 @@ docs/experiments/pipeline-a-extraction-history.md
 ```text
 Every mechanical rerun the checkbox-vision fix motivated (Tesseract 150-doc,
 PaddleOCR GPU 150-doc, Tesseract 600-doc robustness, PaddleOCR GPU 600-doc
-robustness) is now complete for both backends. Nothing further is
-mechanically queued. What remains is the incumbent decision and an optional
-follow-up investigation into a newly discovered rotation artifact, both the
-user's to decide.
+robustness) is now complete for both backends. Separately, targeted
+supplemental PSM 11 (employer.ein + Boxes 3/5/6) has been fixed and shown
+to demonstrably recover known incumbent failures on a targeted diagnostic
+sample -- a controlled clean-150 benchmark for it is now justified but not
+yet run. What remains beyond that mechanical step is the incumbent
+decision and an optional follow-up investigation into a newly discovered
+rotation artifact, both the user's to decide.
 ```
 
 Sequence: unit tests -> 5-doc CPU smoke -> GPU enablement -> 5-doc GPU
@@ -453,37 +456,39 @@ What remains a genuine decision rather than a rerun:
   proceeding to Phase 5 — now a considerably stronger case than before given
   both the clean-150 and 600-document robustness results, but still gated
   on an explicit user decision.
-- **Targeted supplemental PSM 11: regression fixed by narrowing scope, but
-  benefit still unproven — not yet eligible for the 150-document
-  benchmark.** The original 5-document smoke
-  (`phase4e_tesseract_supplemental_psm11_smoke_5`) found
-  `employee.first_name` regress from 100% to 0% (text duplication, e.g.
-  `"Steven"` -> `"Steven Steven D"`) because the employee-name OCR fallback
+- **Targeted supplemental PSM 11 (`employer.ein` + Boxes 3/5/6): fixed,
+  and now shown to demonstrably recover known incumbent failures — marked
+  justified for a controlled clean-150 benchmark (not yet run).** History:
+  the original 5-document smoke found `employee.first_name` regress from
+  100% to 0% (text duplication) because the employee-name OCR fallback
   (`_zone_text`) joins every token in its zone rather than picking one,
-  and PSM 11's supplemental pass and PSM 3's main pass both land readings
-  of the same name there. `employer.ein` and federal Boxes 3/5/6 (which
-  use first-match rather than join-all fallback logic) were unaffected.
-  Rather than redesign `_zone_text`, the name zone (and
-  `employee.middle_initial`, which shares it) was **removed from PSM 11's
-  target set** — `_SUPPLEMENTAL_TARGET_ZONES[11]` in
-  `src/w2_pipeline/extraction/ocr.py` now covers only `employer.ein` and
-  Boxes 3/5/6. A retry smoke on the identical 5 documents
-  (`phase4e_tesseract_supplemental_psm11_no_name_zone_smoke_5`) showed
-  **zero regressions** (115/115 correct, matching the incumbent exactly)
-  but **zero demonstrated recovery benefit** either — those 5 documents
-  had no primary-path failures on the four remaining target fields for
-  PSM 11 to have a chance to recover. Average duration was `3.656s`/doc
-  (+56.9% vs. the incumbent's `2.330s`), a cost driven by running the full
-  supplemental OCR pass itself, not by how many zones its output is kept
-  in. Per the decision rule for this task, an inconclusive-but-safe result
-  does not auto-promote: **this configuration is not yet marked eligible
-  for the clean-150 benchmark.** The mechanical next step, if pursued, is
-  a sample large enough to contain at least one primary-path failure on
-  `employer.ein`/Box 3/5/6 (the 150-document set would qualify, given
-  those fields' ~98.67-99.33% incumbent accuracy, but running it was out
-  of scope for both smoke tasks so far). See "Completed Phase History" and
-  `docs/experiments/pipeline-a-extraction-history.md` for both smoke
-  results.
+  so the name zone (and `employee.middle_initial`) was removed from PSM
+  11's target set (`_SUPPLEMENTAL_TARGET_ZONES[11]` in
+  `src/w2_pipeline/extraction/ocr.py`); a retry smoke on a random
+  5-document sample then showed zero regressions but also zero
+  demonstrated recovery, since that sample happened to contain no
+  primary-path failures on the remaining four target fields. A follow-up
+  **recovery diagnostic** (`phase4e_tesseract_supplemental_psm11_recovery_diagnostic_5`
+  — a targeted diagnostic, not a representative benchmark; its aggregate
+  accuracy number is not meaningful) deliberately selected the 5 documents
+  where the incumbent *does* fail one of these four fields (from the
+  150-document result) and reran them with PSM 11 enabled:
+  **4 of 6 (66.7%) known target-field failures were recovered**, with a
+  clean mechanistic pattern — **100% (4/4) of `"missing"`-kind failures
+  recovered** (the primary path found nothing, so the `None`-gated
+  fallback could fill it) and **0% (0/2) of `"mismatch"`-kind failures
+  recovered** (the primary path already produced a wrong-but-non-`None`
+  value, so the fallback never fires, by the same design that protects
+  every other fallback from overriding a value). Two pre-existing,
+  unrelated failures on one document (`employee.first_name`/
+  `middle_initial`, outside PSM 11's target set) were confirmed
+  bit-for-bit unchanged — zero leakage outside scope. Per the decision
+  rule for this task, this is meaningful recovery, not "none or very
+  few": **PSM 11 supplementation (EIN + Boxes 3/5/6 only) is now marked
+  justified for a controlled clean-150 benchmark**, which has not been
+  run. See "Completed Phase History" and
+  `docs/experiments/pipeline-a-extraction-history.md` for full detail on
+  all three PSM 11 supplementation runs to date.
 
 ## Future Phases (after Phase 4E)
 
@@ -1161,6 +1166,48 @@ clean-render smoke.
   600-document run, no PaddleOCR run, and no other configuration change
   were made; the incumbent, the disqualified smoke, and all other
   historical artifacts are preserved unchanged.
+
+Completed Phase 4E targeted supplemental PSM 11 recovery diagnostic —
+meaningful recovery demonstrated, marked justified for clean-150:
+
+```text
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_recovery_diagnostic_5.json
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_recovery_diagnostic_5.md
+```
+
+**A targeted diagnostic, not an accuracy benchmark** — its aggregate
+`field_accuracy` is not representative of anything but this deliberately
+biased sample. Selected, from the 150-document incumbent result, every
+document where PSM 3 + PSM 6 failed at least one of PSM 11's four target
+fields (6 known failures across 5 documents), then reran exactly those
+documents with PSM 11 enabled via a temporary manifest (built and deleted
+for this run only; not a retained artifact).
+
+- `field_accuracy = 0.9652173913043478` (111/115, deliberately
+  unrepresentative), average `3.640s`/document.
+- **4 of 6 (66.7%) known target-field failures recovered**: `employer.ein`
+  on `symage_900021` and `symage_900119` (both `"missing"` -> exact
+  match), `box_5`/`box_6` on `symage_900063` (both `"missing"` -> exact
+  match). **2 of 6 not recovered**: `box_3` on `symage_900075` and `box_6`
+  on `symage_900123` — both were `"mismatch"`-kind (the primary path
+  already produced a wrong, non-`None` value), and the existing
+  `None`-only fallback gate structurally cannot fire for those regardless
+  of what PSM 11 reads. **100% of `"missing"`-kind failures recovered, 0%
+  of `"mismatch"`-kind** — a clean, fully explained mechanistic pattern,
+  not partial/inconsistent signal.
+- **Zero leakage confirmed under a harder sample**: `symage_900119`'s two
+  pre-existing, unrelated failures (`employee.first_name`/
+  `middle_initial`, outside PSM 11's target set since the name zone was
+  removed) were bit-for-bit unchanged.
+- Conclusion: this is meaningful recovery, not "none or very few," per the
+  decision rule for this task. **Targeted supplemental PSM 11
+  (`employer.ein` + Boxes 3/5/6 only) is marked justified for a controlled
+  clean-150 benchmark.** That benchmark has **not** been run — it remains
+  the mechanical next step if pursued; see "Immediate Next Experiment".
+  The incumbent configuration is unchanged; no promotion was made by this
+  diagnostic itself. No 150-document or 600-document run (beyond reading
+  the existing historical result), no PaddleOCR run, and no other
+  configuration change were made.
 
 ## Current Known Weaknesses
 

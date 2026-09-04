@@ -121,12 +121,16 @@ Enable it via the CLI:
 ```
 
 (default `"6"`, matching the incumbent unchanged; comma-separated, parsed
-and validated by `TesseractOcrConfig`). A 5-document smoke with this
-narrowed target set showed zero regressions but also no demonstrated
+and validated by `TesseractOcrConfig`). A random 5-document smoke with
+this narrowed target set showed zero regressions but no demonstrated
 recovery benefit (the sample had no primary-path failures on `employer.ein`
-or Box 3/5/6 to recover from); it is not yet marked eligible for a
-larger-scale run — see `docs/project-state.md`'s "Immediate Next
-Experiment".
+or Box 3/5/6 to recover from). A follow-up diagnostic that deliberately
+sampled documents where the incumbent *does* fail one of these fields
+found 4/6 (66.7%) of those known failures recovered, with zero leakage
+outside scope — a targeted diagnostic, not a representative benchmark, but
+meaningful recovery, so this configuration is now marked **justified for a
+controlled clean-150 benchmark** (not yet run) — see
+`docs/project-state.md`'s "Immediate Next Experiment".
 
 ### OCR Backend Boundary
 
