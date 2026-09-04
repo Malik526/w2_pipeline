@@ -81,7 +81,7 @@ def parse_w2_2026_observations(
     if _has_ocr_observations(observations):
         federal = _apply_ocr_federal_layout_fallbacks(federal, observations, warnings)
     box_12_entries = _parse_box_12(lines, warnings)
-    box_13 = _parse_box_13(lines, observations)
+    box_13 = _parse_box_13(lines, observations, observation_set.box_13_visual_marks)
     box_14_entries, tipped_codes = _parse_box_14(lines, warnings)
     state_local_entries = _parse_state_local(lines, warnings)
 
@@ -293,14 +293,18 @@ def _parse_box_12(lines: list[str], warnings: list[ExtractionWarning]) -> list[B
     return entries
 
 
-def _parse_box_13(lines: list[str], observations: list[TextObservation]) -> Box13Flags:
+def _parse_box_13(
+    lines: list[str],
+    observations: list[TextObservation],
+    box_13_visual_marks: dict[str, bool],
+) -> Box13Flags:
     box_13 = Box13Flags(
         statutory_employee=_checkbox_value(_value_after_prefix(lines, "13 Statutory employee")),
         retirement_plan=_checkbox_value(_value_after_prefix(lines, "13 Retirement plan")),
         third_party_sick_pay=_checkbox_value(_value_after_prefix(lines, "13 Third-party sick pay")),
     )
     if _has_ocr_observations(observations):
-        box_13 = _apply_ocr_box_13_layout_fallbacks(box_13, observations)
+        box_13 = _apply_ocr_box_13_layout_fallbacks(box_13, observations, box_13_visual_marks)
     return box_13
 
 
@@ -348,6 +352,7 @@ def _first_ein_from_ocr_layout(observations: list[TextObservation]) -> str | Non
 def _apply_ocr_box_13_layout_fallbacks(
     box_13: Box13Flags,
     observations: list[TextObservation],
+    box_13_visual_marks: dict[str, bool],
 ) -> Box13Flags:
     if not _looks_like_full_page_ocr_form(observations):
         return box_13
@@ -357,6 +362,7 @@ def _apply_ocr_box_13_layout_fallbacks(
             "statutory_employee": box_13.statutory_employee
             or _has_checkbox_mark(observations, (0.605, 0.650, 0.535, 0.585)),
             "retirement_plan": box_13.retirement_plan
+            or box_13_visual_marks.get("retirement_plan", False)
             or _has_checkbox_mark(observations, (0.655, 0.705, 0.535, 0.585)),
             "third_party_sick_pay": box_13.third_party_sick_pay
             or _has_checkbox_mark(observations, (0.715, 0.770, 0.535, 0.585)),

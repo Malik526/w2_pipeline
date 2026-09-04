@@ -60,6 +60,14 @@ class ObservationSet(ExtractionModel):
     observations: list[TextObservation] = Field(default_factory=list)
     route: AcquisitionRoute
     warnings: list[str] = Field(default_factory=list)
+    box_13_visual_marks: dict[str, bool] = Field(
+        default_factory=dict,
+        description=(
+            "Backend-neutral pixel-based Box 13 checkbox detections, keyed "
+            "by flag name (e.g. 'retirement_plan'), independent of OCR text "
+            "output. See w2_pipeline.extraction.checkbox_vision."
+        ),
+    )
 
 
 class ExtractionWarning(ExtractionModel):

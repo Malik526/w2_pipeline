@@ -223,6 +223,60 @@ def test_parser_extracts_external_style_ocr_word_observations() -> None:
     assert document.box_13.retirement_plan is True
 
 
+def _paddle_style_observations_without_checkbox_mark() -> list[TextObservation]:
+    """Same layout as the external-style OCR fixture, but with no observation
+    at all for the retirement-plan checkbox mark, matching PaddleOCR's actual
+    behavior (its text detector never emits a region for the glyph, unlike
+    Tesseract's garbled "[V"/"4" misreads)."""
+
+    return [
+        ocr_obs("Steven D", 168, 810, 130),
+        ocr_obs("Armstrong", 733, 806, 151, 40),
+        ocr_obs("13", 1399, 812, 30),
+        ocr_obs("Statutory", 1453, 804, 90),
+        ocr_obs("employee", 1453, 825, 90),
+        ocr_obs("Retirement", 1592, 804, 112),
+        ocr_obs("plan", 1595, 825, 46),
+        # No observation for the checkbox mark itself.
+        ocr_obs("Copy", 151, 1535, 50),
+        ocr_obs("Return.", 993, 1535, 80),
+    ]
+
+
+def test_parser_uses_visual_signal_when_ocr_never_detects_the_checkbox_mark() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=_paddle_style_observations_without_checkbox_mark(),
+        box_13_visual_marks={"retirement_plan": True},
+    )
+
+    document, _ = parse_w2_2026_observations(
+        observation_set,
+        document_id="paddle-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert document.box_13.retirement_plan is True
+
+
+def test_parser_does_not_infer_checkbox_mark_without_any_signal() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=_paddle_style_observations_without_checkbox_mark(),
+        box_13_visual_marks={"retirement_plan": False},
+    )
+
+    document, _ = parse_w2_2026_observations(
+        observation_set,
+        document_id="paddle-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert document.box_13.retirement_plan is False
+
+
 def test_parser_reads_ocr_box_e_left_to_right_when_initial_is_slightly_higher() -> None:
     observation_set = ObservationSet(
         route=AcquisitionRoute.OCR,

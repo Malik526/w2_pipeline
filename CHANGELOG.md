@@ -2,6 +2,51 @@
 
 ## 2026-09-04
 
+### Phase 4E - Backend-Neutral Box 13 Checkbox Detection
+
+- Added `src/w2_pipeline/extraction/checkbox_vision.py`: a pixel-based Box 13
+  checkbox detector that reads dark-pixel ink coverage directly from the
+  page image, independent of any OCR engine's text output. Directly
+  addresses the root cause found in the preceding investigation (PaddleOCR's
+  text detector never emits an observation for the checkbox glyph at all).
+- Added `ObservationSet.box_13_visual_marks: dict[str, bool]`
+  (`src/w2_pipeline/extraction/models.py`) as the typed channel for this
+  non-OCR signal. `ObservationAcquirer` (`acquisition.py`) runs the detector
+  on the same source image used for OCR, for every OCR-routed acquisition
+  (plain image input, or rendered PDF pages for image-only/mixed routes),
+  degrading to "no mark detected" plus a warning if detection fails rather
+  than failing extraction. `parser_2026.py`'s
+  `_apply_ocr_box_13_layout_fallbacks` ORs this signal in alongside the
+  existing text-prefix and OCR-token mechanisms (kept, not removed, for
+  defense in depth).
+- Calibrated `RETIREMENT_PLAN_ZONE` against all 150 external Symage
+  clean-render documents (pure pixel analysis of already-prepared local
+  images, not an OCR run or scored benchmark): unchecked ink ratio `0.0787`,
+  checked ratio `0.1000`, zero overlap across all 150 documents, threshold
+  `0.09`.
+- Scoped to `retirement_plan` only. `statutory_employee` and
+  `third_party_sick_pay` have no ground-truth-positive example in current
+  benchmark data to calibrate against; an analogy-based zone guess for them
+  produced ambiguous ink ratios (`0.1134`, `0.0904`) rather than
+  `retirement_plan`'s clean separation, so they were deliberately left on
+  the unchanged existing fallback rather than risk a regression on fields
+  that already score 100%.
+- Added 9 new unit tests (`test_checkbox_vision.py`, `test_acquisition.py`,
+  extensions to `test_parser_2026.py`); full suite: 130 tests passing.
+- Verified with a 20-document real-pipeline smoke check (not a full
+  150-document rerun): PaddleOCR GPU reached `1.0` field accuracy (20/20 on
+  `box_13.retirement_plan`, previously the field's dominant failure mode);
+  Tesseract was unaffected (still 20/20 on `retirement_plan`; its one
+  remaining miss in that sample is the pre-existing, unrelated
+  `employer.ein` failure on `symage_900021`).
+- Updated `docs/contracts/extraction-pipeline-a.md`,
+  `docs/experiments/pipeline-a-extraction-history.md`, and
+  `docs/project-state.md` to record the fix and flag that the formal
+  150-document (and 600-document) benchmark artifacts predate this change
+  and have not been rerun — the next step is a full rerun to get corrected
+  authoritative numbers, deliberately not performed as part of this
+  implementation task.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

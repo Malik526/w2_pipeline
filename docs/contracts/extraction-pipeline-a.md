@@ -35,6 +35,10 @@ Each observation records:
 The deterministic parser consumes this common representation rather than
 PyMuPDF or Tesseract-specific objects.
 
+`ObservationSet` also carries `box_13_visual_marks: dict[str, bool]`, a
+non-OCR, pixel-derived signal populated independent of `TextObservation`
+content; see "Box 13 Visual Checkbox Detection" below.
+
 ## Routing
 
 PDFs with usable embedded text use PyMuPDF native line extraction. Image files
@@ -237,6 +241,75 @@ prevents the renderer from inventing unsupported Box 9 content.
 Pipeline A does not transliterate or normalize employee-name accents. Strings
 are preserved as recognized and compared exactly by the evaluator; for
 example, `Jesús` and `Jesus` remain different semantic values.
+
+## Box 13 Visual Checkbox Detection
+
+Box 13 checkbox state (`statutory_employee`, `retirement_plan`,
+`third_party_sick_pay`) has two possible signals: the text-prefix mechanism
+(`"13 Retirement plan: X"` reconstructed from embedded/OCR text) and an OCR
+layout fallback (`_apply_ocr_box_13_layout_fallbacks` in `parser_2026.py`).
+
+The layout fallback historically depended entirely on OCR text output: it
+scanned a page zone for observations whose text matched a small allow-list
+of mark tokens (`{"x", "v", "✓", "✔", "[v", "v]", "[x", "x]", "4"}`). The
+Phase 4E PaddleOCR investigation
+(`docs/experiments/pipeline-a-extraction-history.md`) found this allow-list
+was implicitly Tesseract-shaped: PaddleOCR's text detector never emits any
+observation for the checkbox glyph at all (it is not linguistically
+plausible text), while Tesseract's noisier segmentation happens to garble it
+into stray text that the allow-list was built to catch. No OCR-token
+adjustment can fix a backend that places zero observations in the zone.
+
+`src/w2_pipeline/extraction/checkbox_vision.py` adds a backend-neutral
+alternative: it detects the mark directly from page pixels (dark-pixel ink
+coverage within a page-relative zone), independent of any OCR engine's text
+output. `ObservationAcquirer` (`acquisition.py`) runs this detector on the
+same source image used for OCR, for every OCR-routed acquisition (plain
+image input, or rendered pages for image-only/mixed PDF routes), and
+attaches the result to `ObservationSet.box_13_visual_marks` — a
+`dict[str, bool]` keyed by flag name, populated independent of which
+`OcrAdapter` produced the surrounding text observations. `parser_2026.py`'s
+`_apply_ocr_box_13_layout_fallbacks` ORs this signal in alongside the
+existing text-prefix and OCR-token mechanisms (defense in depth; the visual
+signal can only add true positives, never override a correct decision from
+another path). A visual-detection failure (e.g. an unreadable image)
+degrades to "no mark detected" and records a warning rather than failing
+extraction, since this is always an additive signal.
+
+**Scope**: only `retirement_plan` has a validated zone. The Symage external
+benchmark's 150 clean-render documents have no ground-truth-positive example
+for `statutory_employee` or `third_party_sick_pay`, so no zone could be
+empirically calibrated for them without risking an unvalidated guess on two
+fields that already score 100% under the existing mechanisms. They remain on
+the OCR-token fallback only, unchanged.
+
+**Calibration.** `RETIREMENT_PLAN_ZONE = (0.615, 0.655, 0.250, 0.280)` is
+expressed as fractions of the true page image dimensions (from
+`PIL.Image.size`), not of any OCR-detected text extent — this is a
+deliberate correction from the older zones (e.g.
+`(0.655, 0.705, 0.535, 0.585)` used by the OCR-token fallback), which are
+ratios of `_layout_extent(observations)`, an OCR-detected-text bounding
+box that can differ substantially from the true image size (on the external
+Symage clean renders, detected text spans roughly the top half of a full
+2550x3300 page, so text-extent-relative and true-image-relative ratios are
+not interchangeable). Measured across all 150 external Symage clean-render
+documents, dark-pixel ink coverage in this zone separates cleanly into an
+unchecked cluster (ratio `0.0787`, checkbox border only) and a checked
+cluster (ratio `0.1000`, border plus mark) with **zero overlap** across every
+document — a wide, safe margin for the `0.09` threshold
+(`_INK_COVERAGE_THRESHOLD` in `checkbox_vision.py`).
+
+**Verification.** A 20-document PaddleOCR GPU smoke run against the
+external clean-render manifest after this change reached `1.0` field
+accuracy (460/460 fields, including 20/20 on `box_13.retirement_plan`,
+versus systematic failure before the fix). The same 20 documents under
+Tesseract remained unaffected (still 20/20 on `retirement_plan`; its one
+remaining failure in that sample is the pre-existing, unrelated
+`employer.ein` miss on `symage_900021`). This was a 20-document smoke check,
+not a full 150-document benchmark; re-running the full Phase 4C/4E
+150-document (and, if warranted, 600-document) benchmarks to update the
+authoritative numbers is a natural follow-up, not performed as part of this
+implementation task.
 
 ## Benchmark Isolation
 
