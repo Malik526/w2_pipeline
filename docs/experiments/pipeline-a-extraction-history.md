@@ -1198,3 +1198,64 @@ redesign. Neither fix was implemented as part of this smoke-test task, per
 its explicit stop-and-document instruction. The smoke result artifacts are
 preserved as evidence; the historical Tesseract incumbent artifacts were
 not modified.
+
+## Phase 4E Targeted Supplemental PSM 11 Retry Without the Name Zone — No Regression, No Demonstrated Benefit
+
+Applied the smaller of the two candidate fixes identified above: rather
+than redesigning `_zone_text`, removed the employee-name zone entirely
+from PSM 11's approved target set in `_SUPPLEMENTAL_TARGET_ZONES`
+(`src/w2_pipeline/extraction/ocr.py`). PSM 11 supplementation now targets
+only the four fields whose parser fallback uses first-match zone logic
+(`employer.ein`, `federal_wages_and_taxes.box_3_social_security_wages`,
+`box_5_medicare_wages_and_tips`, `box_6_medicare_tax_withheld`), the same
+fields that stayed 100% correct in the disqualified smoke above. Updated
+the one affected unit test (`test_targeted_psm_11_supplemental_pass_is_scoped_to_approved_fields`)
+accordingly; full suite 143 tests passing (unchanged count — no tests
+added or removed, one test's expectation updated). Re-ran the identical
+5-document clean-render smoke.
+
+```text
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_no_name_zone_smoke_5.json
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_no_name_zone_smoke_5.md
+```
+
+- `field_accuracy = 1.0` (115/115 correct), `failed_documents = 0`,
+  `field_failure_count = 0`, average `3.656s`/document.
+- Same 5 documents as the disqualified smoke
+  (`symage_900001`/`900002`/`900003`/`900004`/`900006`). Cross-checked
+  against the PSM 3 + PSM 6 incumbent's result for these exact documents:
+  **all 115 fields, across all 5 documents, were already 100% correct
+  under the incumbent alone** — there were zero primary-path failures on
+  `employer.ein` or Boxes 3/5/6 (or any other field) in this specific
+  5-document sample to recover from.
+- **No regression**: every field the incumbent already got right stayed
+  right; the disqualifying `employee.first_name` duplication is gone (the
+  field is no longer targeted by PSM 11 at all, so PSM 3's unmodified
+  primary-path reading is the only source, exactly as under the
+  incumbent).
+- **No demonstrated recovery benefit**: because this sample had no
+  primary-path failures on the four target fields to begin with, this
+  smoke cannot show whether targeted PSM 11 supplementation actually
+  recovers anything in practice — a true test of that requires a sample
+  containing at least one primary-path failure on `employer.ein` or Box
+  3/5/6, which occurs at roughly the 1-1.3% document rate seen in the
+  150-document clean benchmark (`employer.ein` 98.67%, `box_6` 98.67%,
+  `box_3`/`box_5` 99.33% each under the incumbent) — below what a
+  5-document sample can be expected to surface.
+- Latency: `3.656s`/document, up from the incumbent's `2.330s` (+56.9%,
+  slightly higher than the name-zone-inclusive smoke's +51%, since the
+  supplemental PSM 11 pass's cost is a full-page OCR re-scan regardless of
+  how many zones its output is filtered down to afterward — dropping one
+  zone does not reduce the cost of running the pass itself).
+- Per the decision rule set for this task ("no regression but no
+  demonstrated recovery benefit -> do not automatically advance; document
+  that the smoke did not prove value"): **this configuration is not marked
+  eligible for the clean-150 benchmark.** It is no longer disqualified
+  (the regression is fixed), but it also has not yet earned promotion —
+  the mechanical next step, if pursued, is a smoke sample large enough to
+  contain at least one primary-path failure on a target field (the
+  150-document set would trivially qualify, per the base rates above, but
+  running it was explicitly out of scope for this task). No 150-document
+  or 600-document run, no PaddleOCR run, and no other configuration change
+  were made; the incumbent and all historical artifacts (including the
+  disqualified smoke) are preserved unchanged.

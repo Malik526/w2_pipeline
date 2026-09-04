@@ -76,9 +76,7 @@ Supported supplemental modes:
 - **PSM 6** (the original, single-purpose mechanism): the top identifier
   region only, further filtered to text matching an SSN shape. Always on by
   default; the incumbent configuration.
-- **PSM 11** (Phase 4E, opt-in): five zones matching exactly the fields
-  where the Phase 4D.1 PSM 11 experiment showed an improvement over the PSM
-  3 incumbent — `employee.first_name`/`employee.middle_initial` (one zone),
+- **PSM 11** (Phase 4E, opt-in): four zones —
   `employer.ein` (filtered to an EIN shape),
   `federal_wages_and_taxes.box_3_social_security_wages`,
   `box_5_medicare_wages_and_tips`, and `box_6_medicare_tax_withheld`. Each
@@ -86,15 +84,35 @@ Supported supplemental modes:
   `parser_2026.py`, so a recovered observation lands exactly where the
   parser will later look for it. PSM 11 supplementation deliberately
   excludes Box 13 (owned by `checkbox_vision.py`) and SSN (owned by PSM 6).
+  It originally also targeted the employee-name zone
+  (`employee.first_name`/`employee.middle_initial`, matching the full set
+  of fields the Phase 4D.1 PSM 11 experiment showed improve over PSM 3),
+  but a 5-document smoke test found this caused a disqualifying regression
+  — see the caveat below — so the name zone was removed.
 
-A supplemental pass can never override an already-correct primary-path
-value: `TextObservation.is_supplemental` observations are excluded from the
-parser's primary row/line reconstruction (`_group_observation_rows`) and
-from its page-extent computation (`_layout_extent`), so they can only ever
-be consulted by the OCR zone-based fallback functions — and every one of
-those fallbacks already only fires when the primary path left a field
-`None`. This is what makes a supplemental pass safely "targeted" rather
-than a second, unrestricted full-page OCR pass.
+A supplemental pass can never corrupt an already-correct primary-path
+*line-based* value: `TextObservation.is_supplemental` observations are
+excluded from the parser's primary row/line reconstruction
+(`_group_observation_rows`) and from its page-extent computation
+(`_layout_extent`), so a supplemental pass can never duplicate or corrupt
+a Box 1-11/12/14/state-local line the way an unfiltered second full-page
+pass would. **This protection does not extend to every zone-based OCR
+fallback, however** — `_apply_ocr_employee_layout_fallbacks`'s
+employee-name recovery (`_zone_text`) joins every observation found in its
+zone rather than picking the first/best match, unlike the first-match
+logic (`_first_regex_text_in_zone`/`_first_money_text_in_zone`) used for
+SSN/EIN/money fields. A 5-document smoke test
+(`phase4e_tesseract_supplemental_psm11_smoke_5`; see
+`docs/experiments/pipeline-a-extraction-history.md`) demonstrated this
+concretely: enabling PSM 11 with the name zone still targeted regressed
+`employee.first_name` from 100% to 0% via text duplication (e.g.
+`"Steven"` -> `"Steven Steven D"`), because both PSM 3's main pass and PSM
+11's supplemental pass land readings of the same name in that zone and
+`_zone_text` concatenates both. This is why the name zone is no longer in
+PSM 11's target set — any future supplemental pass (or other new
+observation source) that would touch the employee-name zone must account
+for `_zone_text`'s join-all behavior first. `employer.ein` and Box 3/5/6
+are unaffected by this failure mode since their fallbacks are first-match.
 
 Enable it via the CLI:
 
@@ -103,7 +121,12 @@ Enable it via the CLI:
 ```
 
 (default `"6"`, matching the incumbent unchanged; comma-separated, parsed
-and validated by `TesseractOcrConfig`).
+and validated by `TesseractOcrConfig`). A 5-document smoke with this
+narrowed target set showed zero regressions but also no demonstrated
+recovery benefit (the sample had no primary-path failures on `employer.ein`
+or Box 3/5/6 to recover from); it is not yet marked eligible for a
+larger-scale run — see `docs/project-state.md`'s "Immediate Next
+Experiment".
 
 ### OCR Backend Boundary
 
@@ -386,8 +409,10 @@ python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-
 
 External Symage clean-render targeted PSM 11 supplemental smoke benchmark
 (main PSM 3 incumbent + PSM 6 SSN recovery + PSM 11 restricted to
-`employee.first_name`/`middle_initial`, `employer.ein`, and federal Boxes
-3/5/6 only — see "Targeted Supplemental OCR Passes" above):
+`employer.ein` and federal Boxes 3/5/6 only — see "Targeted Supplemental
+OCR Passes" above; already run twice at 5-document scale with zero
+regressions but no demonstrated recovery benefit yet, not yet eligible for
+a larger run):
 
 ```bash
 python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 3 --tesseract-supplemental-psm 6,11 --limit 5

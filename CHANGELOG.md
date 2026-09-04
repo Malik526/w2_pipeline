@@ -287,6 +287,40 @@
   accordingly. Did not run 150 or 600 documents, PaddleOCR, or any other
   configuration, per this task's explicit scope.
 
+### Phase 4E - Targeted Supplemental PSM 11 Narrowed to Drop the Name Zone
+
+- Applied the smaller of the two candidate fixes from the disqualified
+  smoke above: removed the employee-name zone from
+  `_SUPPLEMENTAL_TARGET_ZONES[11]` (`src/w2_pipeline/extraction/ocr.py`)
+  rather than redesigning `_zone_text`. PSM 11 supplemental targeting is
+  now `employer.ein` and federal Boxes 3/5/6 only — the four fields that
+  use first-match fallback logic and were unaffected by the duplication
+  bug. Updated the one affected unit test
+  (`test_targeted_psm_11_supplemental_pass_is_scoped_to_approved_fields`);
+  full suite 143 tests passing (unchanged count).
+- Re-ran the identical 5-document clean-render smoke
+  (`--tesseract-supplemental-psm 6,11`) with the narrowed config. Added
+  `data/evaluation/results/phase4e_tesseract_supplemental_psm11_no_name_zone_smoke_5.json`
+  and the matching `.md`; the disqualified smoke and all other historical
+  artifacts were left untouched.
+- Result: `field_accuracy = 1.0` (115/115), average `3.656s`/document
+  (+56.9% vs. the incumbent). Same 5 documents as the disqualified smoke;
+  cross-checked against the incumbent's result for these exact documents,
+  all 115 fields were already 100% correct under PSM 3 + PSM 6 alone —
+  **no regression**, but also **no primary-path failures to recover from**,
+  so this sample cannot demonstrate a recovery benefit either way.
+- Per the decision rule for this task ("no regression but no demonstrated
+  recovery benefit -> do not automatically advance; document that the
+  smoke did not prove value"), **this configuration is not marked eligible
+  for the clean-150 benchmark.** The regression is fixed, but promotion
+  would need a separate, explicit decision with a sample large enough to
+  actually observe recovery on `employer.ein`/Box 3/5/6 (occurring at
+  roughly a 1-1.3% document rate per the incumbent's 150-document numbers).
+  Updated `docs/contracts/extraction-pipeline-a.md`,
+  `docs/experiments/pipeline-a-extraction-history.md`, and
+  `docs/project-state.md` accordingly. Did not run 150 or 600 documents,
+  PaddleOCR, or any other configuration.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

@@ -37,18 +37,24 @@ class SupplementalTargetZone:
 
 
 # PSM 6 stays the existing, single-purpose SSN-recovery pass (top identifier
-# region). PSM 11's zones are restricted to exactly the fields where the
-# Phase 4D.1 PSM 11 experiment showed an improvement over the PSM 3 incumbent
-# (see docs/experiments/pipeline-a-extraction-history.md); they intentionally
-# exclude Box 13 (owned by checkbox_vision.py) and SSN (owned by PSM 6). Each
-# zone tuple mirrors the matching fallback zone in parser_2026.py so a
-# recovered supplemental observation lands in the same region the parser's
-# own fallback will later search.
+# region). PSM 11's zones are restricted to fields whose parser fallback
+# uses first-match zone logic (`_first_regex_text_in_zone`/
+# `_first_money_text_in_zone`), not the join-all `_zone_text` logic used for
+# the employee-name zone. The name zone was dropped after a 5-document smoke
+# test showed a disqualifying regression there: `_zone_text` joins every
+# observation in its zone rather than picking one, so PSM 11's supplemental
+# pass and PSM 3's main pass both landing readings of the same name in that
+# zone corrupted `employee.first_name` via text duplication (see
+# docs/experiments/pipeline-a-extraction-history.md, "Targeted Supplemental
+# PSM 11 Smoke Test"). `employer.ein` and federal Boxes 3/5/6 were
+# unaffected by that failure mode and remain PSM 11's approved target set;
+# they intentionally still exclude Box 13 (owned by checkbox_vision.py) and
+# SSN (owned by PSM 6). Each zone tuple mirrors the matching fallback zone
+# in parser_2026.py so a recovered supplemental observation lands in the
+# same region the parser's own fallback will later search.
 _SUPPLEMENTAL_TARGET_ZONES: dict[int, tuple[SupplementalTargetZone, ...]] = {
     6: (SupplementalTargetZone(zone=(0.25, 0.55, 0.10, 0.17), pattern=_TOP_IDENTIFIER_RE),),
     11: (
-        # employee.first_name / employee.middle_initial
-        SupplementalTargetZone(zone=(0.04, 0.28, 0.505, 0.550)),
         # employer.ein
         SupplementalTargetZone(zone=(0.20, 0.42, 0.16, 0.24), pattern=_SUPPLEMENTAL_EIN_RE),
         # federal_wages_and_taxes.box_3_social_security_wages

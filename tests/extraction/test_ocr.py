@@ -125,7 +125,10 @@ def _tsv_row(left: float, top: float, width: float, height: float, text: str, co
 def test_targeted_psm_11_supplemental_pass_is_scoped_to_approved_fields(tmp_path: Path) -> None:
     """PSM 11 supplemental output must land only in its approved zones,
     tagged as supplemental, and never in Box 13's checkbox zone (owned by
-    checkbox_vision.py, explicitly excluded from PSM 11 targeting)."""
+    checkbox_vision.py, explicitly excluded from PSM 11 targeting) or the
+    employee-name zone (dropped after the 5-document smoke test found a
+    disqualifying `_zone_text` duplication regression there; see
+    docs/experiments/pipeline-a-extraction-history.md)."""
 
     image_path = tmp_path / "sample.png"
 
@@ -139,7 +142,7 @@ def test_targeted_psm_11_supplemental_pass_is_scoped_to_approved_fields(tmp_path
     supplemental_pass_tsv = "\n".join(
         [
             _tsv_header(),
-            _tsv_row(100, 520, 50, 20, "John"),  # employee name zone -> kept
+            _tsv_row(100, 520, 50, 20, "John"),  # employee name zone -> dropped (no longer targeted)
             _tsv_row(250, 180, 100, 20, "12-3456789"),  # EIN zone, EIN-shaped -> kept
             _tsv_row(250, 180, 100, 20, "Acme"),  # EIN zone, not EIN-shaped -> dropped
             _tsv_row(600, 260, 50, 20, "30000.00"),  # box 3 zone -> kept
@@ -171,7 +174,7 @@ def test_targeted_psm_11_supplemental_pass_is_scoped_to_approved_fields(tmp_path
         observation.text for observation in observations if observation.is_supplemental
     }
     assert main_texts == {"Copy"}
-    assert supplemental_texts == {"John", "12-3456789", "30000.00"}
+    assert supplemental_texts == {"12-3456789", "30000.00"}
 
 
 def test_targeted_psm_6_supplemental_pass_still_recovers_ssn_only(tmp_path: Path) -> None:
