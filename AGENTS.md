@@ -45,6 +45,25 @@ authoritative blank IRS forms under `docs/references/`. Keep future benchmark
 documents and ground truth under `data/evaluation/`, using synthetic or otherwise
 safe data only.
 
+## Long-Running Test And Benchmark Policy
+
+Any deterministic test, benchmark, model evaluation, OCR run, build, or similar
+command expected to take more than approximately 2 minutes must not be kept
+running interactively while the agent repeatedly polls for completion.
+
+Instead, launch it in the background or detached mode, redirect stdout and
+stderr to a persistent log file, persist the process ID, persist or document the
+intended result/output path, report the command, PID, log path, and expected
+result path, then stop active polling and end the current turn once the process
+is confirmed running.
+
+Resume inspection only when the user explicitly asks to continue/check it, or
+in a later agent turn. Do not repeatedly emit "still running", "still
+processing", or "no output yet" style updates when no new engineering work is
+occurring.
+
+For benchmark-specific examples, follow `data/evaluation/README.md`.
+
 ## Changelog
 
 Meaningful repository changes must update `CHANGELOG.md`.

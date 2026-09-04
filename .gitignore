@@ -36,3 +36,7 @@ data/evaluation/private/**
 # Reproducible generated evaluation assets stay out of Git by default.
 data/evaluation/generated/**
 data/evaluation/external/**
+
+# Local long-running benchmark run-control files.
+data/evaluation/results/*.log
+data/evaluation/results/*.pid

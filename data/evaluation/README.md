@@ -167,3 +167,40 @@ robustness benchmark. The clean 150-document JSON now includes structured
 field failures and has a matching Markdown companion. The 600-variant JSON
 remains the canonical aggregate robustness artifact and was not rerun during
 the report-enrichment pass.
+
+## Long-Running Benchmark Commands
+
+Project-local agent policy requires any deterministic test, benchmark, model
+evaluation, OCR run, build, or similar command expected to take more than
+approximately 2 minutes to run in the background instead of being kept open
+interactively with repeated polling.
+
+Use a run name that identifies the benchmark, then persist the log, PID, and
+expected result path:
+
+```bash
+run_name=phase4b_external_clean_150
+log_path=data/evaluation/results/${run_name}.log
+pid_path=data/evaluation/results/${run_name}.pid
+result_path=data/evaluation/results/${run_name}.json
+
+nohup python -m w2_pipeline.evaluation.run_pipeline_a \
+  data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl \
+  --variant-id external_clean_render \
+  --output-json "$result_path" \
+  > "$log_path" 2>&1 &
+
+echo $! > "$pid_path"
+```
+
+After launch, report the command, PID, log path, and expected result path, then
+stop active polling. In a later turn, inspect status with:
+
+```bash
+ps -p "$(cat data/evaluation/results/phase4b_external_clean_150.pid)" -o pid,etime,cmd
+tail -n 80 data/evaluation/results/phase4b_external_clean_150.log
+```
+
+When the process has exited, inspect the JSON and matching Markdown result
+artifact. Log and PID files are local run-control artifacts and are ignored by
+Git; commit only intentional benchmark JSON/Markdown artifacts.

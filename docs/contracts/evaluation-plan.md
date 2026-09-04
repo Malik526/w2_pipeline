@@ -306,3 +306,23 @@ evaluation reports; future real-data reporting should redact sensitive values.
 
 Review rate and cost per document remain future metrics. They are not
 implemented by the current local deterministic benchmark artifacts.
+
+## Long-Running Evaluation Execution
+
+Any deterministic evaluation, benchmark, OCR run, model comparison, build, or
+similar command expected to take more than approximately 2 minutes must be
+launched in the background or detached mode rather than kept open
+interactively. The run must persist stdout/stderr to a log file, persist the
+PID, and identify the intended result artifact path before the agent stops
+active polling.
+
+Use `data/evaluation/results/` for benchmark logs, PID files, and result
+artifacts. JSON/Markdown results are intentional benchmark artifacts. `.log`
+and `.pid` files are local run-control artifacts and should not be committed
+unless a future brief explicitly asks for them.
+
+The project-local command pattern is documented in:
+
+```text
+data/evaluation/README.md
+```

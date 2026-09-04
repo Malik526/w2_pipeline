@@ -2,6 +2,16 @@
 
 ## 2026-09-04
 
+### Harness - Long-Running Benchmark Policy
+
+- Added project-local guidance requiring long-running deterministic tests,
+  OCR/evaluation benchmarks, model comparisons, and similar commands to be
+  launched detached/backgrounded with persisted log, PID, and intended result
+  paths instead of interactive repeated polling.
+- Documented the benchmark command pattern in the evaluation data workflow and
+  clarified that local `.log` and `.pid` run-control files are ignored while
+  intentional JSON/Markdown benchmark artifacts remain trackable.
+
 ### Evaluation - Human-Readable Benchmark Reports
 
 - Added reusable benchmark reporting utilities that serialize structured
