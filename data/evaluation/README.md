@@ -270,3 +270,44 @@ comparable Tesseract run takes. Always launch a full PaddleOCR benchmark
 detached using the long-running command pattern above, and budget for a
 multi-hour wait before checking results — do not treat the usual few-minute
 completion window from Tesseract runs as a guide for when to check back.
+
+### GPU Execution
+
+`--paddle-device` selects PaddlePaddle's execution device (default `cpu`,
+used only with `--ocr-backend paddleocr`); GPU execution requires a
+GPU-enabled `paddlepaddle-gpu` runtime instead of the CPU `paddlepaddle`
+package. Install it, matching the CUDA index to your NVIDIA driver version
+per Paddle's own guidance (see `docs/contracts/extraction-pipeline-a.md` for
+the full driver/CUDA compatibility notes):
+
+```bash
+pip uninstall -y paddlepaddle
+pip install "paddlepaddle-gpu==3.3.1" -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
+```
+
+`pip install '.[paddle-gpu]'` (installs `paddleocr` only, deliberately
+omitting `paddlepaddle`) is safe to run before or after that install; neither
+`paddleocr` nor `paddlex` declares its own `paddlepaddle` dependency, so it
+will not pull in or conflict with an already-installed GPU runtime.
+
+Before running anything, verify the GPU runtime is actually usable with the
+non-benchmark diagnostic (loads no OCR model, runs no inference):
+
+```bash
+python -c "from w2_pipeline.extraction.ocr_paddle import describe_paddle_gpu_availability; print(describe_paddle_gpu_availability())"
+```
+
+Then run PaddleOCR on GPU with:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --ocr-backend paddleocr --paddle-device gpu --limit 5
+```
+
+GPU execution has not yet been benchmarked at any scale (5- or 150-document);
+only a single-image, non-benchmark sanity check has confirmed it works
+end-to-end. To restore CPU-only execution:
+
+```bash
+pip uninstall -y paddlepaddle-gpu
+pip install "paddlepaddle>=3,<4"
+```

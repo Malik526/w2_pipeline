@@ -82,3 +82,33 @@ def test_pipeline_a_metadata_records_paddleocr_backend() -> None:
     assert metadata["ocr_configuration"]["lang"] == "en"
     assert metadata["ocr_configuration"]["device"] == "cpu"
     assert metadata["variant_filter"] == "external_clean_render"
+
+
+def test_run_pipeline_a_cli_defaults_paddle_device_to_cpu() -> None:
+    args = _build_parser().parse_args(["manifest.jsonl"])
+
+    assert args.paddle_device == "cpu"
+
+
+def test_run_pipeline_a_cli_accepts_explicit_paddle_device() -> None:
+    args = _build_parser().parse_args(
+        ["manifest.jsonl", "--ocr-backend", "paddleocr", "--paddle-device", "gpu:0"]
+    )
+
+    assert args.paddle_device == "gpu:0"
+
+
+def test_pipeline_a_extractor_threads_paddle_device_into_config() -> None:
+    extractor = _pipeline_a_extractor(ocr_backend="paddleocr", paddle_device="gpu:0")
+    ocr_adapter = extractor.observation_acquirer.ocr_adapter
+
+    assert isinstance(ocr_adapter, PaddleOcrAdapter)
+    assert ocr_adapter.config.device == "gpu:0"
+
+
+def test_pipeline_a_metadata_records_selected_paddle_device() -> None:
+    extractor = _pipeline_a_extractor(ocr_backend="paddleocr", paddle_device="gpu:0")
+
+    metadata = _pipeline_a_metadata(extractor, variant_id="external_clean_render")
+
+    assert metadata["ocr_configuration"]["device"] == "gpu:0"

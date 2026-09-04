@@ -1,10 +1,16 @@
 from pathlib import Path
+import sys
+import types
 
 import pytest
 
 from w2_pipeline.extraction.errors import MissingOcrDependencyError, OcrExecutionError
 from w2_pipeline.extraction.models import ObservationSource
-from w2_pipeline.extraction.ocr_paddle import PaddleOcrAdapter, PaddleOcrConfig
+from w2_pipeline.extraction.ocr_paddle import (
+    PaddleOcrAdapter,
+    PaddleOcrConfig,
+    describe_paddle_gpu_availability,
+)
 
 
 class RecordingAdapter(PaddleOcrAdapter):
@@ -112,3 +118,76 @@ def test_paddle_adapter_extracts_pdf_pages(tmp_path: Path) -> None:
     assert [observation.text for observation in observations] == ["Page one", "Page two"]
     assert [observation.page for observation in observations] == [1, 2]
     assert len(adapter.calls) == 2
+
+
+@pytest.mark.parametrize("device", ["cpu", "gpu", "gpu:0"])
+def test_paddle_config_accepts_explicit_device_selection(device: str) -> None:
+    config = PaddleOcrConfig(device=device)
+    adapter = PaddleOcrAdapter(config=config)
+
+    assert adapter.config.device == device
+
+
+def _fake_paddle_module(*, compiled_with_cuda: bool, device_names: list[str]) -> types.ModuleType:
+    cuda_module = types.SimpleNamespace(
+        device_count=lambda: len(device_names),
+        get_device_name=lambda index: device_names[index],
+    )
+    device_module = types.SimpleNamespace(
+        is_compiled_with_cuda=lambda: compiled_with_cuda,
+        cuda=cuda_module,
+    )
+    module = types.ModuleType("paddle")
+    module.__version__ = "3.3.1"
+    module.device = device_module
+    return module
+
+
+def test_describe_paddle_gpu_availability_reports_cuda_devices(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(
+        sys.modules,
+        "paddle",
+        _fake_paddle_module(compiled_with_cuda=True, device_names=["NVIDIA GeForce RTX 3060"]),
+    )
+
+    info = describe_paddle_gpu_availability()
+
+    assert info == {
+        "paddle_version": "3.3.1",
+        "compiled_with_cuda": True,
+        "cuda_device_count": 1,
+        "cuda_device_names": ["NVIDIA GeForce RTX 3060"],
+    }
+
+
+def test_describe_paddle_gpu_availability_reports_cpu_only_build(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(
+        sys.modules,
+        "paddle",
+        _fake_paddle_module(compiled_with_cuda=False, device_names=[]),
+    )
+
+    info = describe_paddle_gpu_availability()
+
+    assert info["compiled_with_cuda"] is False
+    assert info["cuda_device_count"] == 0
+    assert info["cuda_device_names"] == []
+
+
+def test_describe_paddle_gpu_availability_fails_clearly_when_paddle_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name: str, *args: object, **kwargs: object) -> object:
+        if name == "paddle":
+            raise ImportError("No module named 'paddle'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.delitem(sys.modules, "paddle", raising=False)
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+
+    with pytest.raises(MissingOcrDependencyError, match="PaddlePaddle is not installed"):
+        describe_paddle_gpu_availability()

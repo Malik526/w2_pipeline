@@ -27,6 +27,18 @@ paddle = [
     "paddlepaddle>=3,<4",
     "paddleocr>=3,<4",
 ]
+# GPU execution deliberately excludes a pinned `paddlepaddle-gpu` dependency
+# here: NVIDIA CUDA build selection depends on the local driver version and
+# GPU wheels are distributed from Paddle's own CUDA-specific package index
+# (not standard PyPI), which a static pyproject dependency cannot express.
+# Install `paddlepaddle-gpu` manually first (see
+# docs/contracts/extraction-pipeline-a.md), then install this extra.
+# `paddleocr`/`paddlex` do not declare a `paddlepaddle` dependency themselves,
+# so this extra will not pull in or conflict with an already-installed GPU
+# runtime.
+paddle-gpu = [
+    "paddleocr>=3,<4",
+]
 
 [tool.pytest.ini_options]
 addopts = "-q"

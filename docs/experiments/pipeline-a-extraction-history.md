@@ -384,3 +384,85 @@ benchmark was **not** run as part of this task. It is the next step before
 PaddleOCR could be evaluated as a genuine incumbent candidate, and the
 person/task requesting it should be aware of the multi-hour runtime cost
 before launching it.
+
+## Phase 4E GPU Enablement
+
+A follow-up Phase 4E task prepared the PaddleOCR backend for GPU execution on
+the reference development machine's local NVIDIA RTX 3060, without running
+any Phase 4E benchmark (5- or 150-document) on GPU or CPU and without
+changing the incumbent or any default configuration.
+
+Environment inspected (WSL2 on Windows):
+
+```text
+GPU: NVIDIA GeForce RTX 3060, 12 GB VRAM
+Driver: 610.43.02 (nvidia-smi: CUDA UMD Version 13.3)
+WSL CUDA passthrough: libcuda.so present under /usr/lib/wsl/lib/
+System CUDA toolkit (nvcc): not installed (not required for prebuilt wheels)
+Python: 3.10.12, x86_64
+Existing install: paddlepaddle==3.3.1 (CPU), paddleocr==3.7.0
+```
+
+Paddle distributes GPU builds as a separate `paddlepaddle-gpu` package from
+its own CUDA-version-specific index (not PyPI), selected by driver version
+rather than installed CUDA toolkit version. `cu126` requires driver >=
+550.54.14 (Linux); this machine's 610.43.02 comfortably exceeds it, so `cu126`
+was chosen as the newest documented stable option rather than the older
+`cu118`. `paddlepaddle-gpu==3.3.1` was available at that index, exactly
+matching the already-installed CPU `paddlepaddle` version, avoiding
+unnecessary version churn; `paddleocr==3.7.0` was left unchanged.
+
+Verified via `importlib.metadata` that neither `paddleocr` nor `paddlex`
+declares a `paddlepaddle` dependency in their own package metadata, so a
+`paddle-gpu` optional-dependency group containing only `paddleocr` cannot
+silently reinstall or conflict with an already-installed GPU runtime — this
+shaped the `pyproject.toml` dependency strategy (see `docs/contracts/
+extraction-pipeline-a.md`, "GPU Execution" section, for the full rationale).
+
+Runtime swap performed:
+
+```text
+pip uninstall -y paddlepaddle
+pip install "paddlepaddle-gpu==3.3.1" -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
+```
+
+The GPU wheel and its bundled CUDA/cuDNN/NCCL runtime totaled roughly 2.9 GB
+of downloads (dominant cost: a ~2 GB `paddlepaddle_gpu` wheel plus ~900 MB of
+`nvidia-*-cu12` runtime packages), a materially heavier install than the
+~195 MB CPU wheel.
+
+Verification (non-benchmark):
+
+```text
+describe_paddle_gpu_availability() ->
+  paddle_version: 3.3.1
+  compiled_with_cuda: true
+  cuda_device_count: 1
+  cuda_device_names: ["NVIDIA GeForce RTX 3060"]
+```
+
+A minimal single-image `PaddleOcrAdapter.extract_image()` call with
+`device="gpu"` (same tiny synthetic test image used for the earlier CPU API
+verification, not a W-2 document and not a benchmark artifact) correctly
+recognized the sample text in `5.96` seconds total, including one-time
+CUDA-context and model-initialization overhead — confirming genuine
+end-to-end GPU inference, not just device visibility.
+
+Code changes: `PaddleOcrConfig.device` already accepted any device string
+(no change needed for basic GPU selection); added `--paddle-device` to the
+`run_pipeline_a` CLI (default `cpu`, unchanged, used only with `--ocr-backend
+paddleocr`) and `describe_paddle_gpu_availability()`
+(`src/w2_pipeline/extraction/ocr_paddle.py`) as a reusable, testable
+diagnostic. Added a `paddle-gpu` optional dependency group (`paddleocr` only)
+to `pyproject.toml`. 8 new unit tests covering device selection and the GPU
+diagnostic (mocked; none require a real GPU or PaddlePaddle installed) bring
+the suite to 121 passing tests.
+
+Conclusion: GPU execution is now installed, explicit, reproducible, and
+selectable via `--paddle-device`, and has been verified to work end-to-end on
+this machine's RTX 3060. No accuracy or throughput benchmark has been run on
+GPU. The CPU incumbent (Tesseract PSM 3 + PSM 6) is unchanged, and
+`PaddleOcrConfig`'s default device remains `cpu`. The next step — running the
+Phase 4E 150-document PaddleOCR comparison, now with the option of GPU
+execution — is deliberately left to a separate task using the Pipeline A
+extraction experiment workflow, per this task's explicit scope.

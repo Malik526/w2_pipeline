@@ -2,6 +2,37 @@
 
 ## 2026-09-04
 
+### Phase 4E - GPU Enablement for PaddleOCR
+
+- Installed `paddlepaddle-gpu==3.3.1` (replacing CPU `paddlepaddle==3.3.1`,
+  same version, from Paddle's `cu126` CUDA index matched to the reference
+  development machine's NVIDIA driver 610.43.02 on WSL2) alongside unchanged
+  `paddleocr==3.7.0`. Verified via `importlib.metadata` that neither
+  `paddleocr` nor `paddlex` declares its own `paddlepaddle` dependency, so a
+  new `paddle-gpu` optional dependency group in `pyproject.toml` (containing
+  only `paddleocr`) cannot silently reinstall or conflict with an
+  already-installed GPU runtime.
+- Added `--paddle-device` to the `run_pipeline_a` benchmark CLI (default
+  `cpu`, unchanged; used only with `--ocr-backend paddleocr`) and
+  `describe_paddle_gpu_availability()`
+  (`src/w2_pipeline/extraction/ocr_paddle.py`) as a reusable, testable,
+  non-benchmark diagnostic for confirming GPU visibility.
+- Verified GPU availability (`compiled_with_cuda: true`, `cuda_device_count:
+  1`, `cuda_device_names: ["NVIDIA GeForce RTX 3060"]`) and ran a minimal
+  single-image `extract_image(device="gpu")` sanity check (not a benchmark)
+  that correctly recognized the sample text in 5.96 seconds, confirming
+  end-to-end GPU inference works.
+- Added 8 new unit tests covering explicit device selection and the GPU
+  diagnostic (mocked; none require a real GPU or PaddlePaddle installed).
+  Full suite: 121 tests passing.
+- Per this task's explicit scope, did **not** run the Phase 4E 5-document or
+  150-document PaddleOCR benchmark on GPU (or re-run it on CPU); updated
+  `docs/project-state.md` and `docs/experiments/pipeline-a-extraction-history.md`
+  to record GPU as installed/verified/selectable but not yet benchmarked at
+  any scale, leaving that as a separate follow-up task.
+- The Tesseract incumbent, `PaddleOcrConfig`'s default `device="cpu"`, and
+  the `enable_mkldnn=False` CPU correctness fix are all unchanged.
+
 ### Phase 4E - PaddleOCR Backend Implementation
 
 - Added a structural `OcrAdapter` contract

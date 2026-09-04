@@ -121,6 +121,92 @@ Unit tests do not require PaddleOCR or its models installed; they override
 the adapter's raw-prediction seam with canned payloads, mirroring the
 existing Tesseract test pattern.
 
+### GPU Execution (Phase 4E GPU Enablement)
+
+`PaddleOcrConfig.device` is a free-form string passed straight through to
+`PaddleOCR(device=...)`; no code change was needed to make GPU execution
+selectable, since the field already accepted any device string the PaddleOCR
+constructor understands (`"cpu"`, `"gpu"`, `"gpu:0"`, and so on). What GPU
+enablement added was the GPU-capable runtime, an explicit CLI switch, and a
+non-benchmark verification step.
+
+**Hardware inspected on the reference development machine:** WSL2 on
+Windows, NVIDIA GeForce RTX 3060 (12 GB VRAM), driver 610.43.02 with WSL CUDA
+passthrough libraries present under `/usr/lib/wsl/lib/` (`libcuda.so`, etc.).
+No system CUDA toolkit (`nvcc`) is installed or required; PaddlePaddle's GPU
+wheel bundles its own CUDA/cuDNN runtime and talks to the GPU through
+`libcuda.so` provided by the WSL driver passthrough.
+
+**Runtime package.** PaddlePaddle distributes GPU builds as a separate
+package, `paddlepaddle-gpu`, from its own CUDA-version-specific package
+index rather than standard PyPI — `paddlepaddle` (CPU) and `paddlepaddle-gpu`
+cannot both be installed usefully at once (both provide the same importable
+`paddle` module), so only one may be installed at a time. Neither `paddleocr`
+nor `paddlex` declares a `paddlepaddle` dependency in their own package
+metadata (verified via `importlib.metadata`), so installing/reinstalling
+`paddleocr` does not silently pull in or clobber whichever `paddle` package
+is already present.
+
+Install the GPU runtime, matching the exact `paddlepaddle` version already
+used for CPU (avoid unrelated version churn), choosing the CUDA index by
+driver version per Paddle's official guidance ("you only need to care about
+the GPU driver version," not the toolkit version) — `cu126` requires driver
+>= 550.54.14, comfortably below this machine's 610.43.02:
+
+```bash
+pip uninstall -y paddlepaddle
+pip install "paddlepaddle-gpu==3.3.1" -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
+```
+
+To restore CPU-only execution later:
+
+```bash
+pip uninstall -y paddlepaddle-gpu
+pip install "paddlepaddle>=3,<4"
+```
+
+**Selecting the device.** The benchmark CLI exposes `--paddle-device`
+(default `cpu`, unchanged), used only with `--ocr-backend paddleocr`:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a <manifest> --ocr-backend paddleocr --paddle-device gpu --limit 5
+```
+
+`enable_mkldnn` is a CPU-only oneDNN acceleration flag and has no effect when
+`device` selects a GPU; its `False` default remains a CPU-specific
+correctness fix and does not need to change for GPU execution.
+
+**Non-benchmark GPU sanity check.** `describe_paddle_gpu_availability()`
+(`src/w2_pipeline/extraction/ocr_paddle.py`) queries PaddlePaddle's own
+device APIs (`paddle.device.is_compiled_with_cuda()`,
+`paddle.device.cuda.device_count()`, `paddle.device.cuda.get_device_name()`)
+without loading any OCR model or running inference — a fast, reproducible way
+to confirm the GPU runtime is correctly installed before attempting a real
+OCR run:
+
+```bash
+python -c "from w2_pipeline.extraction.ocr_paddle import describe_paddle_gpu_availability; print(describe_paddle_gpu_availability())"
+```
+
+On the reference development machine this reported `compiled_with_cuda:
+True`, `cuda_device_count: 1`, and `cuda_device_names: ['NVIDIA GeForce RTX
+3060']`, confirming the GPU runtime is correctly installed and the driver is
+visible to PaddlePaddle. A minimal one-image PaddleOCR `extract_image()` call
+with `device="gpu"` was also run manually against a tiny synthetic test image
+(not committed as a benchmark artifact, and not the Phase 4E 5- or
+150-document benchmark): it correctly recognized the sample text in `5.96`
+seconds total, confirming end-to-end GPU inference works, not just device
+visibility. That figure includes one-time GPU/CUDA context and model
+initialization overhead and is not a representative per-document throughput
+number — only a full benchmark run can establish that.
+
+**Scope boundary.** GPU enablement makes GPU execution available and
+selectable; it does not change the incumbent, does not run the Phase 4E
+5-document or 150-document PaddleOCR benchmarks on GPU, and does not change
+`PaddleOcrConfig`'s default `device` away from `"cpu"`. The full 150-document
+PaddleOCR benchmark (on CPU or GPU) remains a separate, not-yet-run task; see
+`docs/project-state.md`.
+
 ## Parser Strategy
 
 The initial 2026 W-2 parser uses explicit deterministic rules:

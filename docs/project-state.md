@@ -5,22 +5,34 @@ Last updated: 2026-09-04
 ## Current Phase
 
 Phase 4E is in progress: the PaddleOCR alternate OCR backend has been
-implemented behind Pipeline A's existing observation boundary and has passed
-its unit tests and a 5-document smoke evaluation. The full 150-document
-PaddleOCR benchmark comparison has **not** been run yet — see "Immediate Next
-Experiment." Phase 4D (Tesseract main-PSM experiments) is complete.
+implemented behind Pipeline A's existing observation boundary, passed its
+unit tests and a 5-document CPU smoke evaluation, and now also supports
+explicit GPU execution on the reference development machine's local NVIDIA
+RTX 3060 (verified with a non-benchmark sanity check, not yet benchmarked).
+The full 150-document PaddleOCR benchmark comparison has **not** been run
+yet, on CPU or GPU — see "Immediate Next Experiment." Phase 4D (Tesseract
+main-PSM experiments) is complete.
 
 Most recently completed:
 
+- Phase 4E GPU enablement installed `paddlepaddle-gpu==3.3.1` (matching the
+  existing CPU `paddlepaddle` version, `cu126` CUDA index) alongside the
+  unchanged `paddleocr==3.7.0`, added `--paddle-device` to the benchmark CLI
+  (default `cpu`, unchanged) and a `describe_paddle_gpu_availability()`
+  diagnostic, and added a `paddle-gpu` optional dependency group. Verified
+  GPU visibility (`compiled_with_cuda: true`, RTX 3060 detected) and ran a
+  single-image, non-benchmark GPU OCR call that completed correctly. No
+  benchmark (5- or 150-document) has been run on GPU.
 - Phase 4E implemented `PaddleOcrAdapter`
   (`src/w2_pipeline/extraction/ocr_paddle.py`) behind a new structural
   `OcrAdapter` contract (`src/w2_pipeline/extraction/ocr_backend.py`) that
   both the Tesseract and PaddleOCR adapters satisfy, added `--ocr-backend
   {tesseract, paddleocr}` to the benchmark CLI (default `tesseract`,
   unchanged), and added the `paddle` optional dependency group. A 5-document
-  smoke benchmark against the external clean-render set passed with 98.26%
-  field accuracy and 0 document failures, but revealed PaddleOCR is roughly
-  35-37x slower than Tesseract on CPU (~74.3s/document vs. ~2.1s/document).
+  CPU smoke benchmark against the external clean-render set passed with
+  98.26% field accuracy and 0 document failures, but revealed PaddleOCR is
+  roughly 35-37x slower than Tesseract on CPU (~74.3s/document vs.
+  ~2.1s/document).
 - Phase 4C corrected the Box e employee-name semantic error end to end (ground
   truth regeneration plus reruns) and reran both the 150-document external
   clean benchmark and the 600-document external robustness benchmark against
@@ -40,9 +52,10 @@ Most recently completed:
 
 The current Pipeline A incumbent configuration remains unchanged from
 Phase 4B: main Tesseract **PSM 3** plus the targeted supplemental **PSM 6**
-SSN-recovery pass. Neither the Phase 4D PSM experiments nor the Phase 4E
-PaddleOCR smoke result have displaced it; a full-scale PaddleOCR benchmark is
-required before any incumbent change could be considered.
+SSN-recovery pass, running on CPU. Neither the Phase 4D PSM experiments, the
+Phase 4E PaddleOCR CPU smoke result, nor GPU enablement have displaced it; a
+full-scale PaddleOCR benchmark (CPU or GPU) is required before any incumbent
+change could be considered.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -66,7 +79,9 @@ reran the clean and robustness external benchmarks. Phase 4D added configurable
 main-PSM support to Pipeline A and the benchmark CLI and evaluated PSM 11 and
 PSM 12 as controlled sparse-text experiments. Phase 4E introduced a
 backend-selectable OCR boundary and added PaddleOCR as a second Pipeline A OCR
-backend, validated with unit tests and a 5-document smoke benchmark.
+backend, validated with unit tests and a 5-document CPU smoke benchmark, then
+added explicit, verified GPU execution support without running a GPU
+benchmark.
 
 ## Authoritative Reference
 
@@ -143,7 +158,17 @@ docs/experiments/pipeline-a-extraction-history.md
   comparison has not been run.
 - `PaddleOcrConfig` defaults to `enable_mkldnn=False`; the PaddlePaddle
   default (`True`) raised a PIR attribute-conversion error for the default
-  PP-OCRv6 models on the reference development machine.
+  PP-OCRv6 models on the reference development machine. `enable_mkldnn` is
+  CPU-only and irrelevant when `device` selects a GPU.
+- GPU execution is available via `--paddle-device gpu` (or `gpu:0`, etc.),
+  used only with `--ocr-backend paddleocr`. The reference development
+  machine has `paddlepaddle-gpu==3.3.1` installed (NVIDIA RTX 3060, driver
+  610.43.02, `cu126` CUDA index) and GPU visibility/inference were verified
+  with a non-benchmark sanity check
+  (`describe_paddle_gpu_availability()` in
+  `src/w2_pipeline/extraction/ocr_paddle.py`, plus one manual single-image
+  OCR call). Default `device` remains `"cpu"`; no benchmark has been run on
+  GPU.
 
 ## Encoded Assumptions
 
@@ -198,19 +223,23 @@ docs/experiments/pipeline-a-extraction-history.md
 Phase 4E (continued) - full 150-document PaddleOCR clean-render benchmark
 ```
 
-The PaddleOCR backend implementation is done: it passed unit tests and a
-5-document smoke evaluation (98.26% field accuracy, 0 failures) against the
-external clean-render set. The next step is running the same 150-document
-external Symage clean-render benchmark used for every Tesseract PSM
-comparison, with `--ocr-backend paddleocr`, holding dataset, ground truth,
-parser, evaluator, and schema constant exactly as the Phase 4D PSM
-experiments did. **This has not been run.** Budget for it explicitly: at the
-smoke rate (~74.3s/document) a full 150-document run is on the order of 3
-hours of wall-clock time, roughly 35-37x longer than the equivalent Tesseract
-run — launch it detached per the long-running command policy and expect a
-multi-hour wait, not the few-minute turnaround of prior Pipeline A
-benchmarks. Only after that full run is complete should PaddleOCR vs.
-Tesseract be evaluated as an incumbent decision.
+The PaddleOCR backend implementation is done, including verified GPU support:
+it passed unit tests, a 5-document CPU smoke evaluation (98.26% field
+accuracy, 0 failures), and a non-benchmark GPU sanity check (RTX 3060
+detected and used successfully for a single-image OCR call). The next step is
+running the same 150-document external Symage clean-render benchmark used
+for every Tesseract PSM comparison, with `--ocr-backend paddleocr`, holding
+dataset, ground truth, parser, evaluator, and schema constant exactly as the
+Phase 4D PSM experiments did. **This has not been run, on CPU or GPU.**
+`--paddle-device` now makes both options available — CPU (`cpu`, the
+smoke-tested rate of ~74.3s/document, ~3 hours for 150 documents) or GPU
+(`gpu`, not yet benchmarked at any scale, so its actual throughput and
+whether it changes the ~35-37x Tesseract slowdown are unknown until run).
+Whichever device is used, launch it detached per the long-running command
+policy and expect at minimum a multi-hour wait unless GPU throughput proves
+otherwise — do not assume GPU execution is fast until measured. Only after a
+full run is complete should PaddleOCR vs. Tesseract be evaluated as an
+incumbent decision.
 
 ## Future Phases (after Phase 4E)
 
@@ -469,6 +498,44 @@ Smoke-validated (not yet benchmarked at scale):
   on CPU. The full 150-document comparison needed to make an incumbent
   decision has **not** been run; see "Immediate Next Experiment."
 
+Completed Phase 4E GPU enablement:
+
+```text
+src/w2_pipeline/extraction/ocr_paddle.py (describe_paddle_gpu_availability)
+src/w2_pipeline/evaluation/run_pipeline_a.py (--paddle-device)
+tests/extraction/test_ocr_paddle.py
+tests/evaluation/test_run_pipeline_a.py
+pyproject.toml (paddle-gpu extra)
+```
+
+Installed `paddlepaddle-gpu==3.3.1` (replacing CPU `paddlepaddle==3.3.1`,
+same version, `cu126` CUDA index matched to the reference machine's NVIDIA
+driver 610.43.02) alongside unchanged `paddleocr==3.7.0`; added
+`--paddle-device` (default `cpu`, unchanged) and
+`describe_paddle_gpu_availability()`; added a `paddle-gpu` optional
+dependency group containing only `paddleocr`, since neither `paddleocr` nor
+`paddlex` declares its own `paddlepaddle` dependency and therefore cannot
+silently reinstall or conflict with an already-installed GPU runtime. 8 new
+unit tests (mocked; no real GPU or PaddlePaddle required). Full suite: 121
+tests passing.
+
+Verification (non-benchmark, RTX 3060, 12 GB VRAM):
+
+```text
+describe_paddle_gpu_availability() -> compiled_with_cuda: true,
+  cuda_device_count: 1, cuda_device_names: ["NVIDIA GeForce RTX 3060"]
+single-image extract_image(device="gpu") -> correct text, 5.96s total
+  (includes one-time CUDA-context/model-init overhead, not throughput)
+```
+
+Conclusion: GPU execution is installed, explicit, reproducible, and
+selectable, and has been verified end-to-end on this machine. No accuracy or
+throughput benchmark has been run on GPU at any scale. The incumbent and all
+defaults (including `PaddleOcrConfig.device = "cpu"`) are unchanged. The
+150-document PaddleOCR benchmark — now runnable on CPU or GPU — remains the
+next step and is deliberately left to a separate task; see "Immediate Next
+Experiment."
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
@@ -494,7 +561,8 @@ Smoke-validated (not yet benchmarked at scale):
 ## Unimplemented Capabilities
 
 - The full 150-document PaddleOCR benchmark (Phase 4E completion) has not
-  been run; only a 5-document smoke result exists.
+  been run on CPU or GPU; only a 5-document CPU smoke result and a
+  single-image, non-benchmark GPU sanity check exist.
 - Phase 5 (Pipeline B document-vision/VLM challenger) has not been started.
 - Review routing, confidence calibration, validation engines, persistence,
   FastAPI/API layer, frontend, CSV export, and cost tracking remain

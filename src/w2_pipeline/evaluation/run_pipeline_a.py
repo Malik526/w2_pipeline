@@ -34,7 +34,11 @@ def main(argv: list[str] | None = None) -> None:
 
     manifest = load_manifest_jsonl(args.manifest)
     entries = _filter_entries(manifest.entries, variant_id=args.variant_id, limit=args.limit)
-    extractor = _pipeline_a_extractor(ocr_backend=args.ocr_backend, tesseract_psm=args.tesseract_psm)
+    extractor = _pipeline_a_extractor(
+        ocr_backend=args.ocr_backend,
+        tesseract_psm=args.tesseract_psm,
+        paddle_device=args.paddle_device,
+    )
     result = evaluate_manifest(
         entries=entries,
         manifest_base_dir=args.manifest.parent,
@@ -85,6 +89,16 @@ def _build_parser() -> argparse.ArgumentParser:
             "against the Tesseract incumbent."
         ),
     )
+    parser.add_argument(
+        "--paddle-device",
+        default="cpu",
+        help=(
+            "PaddlePaddle execution device, used only when --ocr-backend "
+            "paddleocr is selected. Examples: cpu, gpu, gpu:0. GPU execution "
+            "requires a GPU-enabled paddlepaddle-gpu runtime; see "
+            "docs/contracts/extraction-pipeline-a.md. Default remains cpu."
+        ),
+    )
     parser.add_argument("--output-json", type=Path, default=None, help="Optional summary JSON path.")
     parser.add_argument(
         "--no-markdown-report",
@@ -94,15 +108,22 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _pipeline_a_extractor(*, ocr_backend: str = "tesseract", tesseract_psm: int = 3) -> PipelineAExtractor:
+def _pipeline_a_extractor(
+    *,
+    ocr_backend: str = "tesseract",
+    tesseract_psm: int = 3,
+    paddle_device: str = "cpu",
+) -> PipelineAExtractor:
     return PipelineAExtractor(
-        observation_acquirer=ObservationAcquirer(ocr_adapter=_build_ocr_adapter(ocr_backend, tesseract_psm))
+        observation_acquirer=ObservationAcquirer(
+            ocr_adapter=_build_ocr_adapter(ocr_backend, tesseract_psm, paddle_device)
+        )
     )
 
 
-def _build_ocr_adapter(ocr_backend: str, tesseract_psm: int) -> OcrAdapter:
+def _build_ocr_adapter(ocr_backend: str, tesseract_psm: int, paddle_device: str = "cpu") -> OcrAdapter:
     if ocr_backend == "paddleocr":
-        return PaddleOcrAdapter(config=PaddleOcrConfig())
+        return PaddleOcrAdapter(config=PaddleOcrConfig(device=paddle_device))
     if ocr_backend == "tesseract":
         return TesseractOcrAdapter(config=TesseractOcrConfig(page_segmentation_mode=tesseract_psm))
     raise ValueError(f"Unsupported OCR backend {ocr_backend!r}; expected one of: {SUPPORTED_OCR_BACKENDS}.")

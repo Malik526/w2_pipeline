@@ -109,3 +109,31 @@ class PaddleOcrAdapter:
                 enable_mkldnn=self.config.enable_mkldnn,
             )
         return self._client
+
+
+def describe_paddle_gpu_availability() -> dict[str, Any]:
+    """Report whether the installed PaddlePaddle runtime can use a GPU.
+
+    A reproducible, non-benchmark diagnostic: it only queries PaddlePaddle's
+    own device APIs and does not load OCR models or run inference.
+    """
+
+    try:
+        import paddle
+    except ImportError as exc:
+        raise MissingOcrDependencyError(
+            "PaddlePaddle is not installed. Install the `paddle` (CPU) or "
+            "`paddlepaddle-gpu` (GPU) runtime described in "
+            "docs/contracts/extraction-pipeline-a.md before checking GPU "
+            "availability."
+        ) from exc
+
+    compiled_with_cuda = paddle.device.is_compiled_with_cuda()
+    device_count = paddle.device.cuda.device_count() if compiled_with_cuda else 0
+    device_names = [paddle.device.cuda.get_device_name(index) for index in range(device_count)]
+    return {
+        "paddle_version": paddle.__version__,
+        "compiled_with_cuda": compiled_with_cuda,
+        "cuda_device_count": device_count,
+        "cuda_device_names": device_names,
+    }
