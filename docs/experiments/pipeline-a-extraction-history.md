@@ -539,3 +539,79 @@ immediately after this result (`phase4e_paddleocr_gpu_external_clean_150`,
 detached, not yet complete at the time this entry was written). The
 150-document result — not this 5-document smoke — is the basis for any future
 incumbent decision.
+
+## Phase 4E PaddleOCR GPU 150-Document Benchmark
+
+The full 150-document external Symage clean-render benchmark ran with
+`--ocr-backend paddleocr --paddle-device gpu`, holding dataset, corrected
+ground truth, parser, evaluator, and schema constant — the same set used for
+the Phase 4C Tesseract incumbent result and both Phase 4D PSM experiments.
+This was a pure experiment execution: no Paddle implementation, parser, or
+Paddle accuracy-setting changes were made.
+
+```text
+date: 2026-09-04
+scope: external Symage clean renders, 150 documents
+artifact: data/evaluation/results/phase4e_paddleocr_gpu_external_clean_150.json
+markdown: data/evaluation/results/phase4e_paddleocr_gpu_external_clean_150.md
+pipeline_commit: 91235fd94028fcfc3aa45d93b0d40522c42c35a9
+backend: paddleocr (device=gpu, lang=en, use_doc_orientation_classify=False,
+  use_doc_unwarping=False, use_textline_orientation=False)
+paddlepaddle_version: 3.3.1 (paddlepaddle-gpu, cu126)
+paddleocr_version: 3.7.0
+hardware: NVIDIA GeForce RTX 3060 (WSL2 CUDA passthrough)
+documents: 150
+successful_documents: 150
+failed_documents: 0
+field_accuracy: 0.9739130434782609
+correct_fields: 3360
+total_fields: 3450
+field_failure_count: 90
+average_duration_seconds: 1.349492507300068
+```
+
+Every one of the 90 field failures is the same field:
+`box_13.retirement_plan` (60/150 correct, `0.4` accuracy) — expected `true`,
+predicted `false`, on 90 distinct documents. No other field path has a single
+incorrect value across all 150 documents: employee first name, middle
+initial, last name, suffix, SSN; employer EIN, control number; and all of
+federal Boxes 1 through 11 are 100% correct.
+
+Direct comparison against the Tesseract PSM 3 + PSM 6 incumbent on the
+identical 150-document clean set (Phase 4C):
+
+```text
+                    Tesseract incumbent    PaddleOCR GPU
+field_accuracy:     0.991304347826087      0.9739130434782609
+correct/total:      3420 / 3450            3360 / 3450
+field_failures:     30                     90
+avg_duration_sec:   2.0517181199200363     1.349492507300068  (~34% faster)
+failed_documents:   0                      0
+```
+
+Per-field, the two backends' weaknesses are almost entirely disjoint rather
+than overlapping. Tesseract's incumbent failures are spread across seven
+fields: `employee.first_name` (93.33%), `employee.middle_initial` (94.0%),
+`box_13.retirement_plan` (96.67%), `employer.ein` (98.67%),
+`box_6_medicare_tax_withheld` (98.67%), `box_3_social_security_wages`
+(99.33%), and `box_5_medicare_wages_and_tips` (99.33%). PaddleOCR GPU is
+100% correct on every one of those seven fields, but is dramatically worse
+than Tesseract on the one field where Tesseract is already comparatively
+strong: `box_13.retirement_plan` drops from Tesseract's 96.67% to PaddleOCR's
+40.0%.
+
+Conclusion: at 150-document scale, PaddleOCR GPU does **not** exceed the
+Tesseract incumbent's overall field accuracy (97.39% vs. 99.13%), so it is
+**not** promoted to incumbent from this result. However, the result is more
+nuanced than "worse": PaddleOCR GPU is meaningfully faster (~34% lower
+average latency than Tesseract, and roughly 55x faster than PaddleOCR CPU),
+has zero document failures, and its entire error surface is one single,
+narrow, systematic field failure (`box_13.retirement_plan`) rather than
+Tesseract's more diffuse spread across seven fields including identity
+fields (employee name) and federal money boxes. Whether that narrow,
+concentrated failure mode is preferable to Tesseract's broader-but-shallower
+one (e.g., because a single systematic weak field is easier to target with a
+future fix than several unrelated ones) is a product/architecture judgment
+call, not a decision made by this experiment run. This finding, not a
+recommendation, is recorded for that future decision. No further Paddle
+tuning or hybrid-backend design was attempted as part of this task.

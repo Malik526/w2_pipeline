@@ -1,0 +1,1097 @@
+{
+  "accuracy_by_route": {
+    "ocr": {
+      "correct_fields": 3360,
+      "documents": 150,
+      "field_accuracy": 0.9739130434782609,
+      "total_fields": 3450
+    }
+  },
+  "accuracy_by_variant": {
+    "external_clean_render": {
+      "correct_fields": 3360,
+      "documents": 150,
+      "field_accuracy": 0.9739130434782609,
+      "total_fields": 3450
+    }
+  },
+  "average_duration_seconds": 1.349492507300068,
+  "benchmark_metadata": {
+    "git_commit": "91235fd94028fcfc3aa45d93b0d40522c42c35a9",
+    "ocr_backend": "paddleocr",
+    "ocr_configuration": {
+      "device": "gpu",
+      "lang": "en",
+      "use_doc_orientation_classify": false,
+      "use_doc_unwarping": false,
+      "use_textline_orientation": false
+    },
+    "pipeline_id": "pipeline_a",
+    "run_timestamp": "2026-09-04T07:51:19.381821+00:00",
+    "schema_version": 2026,
+    "source_datasets": [
+      "Symage/synthetic-us-forms-preview"
+    ],
+    "variant_filter": "external_clean_render",
+    "variant_scope": [
+      "external_clean_render"
+    ]
+  },
+  "correct_fields": 3360,
+  "document_conditions": [
+    "external_clean_render"
+  ],
+  "documents": 150,
+  "failed_documents": 0,
+  "failure_rate": 0.0,
+  "field_accuracy": 0.9739130434782609,
+  "field_failure_count": 90,
+  "field_failures": [
+    {
+      "document_id": "symage_900001-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900002-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900005-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900007-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900008-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900010-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900012-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900014-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900017-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900018-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900019-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900020-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900023-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900028-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900030-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900031-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900032-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900035-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900036-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900037-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900040-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900043-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900044-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900047-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900048-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900050-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900051-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900053-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900054-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900056-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900057-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900059-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900060-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900062-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900064-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900065-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900066-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900067-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900068-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900071-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900072-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900078-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900084-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900086-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900089-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900090-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900092-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900093-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900097-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900100-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900101-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900102-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900104-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900105-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900106-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900107-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900110-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900111-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900112-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900114-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900116-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900121-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900122-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900123-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900124-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900126-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900128-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900132-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900134-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900135-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900136-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900139-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900140-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900141-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900144-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900147-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900148-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900149-irs_w2_single_page_2026-p0",
+      "expected": true,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": false,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    }
+  ],
+  "per_field_accuracy": {
+    "box_13.retirement_plan": {
+      "correct": 60,
+      "field_accuracy": 0.4,
+      "incorrect": 90,
+      "total": 150
+    },
+    "box_13.statutory_employee": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "box_13.third_party_sick_pay": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.first_name": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.last_name": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.middle_initial": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.ssn": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.suffix": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.control_number": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.ein": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.document_type": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.schema_version": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.tax_year": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    }
+  },
+  "pipeline_id": "pipeline_a",
+  "source_datasets": [
+    "Symage/synthetic-us-forms-preview"
+  ],
+  "successful_documents": 150,
+  "total_fields": 3450
+}

@@ -2,6 +2,40 @@
 
 ## 2026-09-04
 
+### Phase 4E - PaddleOCR GPU 150-Document Benchmark
+
+- Ran the Phase 4E PaddleOCR backend with `--paddle-device gpu` against the
+  full 150-document external Symage clean-render set, holding dataset,
+  ground truth, parser, evaluator, and schema constant — the same set used
+  for the Phase 4C Tesseract incumbent result. Pure experiment execution: no
+  Paddle implementation, parser, or accuracy-tuning changes were made.
+- Result: `field_accuracy = 0.9739130434782609` (3,360/3,450 correct),
+  `failed_documents = 0`, `field_failure_count = 90`, average
+  `1.349492507300068` seconds/document. All 90 failures are the same field,
+  `box_13.retirement_plan` (60/150 correct, 40.0% accuracy); every other
+  field is 100% correct across all 150 documents. Result artifacts:
+  `data/evaluation/results/phase4e_paddleocr_gpu_external_clean_150.json`
+  and `.md`.
+- Compared directly against the Tesseract incumbent on the identical set:
+  PaddleOCR GPU's overall accuracy is lower (97.39% vs. Tesseract's 99.13%,
+  90 vs. 30 field failures) so it was **not** promoted to incumbent, but it
+  is ~34% faster (`1.35s` vs. `2.05s`/document) and its entire error surface
+  is one systematic field rather than Tesseract's spread across seven
+  fields, including 100% accuracy on the employee-name and EIN fields where
+  Tesseract is weakest.
+- Updated `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` with the full comparison and per-field breakdown,
+  and reframed "Immediate Next Experiment" as an open decision (whether to
+  run the 600-document PaddleOCR GPU robustness set, investigate the
+  `box_13.retirement_plan` failure specifically, consider a future hybrid
+  approach, or stop Paddle investment here) rather than a mechanical next
+  benchmark, since this task's scope was execution and comparison, not
+  deciding Pipeline A's future direction.
+- Removed the completed 150-document run's local `.pid`/`.log` run-control
+  files (log held no unique warnings beyond the already-documented ccache
+  notice).
+- The Tesseract incumbent and all PaddleOCR defaults are unchanged.
+
 ### Phase 4E - PaddleOCR GPU 5-Document Smoke
 
 - Ran the Phase 4E PaddleOCR backend with `--paddle-device gpu` against the
