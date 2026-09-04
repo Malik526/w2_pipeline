@@ -2,6 +2,19 @@
 
 ## 2026-09-04
 
+### Phase 4D - Tesseract PSM Experiment Preparation
+
+- Added Pipeline A OCR configuration support for controlled main Tesseract PSM
+  selection, preserving PSM 3 as the default and allowing PSM 11 and PSM 12
+  experiments.
+- Extended the Pipeline A benchmark CLI with `--tesseract-psm` while preserving
+  targeted supplemental PSM 6 SSN recovery for all supported main modes.
+- Updated benchmark metadata so saved Pipeline A results record the selected
+  main page segmentation mode and supplemental PSM list.
+- Documented pending Phase 4D PSM 11/12 benchmark commands and noted that full
+  150-document experiment runs must wait for the active Phase 4C 600-document
+  benchmark to finish.
+
 ### Evaluation - Employee Name Semantics
 
 - Corrected Symage external ground truth mapping for Box e so

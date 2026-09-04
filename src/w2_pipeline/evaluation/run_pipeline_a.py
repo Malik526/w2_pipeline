@@ -13,31 +13,24 @@ from w2_pipeline.evaluation.reporting import (
     write_markdown_report_for_json,
 )
 from w2_pipeline.evaluation.runner import evaluate_manifest
+from w2_pipeline.extraction.acquisition import ObservationAcquirer
+from w2_pipeline.extraction.ocr import (
+    SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES,
+    TesseractOcrAdapter,
+    TesseractOcrConfig,
+)
 from w2_pipeline.extraction.pipeline_a import PipelineAExtractor
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """Evaluate Pipeline A against a manifest and print aggregate metrics."""
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("manifest", type=Path, help="Path to manifest.jsonl.")
-    parser.add_argument("--limit", type=int, default=None, help="Maximum entries to evaluate.")
-    parser.add_argument(
-        "--variant-id",
-        default=None,
-        help="Optional variant ID filter, such as external_clean_render or clean_pdf.",
-    )
-    parser.add_argument("--output-json", type=Path, default=None, help="Optional summary JSON path.")
-    parser.add_argument(
-        "--no-markdown-report",
-        action="store_true",
-        help="Do not write the matching .md report when --output-json is used.",
-    )
-    args = parser.parse_args()
+    parser = _build_parser()
+    args = parser.parse_args(argv)
 
     manifest = load_manifest_jsonl(args.manifest)
     entries = _filter_entries(manifest.entries, variant_id=args.variant_id, limit=args.limit)
-    extractor = PipelineAExtractor()
+    extractor = _pipeline_a_extractor(tesseract_psm=args.tesseract_psm)
     result = evaluate_manifest(
         entries=entries,
         manifest_base_dir=args.manifest.parent,
@@ -58,6 +51,43 @@ def main() -> None:
             write_markdown_report_for_json(args.output_json)
 
 
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("manifest", type=Path, help="Path to manifest.jsonl.")
+    parser.add_argument("--limit", type=int, default=None, help="Maximum entries to evaluate.")
+    parser.add_argument(
+        "--variant-id",
+        default=None,
+        help="Optional variant ID filter, such as external_clean_render or clean_pdf.",
+    )
+    parser.add_argument(
+        "--tesseract-psm",
+        type=int,
+        choices=SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES,
+        default=3,
+        help=(
+            "Main full-page Tesseract page segmentation mode. "
+            "Supplemental targeted PSM 6 SSN recovery remains enabled."
+        ),
+    )
+    parser.add_argument("--output-json", type=Path, default=None, help="Optional summary JSON path.")
+    parser.add_argument(
+        "--no-markdown-report",
+        action="store_true",
+        help="Do not write the matching .md report when --output-json is used.",
+    )
+    return parser
+
+
+def _pipeline_a_extractor(*, tesseract_psm: int) -> PipelineAExtractor:
+    config = TesseractOcrConfig(page_segmentation_mode=tesseract_psm)
+    return PipelineAExtractor(
+        observation_acquirer=ObservationAcquirer(
+            ocr_adapter=TesseractOcrAdapter(config=config),
+        )
+    )
+
+
 def _filter_entries(
     entries: list[DatasetManifestEntry],
     *,
@@ -76,6 +106,7 @@ def _pipeline_a_metadata(extractor: PipelineAExtractor, *, variant_id: str | Non
         "git_commit": _git_commit(),
         "ocr_backend": "tesseract",
         "ocr_configuration": {
+            "main_page_segmentation_mode": ocr_adapter.page_segmentation_mode,
             "page_segmentation_mode": ocr_adapter.page_segmentation_mode,
             "supplemental_page_segmentation_modes": list(
                 ocr_adapter.supplemental_page_segmentation_modes

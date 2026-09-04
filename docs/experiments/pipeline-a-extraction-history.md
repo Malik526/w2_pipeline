@@ -114,3 +114,35 @@ expanding the evaluated field count from `3,300` to `3,450` because
 clean documents. Remaining clean-render failures are concentrated in employee
 first name, employee middle initial, Box 13 retirement-plan detection,
 employer EIN, and a small number of federal money fields.
+
+## Phase 4D PSM 11/12 Experiment Preparation
+
+Phase 4D prepares controlled Tesseract sparse-text page segmentation
+experiments within Pipeline A. It does not create new pipelines and does not
+change canonical schema, ground truth semantics, parser logic, evaluator
+matching, or annotation isolation.
+
+Prepared comparison:
+
+```text
+incumbent: main PSM 3 + targeted supplemental PSM 6
+phase4d.1: main PSM 11 + targeted supplemental PSM 6
+phase4d.2: main PSM 12 + targeted supplemental PSM 6
+dataset: Symage/synthetic-us-forms-preview
+variant: external_clean_render
+documents: 150
+```
+
+Planned result artifacts:
+
+```text
+data/evaluation/results/phase4d_psm11_external_clean_150.json
+data/evaluation/results/phase4d_psm11_external_clean_150.md
+data/evaluation/results/phase4d_psm12_external_clean_150.json
+data/evaluation/results/phase4d_psm12_external_clean_150.md
+```
+
+At preparation time, the Phase 4C 600-document robustness benchmark was still
+running detached, so the Phase 4D 150-document PSM runs were not launched. Run
+PSM 11 first after the 600 run exits, then inspect and commit its artifacts
+before launching PSM 12. Do not run the two PSM experiments concurrently.

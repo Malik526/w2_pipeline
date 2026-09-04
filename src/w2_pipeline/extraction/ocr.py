@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+from dataclasses import dataclass
 import re
 import shutil
 import subprocess
@@ -15,6 +16,28 @@ from w2_pipeline.extraction.errors import MissingOcrDependencyError, OcrExecutio
 from w2_pipeline.extraction.models import BoundingBox, ObservationSource, TextObservation
 
 _TOP_IDENTIFIER_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
+SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES = (3, 11, 12)
+
+
+@dataclass(frozen=True)
+class TesseractOcrConfig:
+    """Configuration for Pipeline A's Tesseract OCR component."""
+
+    page_segmentation_mode: int = 3
+    supplemental_page_segmentation_modes: tuple[int, ...] = (6,)
+
+    def __post_init__(self) -> None:
+        if self.page_segmentation_mode not in SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES:
+            supported = ", ".join(str(mode) for mode in SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES)
+            raise ValueError(
+                "Unsupported main Tesseract page segmentation mode "
+                f"{self.page_segmentation_mode}; expected one of: {supported}."
+            )
+        object.__setattr__(
+            self,
+            "supplemental_page_segmentation_modes",
+            tuple(self.supplemental_page_segmentation_modes),
+        )
 
 
 class TesseractOcrAdapter:
@@ -24,12 +47,34 @@ class TesseractOcrAdapter:
         self,
         executable: str = "tesseract",
         *,
-        page_segmentation_mode: int = 3,
-        supplemental_page_segmentation_modes: tuple[int, ...] = (6,),
+        config: TesseractOcrConfig | None = None,
+        page_segmentation_mode: int | None = None,
+        supplemental_page_segmentation_modes: tuple[int, ...] | None = None,
     ) -> None:
+        if config is not None and (
+            page_segmentation_mode is not None
+            or supplemental_page_segmentation_modes is not None
+        ):
+            raise ValueError(
+                "Pass either TesseractOcrConfig or explicit OCR settings, not both."
+            )
+        self.config = config or TesseractOcrConfig(
+            page_segmentation_mode=(
+                page_segmentation_mode
+                if page_segmentation_mode is not None
+                else TesseractOcrConfig.page_segmentation_mode
+            ),
+            supplemental_page_segmentation_modes=(
+                supplemental_page_segmentation_modes
+                if supplemental_page_segmentation_modes is not None
+                else TesseractOcrConfig.supplemental_page_segmentation_modes
+            ),
+        )
         self.executable = executable
-        self.page_segmentation_mode = page_segmentation_mode
-        self.supplemental_page_segmentation_modes = supplemental_page_segmentation_modes
+        self.page_segmentation_mode = self.config.page_segmentation_mode
+        self.supplemental_page_segmentation_modes = (
+            self.config.supplemental_page_segmentation_modes
+        )
 
     def ensure_available(self) -> None:
         """Raise an actionable error when the OCR binary is missing."""

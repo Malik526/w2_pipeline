@@ -279,6 +279,11 @@ scope, Git commit when available, and Pipeline A OCR configuration. This
 metadata is part of result interpretation and should be preserved when
 committing intentional benchmark artifacts.
 
+Pipeline A OCR configuration metadata records the selected main Tesseract page
+segmentation mode and the supplemental mode list. Phase 4D PSM experiments
+must keep the same dataset, ground truth, parser, evaluator, and targeted
+supplemental PSM 6 behavior while changing only the main full-page PSM.
+
 ## Phase 4B External Pipeline A Results
 
 Phase 4B adds per-field summary output and structured field-failure inspection

@@ -137,6 +137,12 @@ Run Pipeline A against external Symage clean renders:
 python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --limit 5
 ```
 
+Run a tiny Pipeline A PSM smoke check without changing the default:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 11 --limit 5
+```
+
 Pipeline A never receives external annotations. It receives only the document
 path and production-realistic metadata through `ExtractionInput`.
 
@@ -211,3 +217,30 @@ tail -n 80 data/evaluation/results/phase4b_external_clean_150.log
 When the process has exited, inspect the JSON and matching Markdown result
 artifact. Log and PID files are local run-control artifacts and are ignored by
 Git; commit only intentional benchmark JSON/Markdown artifacts.
+
+## Phase 4D PSM Experiment Commands
+
+Do not run these while another timed OCR benchmark is active. Run PSM 11 first,
+inspect and commit its completed artifacts, then run PSM 12.
+
+PSM 11:
+
+```bash
+run_name=phase4d_psm11_external_clean_150
+log_path=data/evaluation/results/${run_name}.log
+pid_path=data/evaluation/results/${run_name}.pid
+result_path=data/evaluation/results/${run_name}.json
+
+setsid -f sh -c 'trap "" HUP; echo $$ > data/evaluation/results/phase4d_psm11_external_clean_150.pid; exec env PYTHONPATH=src python3 -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 11 --output-json data/evaluation/results/phase4d_psm11_external_clean_150.json > data/evaluation/results/phase4d_psm11_external_clean_150.log 2>&1'
+```
+
+PSM 12:
+
+```bash
+run_name=phase4d_psm12_external_clean_150
+log_path=data/evaluation/results/${run_name}.log
+pid_path=data/evaluation/results/${run_name}.pid
+result_path=data/evaluation/results/${run_name}.json
+
+setsid -f sh -c 'trap "" HUP; echo $$ > data/evaluation/results/phase4d_psm12_external_clean_150.pid; exec env PYTHONPATH=src python3 -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 12 --output-json data/evaluation/results/phase4d_psm12_external_clean_150.json > data/evaluation/results/phase4d_psm12_external_clean_150.log 2>&1'
+```

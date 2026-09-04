@@ -47,7 +47,8 @@ Phase 4 selects Tesseract as the single OCR baseline. The Python package calls
 the local `tesseract` system binary and parses TSV output into observations.
 Phase 4B sets full-page segmentation mode `--psm 3` as the default and uses a
 supplemental `--psm 6` pass only to retain recognized SSN-like text in the top
-identifier region.
+identifier region. Phase 4D keeps PSM 3 as the incumbent default while allowing
+controlled full-page PSM 11 and PSM 12 experiments through configuration.
 
 If Tesseract is unavailable, Pipeline A raises `MissingOcrDependencyError` with
 an actionable installation message. Unit tests do not require the system OCR
@@ -105,11 +106,22 @@ External Symage clean-render smoke benchmark:
 python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --limit 5
 ```
 
+External Symage clean-render PSM experiment smoke benchmark:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 11 --limit 5
+```
+
 Full external prepared benchmark:
 
 ```bash
 python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl
 ```
+
+The `--tesseract-psm` option selects only the main full-page Tesseract page
+segmentation mode for Pipeline A. Supported experiment values are `3`, `11`,
+and `12`. The targeted supplemental PSM 6 SSN recovery pass remains enabled so
+PSM 11 and PSM 12 experiments isolate the main segmentation mode.
 
 ## Baseline Results
 

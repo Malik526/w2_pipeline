@@ -93,6 +93,10 @@ docs/contracts/extraction-pipeline-a.md
   COCO, YOLO, token, bounding-box, and NER annotations remain evaluator-side.
 - Pipeline A uses PyMuPDF native text for text PDFs and Tesseract OCR for image
   inputs or image-only PDF pages.
+- Pipeline A's main full-page Tesseract PSM is configurable for controlled
+  experiments. The default remains PSM 3, with PSM 11 and PSM 12 supported as
+  Phase 4D experiment modes while targeted supplemental PSM 6 SSN recovery
+  remains enabled.
 - Tesseract is a system runtime dependency; when absent, OCR documents fail
   explicitly and benchmark failure isolation records the failure.
 - In the completed Phase 4B benchmark environment, Tesseract was present and
