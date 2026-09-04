@@ -31,6 +31,10 @@ Each observation records:
 - 1-indexed page number
 - top-left-origin bounding box using `x0`, `y0`, `x1`, `y1`
 - source: `native_pdf` or `ocr`
+- `is_supplemental`: `True` when the observation came from a targeted
+  supplemental OCR pass (see "Targeted Supplemental OCR Passes" below)
+  rather than the main pass; `False` for every native-PDF and main-pass OCR
+  observation.
 
 The deterministic parser consumes this common representation rather than
 PyMuPDF or Tesseract-specific objects.
@@ -58,6 +62,48 @@ experiments through configuration.
 If Tesseract is unavailable, Pipeline A raises `MissingOcrDependencyError` with
 an actionable installation message. Unit tests do not require the system OCR
 binary.
+
+### Targeted Supplemental OCR Passes
+
+Beyond the configurable *main* page segmentation mode, `TesseractOcrConfig`
+also accepts `supplemental_page_segmentation_modes: tuple[int, ...]`
+(default `(6,)`), each run in addition to the main pass and geo-fenced to a
+small set of approved target zones defined in
+`src/w2_pipeline/extraction/ocr.py`'s `_SUPPLEMENTAL_TARGET_ZONES` table.
+Supported supplemental modes:
+`SUPPORTED_SUPPLEMENTAL_PAGE_SEGMENTATION_MODES = (6, 11)`.
+
+- **PSM 6** (the original, single-purpose mechanism): the top identifier
+  region only, further filtered to text matching an SSN shape. Always on by
+  default; the incumbent configuration.
+- **PSM 11** (Phase 4E, opt-in): five zones matching exactly the fields
+  where the Phase 4D.1 PSM 11 experiment showed an improvement over the PSM
+  3 incumbent — `employee.first_name`/`employee.middle_initial` (one zone),
+  `employer.ein` (filtered to an EIN shape),
+  `federal_wages_and_taxes.box_3_social_security_wages`,
+  `box_5_medicare_wages_and_tips`, and `box_6_medicare_tax_withheld`. Each
+  zone tuple is identical to its corresponding OCR fallback zone in
+  `parser_2026.py`, so a recovered observation lands exactly where the
+  parser will later look for it. PSM 11 supplementation deliberately
+  excludes Box 13 (owned by `checkbox_vision.py`) and SSN (owned by PSM 6).
+
+A supplemental pass can never override an already-correct primary-path
+value: `TextObservation.is_supplemental` observations are excluded from the
+parser's primary row/line reconstruction (`_group_observation_rows`) and
+from its page-extent computation (`_layout_extent`), so they can only ever
+be consulted by the OCR zone-based fallback functions — and every one of
+those fallbacks already only fires when the primary path left a field
+`None`. This is what makes a supplemental pass safely "targeted" rather
+than a second, unrestricted full-page OCR pass.
+
+Enable it via the CLI:
+
+```bash
+--tesseract-supplemental-psm 6,11
+```
+
+(default `"6"`, matching the incumbent unchanged; comma-separated, parsed
+and validated by `TesseractOcrConfig`).
 
 ### OCR Backend Boundary
 
@@ -338,6 +384,15 @@ External Symage clean-render PSM experiment smoke benchmark:
 python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 11 --limit 5
 ```
 
+External Symage clean-render targeted PSM 11 supplemental smoke benchmark
+(main PSM 3 incumbent + PSM 6 SSN recovery + PSM 11 restricted to
+`employee.first_name`/`middle_initial`, `employer.ein`, and federal Boxes
+3/5/6 only — see "Targeted Supplemental OCR Passes" above):
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 3 --tesseract-supplemental-psm 6,11 --limit 5
+```
+
 Full external prepared benchmark:
 
 ```bash
@@ -355,6 +410,9 @@ segmentation mode for Pipeline A. Supported experiment values are `3`, `11`,
 and `12`. The targeted supplemental PSM 6 SSN recovery pass remains enabled so
 PSM 11 and PSM 12 experiments isolate the main segmentation mode.
 `--tesseract-psm` is ignored when `--ocr-backend paddleocr` is selected.
+`--tesseract-supplemental-psm` (default `6`) separately controls the
+targeted supplemental pass(es); see "Targeted Supplemental OCR Passes"
+above.
 
 ## Baseline Results
 

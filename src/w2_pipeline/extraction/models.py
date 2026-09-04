@@ -52,6 +52,20 @@ class TextObservation(ExtractionModel):
     page: int = Field(ge=1)
     bbox: BoundingBox
     source: ObservationSource
+    is_supplemental: bool = Field(
+        default=False,
+        description=(
+            "True when this observation came from a targeted supplemental "
+            "OCR pass (e.g. Tesseract's SSN-recovery PSM 6 pass) rather than "
+            "the main pass. Supplemental observations are geo-fenced to "
+            "their own approved zone(s) at the OCR adapter and are excluded "
+            "from primary row-based line reconstruction in the parser, so a "
+            "second pass over the same page can never duplicate or corrupt "
+            "an already-successful primary-path field; it can only feed the "
+            "existing zone-based OCR fallbacks that already fire solely "
+            "when the primary path left a field empty."
+        ),
+    )
 
 
 class ObservationSet(ExtractionModel):

@@ -42,6 +42,34 @@ is complete.
 
 Most recently completed:
 
+- Readiness/implementation task: generalized Pipeline A's targeted
+  supplemental OCR mechanism (previously hardcoded to a single PSM-6
+  SSN-recovery zone) so **PSM 11 can now be added as a second, field-targeted
+  supplemental pass** — `--tesseract-supplemental-psm 6,11` — restricted to
+  exactly the six fields where the Phase 4D.1 PSM 11 experiment showed an
+  improvement over the incumbent (`employee.first_name`,
+  `employee.middle_initial`, `employer.ein`, and federal Boxes 3/5/6),
+  explicitly excluding Box 13 (owned by `checkbox_vision.py`) and SSN (owned
+  by PSM 6). Confirmed the *existing* config/CLI could not express this
+  (single hardcoded zone+regex filter, no CLI exposure of supplemental
+  modes, and a real row-grouping corruption risk for money fields whose
+  target zones overlap primary Box-line regions) before implementing the
+  smallest supporting extension: a new `TextObservation.is_supplemental`
+  flag, a generalized per-PSM-mode target-zone table in `ocr.py`
+  (`SupplementalTargetZone`/`_SUPPLEMENTAL_TARGET_ZONES`), exclusion of
+  supplemental observations from the parser's primary row-grouping and
+  page-extent computation (protecting already-correct primary-path values
+  from ever being corrupted or overridden), and the new CLI flag. The
+  parser remains fully backend/PSM-agnostic — no PSM-specific branching was
+  added to canonical field logic. 13 new focused tests (7 in
+  `test_ocr.py`, 2 in `test_parser_2026.py`, 4 in
+  `test_run_pipeline_a.py`); full suite 143 passing. **No experiment was
+  run** — this was implementation/readiness only, per explicit task scope;
+  the incumbent configuration is unchanged, and PaddleOCR/checkbox-vision
+  were not touched. The exact command for the not-yet-run targeted PSM 11
+  smoke experiment is recorded in
+  `docs/contracts/extraction-pipeline-a.md`'s "Benchmark Commands".
+
 - Phase 4E shipped a backend-neutral visual checkbox detector for
   `box_13.retirement_plan`: `checkbox_vision.py` detects the mark from page
   pixel ink coverage (calibrated across all 150 external clean documents:
@@ -229,8 +257,19 @@ docs/experiments/pipeline-a-extraction-history.md
   broad regression (50.49% field accuracy) that zeroed employee first name,
   employee last name, employee SSN, employer EIN, and all of federal Boxes
   1-6, worse overall than PSM 11.
-- Both Phase 4D main-PSM experiments are complete; no further PSM values are
-  currently planned for evaluation.
+- Both Phase 4D main-PSM experiments (PSM 11 and PSM 12 as *main* full-page
+  replacements) are complete; no further main-PSM values are planned.
+  Separately, PSM 11 is now also available as a **targeted supplemental**
+  pass (`--tesseract-supplemental-psm 6,11`, alongside the incumbent main
+  PSM 3) restricted to exactly the six fields Phase 4D.1 showed it improves
+  (`employee.first_name`, `employee.middle_initial`, `employer.ein`, and
+  federal Boxes 3/5/6) — a fundamentally different, lower-risk use of PSM 11
+  than the rejected main-PSM-replacement experiment, since it can only fill
+  fields the PSM 3 primary pass left empty rather than replacing PSM 3's
+  output outright. This capability was added as readiness/implementation
+  work only; **no experiment using it has been run yet**. See "Targeted
+  Supplemental OCR Passes" in `docs/contracts/extraction-pipeline-a.md` for
+  the mechanism and the exact smoke-experiment command.
 - PaddleOCR is available as an alternate OCR backend via `--ocr-backend
   paddleocr` (`src/w2_pipeline/extraction/ocr_paddle.py`), selectable behind
   the same `OcrAdapter` contract Tesseract implements. It is **not** the
@@ -406,6 +445,17 @@ What remains a genuine decision rather than a rerun:
   proceeding to Phase 5 — now a considerably stronger case than before given
   both the clean-150 and 600-document robustness results, but still gated
   on an explicit user decision.
+- **A newly available, not-yet-run experiment**: Tesseract main PSM 3 +
+  targeted supplemental PSM 6 + targeted supplemental PSM 11 (restricted to
+  `employee.first_name`/`middle_initial`, `employer.ein`, and federal Boxes
+  3/5/6 only). This is now implemented and ready
+  (`--tesseract-supplemental-psm 6,11`; see "Targeted Supplemental OCR
+  Passes" in `docs/contracts/extraction-pipeline-a.md`) but was
+  deliberately not run as part of the implementation task that added it.
+  Since it can only fill fields PSM 3 already leaves empty, expected impact
+  is small relative to the Phase 4D.1 main-PSM-11 result (which changed the
+  *primary* extraction path for those fields); a 5-document smoke test is
+  the natural next mechanical step if this is pursued.
 
 ## Future Phases (after Phase 4E)
 

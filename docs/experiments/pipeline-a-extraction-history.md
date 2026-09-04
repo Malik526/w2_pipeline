@@ -1049,3 +1049,66 @@ data/evaluation/results/phase4e_paddleocr_gpu_checkbox_vision_external_all_varia
   investigation before PaddleOCR GPU could be considered a clean win across
   all four variants. No Tesseract PSM 11 (or any other configuration) was
   run as part of this task, per its explicit scope.
+
+## Phase 4E Targeted Supplemental PSM 11 Readiness (Implementation Only)
+
+A readiness/implementation task, not an experiment: determine whether
+Pipeline A's existing configuration/CLI could express Tesseract main PSM 3
++ a *targeted* supplemental PSM 11 pass, restricted to only the fields the
+Phase 4D.1 main-PSM-11 experiment (above) showed improve over the PSM 3
+incumbent — `employee.first_name` (98.0%), `employee.middle_initial`
+(99.33%), `employer.ein` (100.0%), and federal Boxes 3/5/6 (100.0% each) —
+explicitly excluding `box_13.retirement_plan` (now owned by the
+backend-neutral visual checkbox detector) and SSN (owned by the existing
+PSM 6 supplemental pass).
+
+**Finding: the existing mechanism could not express this.** The only
+supplemental-pass filter in the codebase, `_top_identifier_observations`,
+was hardcoded to one zone (the top identifier/SSN region) and one regex
+(the SSN shape), applied identically to every configured supplemental
+mode. There was also no CLI exposure of supplemental modes at all — only
+the main PSM was configurable. Beyond the missing configuration surface, a
+genuine safety problem was identified: PSM 11's approved target fields
+include federal Boxes 3/5/6, whose recovery zones physically overlap the
+*same* page regions the primary path already parses via row-grouped
+"box-number label: value" line reconstruction (`_group_observation_rows`/
+`_parse_federal`). Merging a second, differently-segmented OCR pass's
+output into that same flat observation list — even after zone-filtering —
+risked interleaving or duplicating tokens within an already-correct
+primary-path row, potentially corrupting or silently overriding a value
+that PSM 3 alone had already read correctly. This risk does not exist for
+PSM 6's SSN zone, which is spatially isolated from every primary-path box
+line, which is presumably why the original single-zone-only design never
+needed to consider it.
+
+**Implemented, smallest supporting extension** (see `CHANGELOG.md` for the
+full file-by-file breakdown): a new `TextObservation.is_supplemental` flag;
+a generalized per-PSM-mode target-zone table in `ocr.py`
+(`SupplementalTargetZone`/`_SUPPLEMENTAL_TARGET_ZONES`) replacing the old
+single-zone filter, with PSM 6 unchanged and PSM 11 given five zones
+(name, EIN, box 3, box 5, box 6) each mirroring its corresponding
+`parser_2026.py` fallback zone exactly; exclusion of supplemental
+observations from the parser's primary row-grouping and page-extent
+computation, so a supplemental pass can only ever reach the OCR
+zone-based fallback functions — which already fire solely when the
+primary path left a field empty, making corruption of an already-correct
+primary value structurally impossible regardless of which supplemental
+PSM is configured; and a new `--tesseract-supplemental-psm` CLI flag
+(default `6`, incumbent behavior unchanged). No PSM-specific branching was
+added to the parser's canonical field logic. 13 new focused tests; full
+suite 143 passing, zero regressions.
+
+**No experiment was run as part of this task** — the exact command for the
+not-yet-run 5-document smoke experiment this readiness work unlocks:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 3 --tesseract-supplemental-psm 6,11 --limit 5
+```
+
+Expected effect size is likely small relative to the original main-PSM-11
+experiment: as a *supplemental* pass gated to fields the primary path left
+empty, it can only recover the small residual gap PSM 3 alone misses on
+these six fields (roughly 1-7% of documents per field on the clean-150
+set), not replace PSM 3's read outright the way the rejected main-PSM-11
+configuration did. Whether this is worth running, and at what scale, is
+left to the user; the incumbent configuration is unchanged by this task.

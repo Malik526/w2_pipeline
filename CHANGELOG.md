@@ -194,6 +194,63 @@
   Capabilities). No Tesseract PSM 11 or other configuration was run, per
   this task's explicit scope.
 
+### Phase 4E - Targeted Supplemental PSM 11 Readiness (Implementation Only, No Experiment Run)
+
+- Verified whether Pipeline A's existing config/CLI could express a
+  Tesseract configuration adding PSM 11 as a *targeted* supplemental pass
+  (main PSM 3 + supplemental PSM 6, unchanged, plus supplemental PSM 11
+  restricted to only the fields the Phase 4D.1 main-PSM-11 experiment
+  showed improve: `employee.first_name`, `employee.middle_initial`,
+  `employer.ein`, and federal Boxes 3/5/6) without further implementation.
+  Answer: **no** — the only existing supplemental mechanism was a single
+  hardcoded zone+regex filter (the SSN top-identifier region), with no CLI
+  exposure of supplemental modes at all, and merging an unfiltered PSM 11
+  pass into the flat observation list would have risked corrupting
+  already-correct primary-path Box 3/5/6 line parsing (those target zones
+  physically overlap primary Box-line regions, unlike PSM 6's spatially
+  isolated SSN zone).
+- Implemented the smallest supporting extension rather than a broader
+  redesign:
+  - `TextObservation.is_supplemental: bool` (`models.py`) — tags whether an
+    observation came from a targeted supplemental pass rather than the
+    main pass. Backend-neutral: PaddleOCR observations are never tagged,
+    so this is a no-op for that backend.
+  - `SupplementalTargetZone` / `_SUPPLEMENTAL_TARGET_ZONES` (`ocr.py`) — a
+    generalized per-PSM-mode table of approved zones (each mirroring its
+    corresponding parser fallback zone), replacing the old
+    single-zone-only `_top_identifier_observations` with
+    `_targeted_supplemental_observations`. PSM 6's zone/behavior is
+    unchanged; PSM 11 gets five new zones covering exactly the six
+    approved fields, explicitly excluding Box 13 (owned by
+    `checkbox_vision.py`) and SSN (owned by PSM 6). Added
+    `SUPPORTED_SUPPLEMENTAL_PAGE_SEGMENTATION_MODES = (6, 11)` with
+    `TesseractOcrConfig` validation.
+  - `parser_2026.py` — supplemental observations are now excluded from
+    primary row/line reconstruction (`_group_observation_rows`) and from
+    page-extent computation (`_layout_extent`), so a supplemental pass can
+    only ever reach the OCR zone-based fallback functions, which already
+    fire solely when the primary path left a field `None`. This makes
+    supplemental recovery structurally incapable of overriding or
+    corrupting an already-correct primary value, on any current or future
+    supplemental PSM. The parser gained no PSM-specific branching; it
+    remains fully backend/PSM-agnostic.
+  - `run_pipeline_a.py` — new `--tesseract-supplemental-psm` CLI flag
+    (comma-separated, default `"6"`, unchanged incumbent behavior when
+    omitted).
+- 13 new focused tests: 7 in `test_ocr.py` (config validation, PSM 11 zone
+  targeting including explicit Box 13 exclusion, PSM 6 behavior
+  unchanged), 2 in `test_parser_2026.py` (row-grouping corruption
+  protection; targeted recovery when the primary path is missing), 4 in
+  `test_run_pipeline_a.py` (CLI parsing and threading). Full suite: 143
+  tests passing, zero regressions.
+- Updated `docs/contracts/extraction-pipeline-a.md` with a new "Targeted
+  Supplemental OCR Passes" section and the exact command for the
+  not-yet-run smoke experiment, and `docs/project-state.md` accordingly.
+- **No experiment was run** — this was implementation/readiness work only,
+  per explicit task scope. The incumbent configuration is unchanged; no
+  promotion or default change was made. PaddleOCR and `checkbox_vision.py`
+  were not touched.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

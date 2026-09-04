@@ -16,6 +16,7 @@ from w2_pipeline.evaluation.runner import evaluate_manifest
 from w2_pipeline.extraction.acquisition import ObservationAcquirer
 from w2_pipeline.extraction.ocr import (
     SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES,
+    SUPPORTED_SUPPLEMENTAL_PAGE_SEGMENTATION_MODES,
     TesseractOcrAdapter,
     TesseractOcrConfig,
 )
@@ -37,6 +38,7 @@ def main(argv: list[str] | None = None) -> None:
     extractor = _pipeline_a_extractor(
         ocr_backend=args.ocr_backend,
         tesseract_psm=args.tesseract_psm,
+        tesseract_supplemental_psm=_parse_supplemental_psm(args.tesseract_supplemental_psm),
         paddle_device=args.paddle_device,
     )
     result = evaluate_manifest(
@@ -80,6 +82,20 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--tesseract-supplemental-psm",
+        default="6",
+        help=(
+            "Comma-separated targeted supplemental Tesseract page "
+            "segmentation modes, used only when --ocr-backend tesseract is "
+            "selected. Each mode's output is geo-fenced to its own approved "
+            "target zone(s) (see SupplementalTargetZone in "
+            "w2_pipeline.extraction.ocr) and only fills fields the main PSM "
+            "pass left empty. Supported: "
+            f"{', '.join(str(mode) for mode in SUPPORTED_SUPPLEMENTAL_PAGE_SEGMENTATION_MODES)}. "
+            "Default '6' (SSN recovery, matches the incumbent)."
+        ),
+    )
+    parser.add_argument(
         "--ocr-backend",
         choices=SUPPORTED_OCR_BACKENDS,
         default="tesseract",
@@ -112,21 +128,38 @@ def _pipeline_a_extractor(
     *,
     ocr_backend: str = "tesseract",
     tesseract_psm: int = 3,
+    tesseract_supplemental_psm: tuple[int, ...] = (6,),
     paddle_device: str = "cpu",
 ) -> PipelineAExtractor:
     return PipelineAExtractor(
         observation_acquirer=ObservationAcquirer(
-            ocr_adapter=_build_ocr_adapter(ocr_backend, tesseract_psm, paddle_device)
+            ocr_adapter=_build_ocr_adapter(
+                ocr_backend, tesseract_psm, tesseract_supplemental_psm, paddle_device
+            )
         )
     )
 
 
-def _build_ocr_adapter(ocr_backend: str, tesseract_psm: int, paddle_device: str = "cpu") -> OcrAdapter:
+def _build_ocr_adapter(
+    ocr_backend: str,
+    tesseract_psm: int,
+    tesseract_supplemental_psm: tuple[int, ...] = (6,),
+    paddle_device: str = "cpu",
+) -> OcrAdapter:
     if ocr_backend == "paddleocr":
         return PaddleOcrAdapter(config=PaddleOcrConfig(device=paddle_device))
     if ocr_backend == "tesseract":
-        return TesseractOcrAdapter(config=TesseractOcrConfig(page_segmentation_mode=tesseract_psm))
+        return TesseractOcrAdapter(
+            config=TesseractOcrConfig(
+                page_segmentation_mode=tesseract_psm,
+                supplemental_page_segmentation_modes=tesseract_supplemental_psm,
+            )
+        )
     raise ValueError(f"Unsupported OCR backend {ocr_backend!r}; expected one of: {SUPPORTED_OCR_BACKENDS}.")
+
+
+def _parse_supplemental_psm(value: str) -> tuple[int, ...]:
+    return tuple(int(mode.strip()) for mode in value.split(",") if mode.strip())
 
 
 def _filter_entries(

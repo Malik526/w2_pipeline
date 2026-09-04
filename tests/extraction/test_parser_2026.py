@@ -31,6 +31,12 @@ def ocr_obs(text: str, x0: float, y0: float, width: float = 80, height: float = 
     )
 
 
+def supplemental_ocr_obs(
+    text: str, x0: float, y0: float, width: float = 80, height: float = 24
+) -> TextObservation:
+    return ocr_obs(text, x0, y0, width, height).model_copy(update={"is_supplemental": True})
+
+
 def fixture_observations() -> ObservationSet:
     return ObservationSet(
         route=AcquisitionRoute.NATIVE_PDF,
@@ -378,3 +384,61 @@ def test_parser_preserves_accented_ocr_employee_name_text() -> None:
     assert document.employee.first_name == "Jesús"
     assert document.employee.middle_initial == "D"
     assert document.employee.last_name == "García"
+
+
+def test_parser_excludes_supplemental_observations_from_primary_row_grouping() -> None:
+    """A targeted supplemental pass (e.g. PSM 11's box-3/5/6 recovery) shares
+    physical page regions with primary box lines. Even when a supplemental
+    observation lands at the exact same position as an already-correct
+    primary value with a *different* (wrong) reading, it must never be
+    merged into that primary row and corrupt or override the result."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            ocr_obs("5", 1412, 473, 12),
+            ocr_obs("Medicare", 1454, 473, 128),
+            ocr_obs("wages", 1582, 473, 85),
+            ocr_obs("and", 1676, 473, 45),
+            ocr_obs("tips", 1732, 473, 50),
+            ocr_obs("$122,000.00", 1693, 492, 184, 30),
+            supplemental_ocr_obs("$999,999.99", 1693, 492, 184, 30),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 2400, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="external-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.federal_wages_and_taxes.box_5_medicare_wages_and_tips == Decimal("122000.00")
+
+
+def test_parser_recovers_targeted_field_from_supplemental_observation_when_primary_is_missing() -> None:
+    """The other side of the same mechanism: when the main pass has no
+    reading at all for a targeted field, a supplemental-tagged observation
+    landing in that field's OCR fallback zone should still recover it."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            supplemental_ocr_obs("$122,000.00", 1693, 405, 184, 30),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 2400, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="external-style",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.federal_wages_and_taxes.box_3_social_security_wages == Decimal("122000.00")

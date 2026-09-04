@@ -2,6 +2,7 @@ import pytest
 
 from w2_pipeline.evaluation.run_pipeline_a import (
     _build_parser,
+    _parse_supplemental_psm,
     _pipeline_a_extractor,
     _pipeline_a_metadata,
 )
@@ -42,6 +43,36 @@ def test_pipeline_a_extractor_uses_selected_tesseract_psm_and_supplemental_psm_6
 
     assert ocr_adapter.page_segmentation_mode == 12
     assert ocr_adapter.supplemental_page_segmentation_modes == (6,)
+
+
+def test_run_pipeline_a_cli_defaults_supplemental_psm_to_6() -> None:
+    args = _build_parser().parse_args(["manifest.jsonl"])
+
+    assert args.tesseract_supplemental_psm == "6"
+
+
+def test_run_pipeline_a_cli_accepts_targeted_psm_11_supplementation() -> None:
+    args = _build_parser().parse_args(
+        ["manifest.jsonl", "--tesseract-supplemental-psm", "6,11"]
+    )
+
+    assert _parse_supplemental_psm(args.tesseract_supplemental_psm) == (6, 11)
+
+
+def test_pipeline_a_extractor_threads_targeted_psm_11_supplementation() -> None:
+    extractor = _pipeline_a_extractor(tesseract_psm=3, tesseract_supplemental_psm=(6, 11))
+    ocr_adapter = extractor.observation_acquirer.ocr_adapter
+
+    assert ocr_adapter.page_segmentation_mode == 3
+    assert ocr_adapter.supplemental_page_segmentation_modes == (6, 11)
+
+
+def test_pipeline_a_metadata_records_targeted_psm_11_supplementation() -> None:
+    extractor = _pipeline_a_extractor(tesseract_psm=3, tesseract_supplemental_psm=(6, 11))
+
+    metadata = _pipeline_a_metadata(extractor, variant_id="external_clean_render")
+
+    assert metadata["ocr_configuration"]["supplemental_page_segmentation_modes"] == [6, 11]
 
 
 def test_pipeline_a_metadata_records_selected_tesseract_psm() -> None:

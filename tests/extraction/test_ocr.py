@@ -6,6 +6,7 @@ from PIL import Image
 from w2_pipeline.extraction.errors import MissingOcrDependencyError
 from w2_pipeline.extraction.models import ObservationSource
 from w2_pipeline.extraction.ocr import (
+    SUPPORTED_SUPPLEMENTAL_PAGE_SEGMENTATION_MODES,
     TesseractOcrAdapter,
     TesseractOcrConfig,
     parse_tesseract_tsv,
@@ -95,3 +96,114 @@ def test_tesseract_adapter_preserves_supplemental_psm_6_for_psm_11(tmp_path: Pat
 
     assert observations == []
     assert adapter.calls == [11, 6]
+
+
+def test_supported_supplemental_psm_modes_are_6_and_11() -> None:
+    assert SUPPORTED_SUPPLEMENTAL_PAGE_SEGMENTATION_MODES == (6, 11)
+
+
+@pytest.mark.parametrize("supplemental_modes", [(6, 11), (11,), (6,)])
+def test_tesseract_config_supports_targeted_psm_11_supplementation(
+    supplemental_modes: tuple[int, ...],
+) -> None:
+    config = TesseractOcrConfig(supplemental_page_segmentation_modes=supplemental_modes)
+
+    assert config.supplemental_page_segmentation_modes == supplemental_modes
+
+
+def test_tesseract_config_rejects_unsupported_supplemental_psm() -> None:
+    with pytest.raises(ValueError, match="Unsupported supplemental Tesseract"):
+        TesseractOcrConfig(supplemental_page_segmentation_modes=(7,))
+
+
+def _tsv_row(left: float, top: float, width: float, height: float, text: str, conf: str = "96") -> str:
+    return "\t".join(
+        ["5", "1", "1", "1", "1", "1", str(left), str(top), str(width), str(height), conf, text]
+    )
+
+
+def test_targeted_psm_11_supplemental_pass_is_scoped_to_approved_fields(tmp_path: Path) -> None:
+    """PSM 11 supplemental output must land only in its approved zones,
+    tagged as supplemental, and never in Box 13's checkbox zone (owned by
+    checkbox_vision.py, explicitly excluded from PSM 11 targeting)."""
+
+    image_path = tmp_path / "sample.png"
+
+    main_pass_tsv = "\n".join(
+        [
+            _tsv_header(),
+            # Establishes a 1000x1000 reference page extent for zone ratios.
+            _tsv_row(0, 990, 1000, 10, "Copy"),
+        ]
+    )
+    supplemental_pass_tsv = "\n".join(
+        [
+            _tsv_header(),
+            _tsv_row(100, 520, 50, 20, "John"),  # employee name zone -> kept
+            _tsv_row(250, 180, 100, 20, "12-3456789"),  # EIN zone, EIN-shaped -> kept
+            _tsv_row(250, 180, 100, 20, "Acme"),  # EIN zone, not EIN-shaped -> dropped
+            _tsv_row(600, 260, 50, 20, "30000.00"),  # box 3 zone -> kept
+            _tsv_row(700, 560, 30, 20, "X"),  # Box 13 checkbox zone -> dropped
+            _tsv_row(950, 10, 30, 20, "Stray"),  # off-target noise -> dropped
+        ]
+    )
+
+    class RecordingAdapter(TesseractOcrAdapter):
+        def __init__(self) -> None:
+            super().__init__(
+                config=TesseractOcrConfig(
+                    page_segmentation_mode=3, supplemental_page_segmentation_modes=(11,)
+                )
+            )
+
+        def ensure_available(self) -> None:
+            return None
+
+        def _run_tesseract(self, image_path: Path, *, page_segmentation_mode: int) -> str:
+            if page_segmentation_mode == 11:
+                return supplemental_pass_tsv
+            return main_pass_tsv
+
+    observations = RecordingAdapter().extract_image(image_path)
+
+    main_texts = {observation.text for observation in observations if not observation.is_supplemental}
+    supplemental_texts = {
+        observation.text for observation in observations if observation.is_supplemental
+    }
+    assert main_texts == {"Copy"}
+    assert supplemental_texts == {"John", "12-3456789", "30000.00"}
+
+
+def test_targeted_psm_6_supplemental_pass_still_recovers_ssn_only(tmp_path: Path) -> None:
+    """Generalizing the filter must not change PSM 6's existing SSN-only behavior."""
+
+    image_path = tmp_path / "sample.png"
+
+    main_pass_tsv = "\n".join([_tsv_header(), _tsv_row(0, 990, 1000, 10, "Copy")])
+    supplemental_pass_tsv = "\n".join(
+        [
+            _tsv_header(),
+            _tsv_row(300, 130, 150, 20, "123-45-6789"),  # top identifier zone, SSN-shaped -> kept
+            _tsv_row(300, 130, 150, 20, "Not An SSN"),  # same zone, wrong shape -> dropped
+            _tsv_row(600, 260, 50, 20, "999-99-9999"),  # SSN-shaped but outside PSM 6's zone -> dropped
+        ]
+    )
+
+    class RecordingAdapter(TesseractOcrAdapter):
+        def __init__(self) -> None:
+            super().__init__(config=TesseractOcrConfig(page_segmentation_mode=3))
+
+        def ensure_available(self) -> None:
+            return None
+
+        def _run_tesseract(self, image_path: Path, *, page_segmentation_mode: int) -> str:
+            if page_segmentation_mode == 6:
+                return supplemental_pass_tsv
+            return main_pass_tsv
+
+    observations = RecordingAdapter().extract_image(image_path)
+
+    supplemental_texts = {
+        observation.text for observation in observations if observation.is_supplemental
+    }
+    assert supplemental_texts == {"123-45-6789"}

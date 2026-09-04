@@ -72,8 +72,18 @@ def parse_w2_2026_observations(
         observation_set.observations,
         key=lambda observation: (observation.page, observation.bbox.y0, observation.bbox.x0),
     )
+    # Primary row/line reconstruction only ever sees the main OCR pass: a
+    # targeted supplemental pass (e.g. PSM 11's box-3/5/6 recovery) shares
+    # physical page regions with primary-path box lines, so merging it into
+    # row grouping could duplicate or corrupt an already-correct line. It
+    # still reaches every OCR fallback below via the full `observations`
+    # list, which is exactly where a targeted pass is meant to help: those
+    # fallbacks only ever fire when the primary path left a field empty.
+    primary_observations = [
+        observation for observation in observations if not observation.is_supplemental
+    ]
     group_word_rows = observation_set.route in {AcquisitionRoute.OCR, AcquisitionRoute.MIXED}
-    lines = _line_texts(observations, group_word_rows=group_word_rows)
+    lines = _line_texts(primary_observations, group_word_rows=group_word_rows)
     warnings: list[ExtractionWarning] = []
     employee = _parse_employee(observations, warnings)
     employer = _parse_employer(observations, warnings)
@@ -382,9 +392,16 @@ def _looks_like_full_page_ocr_form(observations: list[TextObservation]) -> bool:
 
 
 def _layout_extent(observations: list[TextObservation]) -> tuple[float, float]:
+    # Extent reflects the main OCR pass's full-page coverage. A targeted
+    # supplemental pass only ever scans a few narrow zones, so including it
+    # here could skew every zone-ratio calculation on the page, not just the
+    # field(s) the supplemental pass targets.
+    primary_observations = [
+        observation for observation in observations if not observation.is_supplemental
+    ] or observations
     return (
-        max((observation.bbox.x1 for observation in observations), default=1.0),
-        max((observation.bbox.y1 for observation in observations), default=1.0),
+        max((observation.bbox.x1 for observation in primary_observations), default=1.0),
+        max((observation.bbox.y1 for observation in primary_observations), default=1.0),
     )
 
 
