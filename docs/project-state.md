@@ -30,15 +30,20 @@ robustness picture is now in for both backends too: Tesseract reached
 `field_accuracy = 0.8897826086956522` (worst variant blurred, 67.71%);
 PaddleOCR GPU reached `field_accuracy = 0.976231884057971` (13,472/13,800),
 perfect on clean/compressed/blurred and its only weak variant is rotated
-(90.49%, comparable to Tesseract's 89.97% there), where a newly discovered
-label-bleed text-reconstruction artifact zeroes `employee.first_name`
-specifically under rotation — unrelated to checkbox vision. PaddleOCR GPU is
-now ahead of the Tesseract incumbent on aggregate accuracy across all four
-variants combined, not just on clean data, though the rotated-image
-`employee.first_name` weakness is a genuine new caveat for that comparison.
-Whether to promote PaddleOCR GPU remains an explicit, not-yet-made decision;
-see "Immediate Next Experiment." Phase 4D (Tesseract main-PSM experiments)
-is complete.
+(90.49%, comparable to Tesseract's 89.97% there), where a label-bleed
+text-reconstruction artifact zeroes `employee.first_name` specifically
+under rotation — unrelated to checkbox vision. **Investigated and
+root-caused** (`docs/experiments/phase4e-paddle-rotation-name-investigation.md`):
+this is a shared, backend-neutral bug in the parser's employee-name OCR
+fallback, not a PaddleOCR-specific weakness — Tesseract fails identically
+(0/150 on rotated `employee.first_name`, correcting a prior documentation
+error that had reported it as PaddleOCR-only). PaddleOCR GPU is now ahead
+of the Tesseract incumbent on aggregate accuracy across all four variants
+combined, not just on clean data, and the rotated-name weakness is not a
+caveat specific to that comparison since both backends share it equally.
+Whether to promote PaddleOCR GPU remains an explicit, not-yet-made
+decision; see "Immediate Next Experiment." Phase 4D (Tesseract main-PSM
+experiments) is complete.
 
 Most recently completed:
 
@@ -392,10 +397,14 @@ supplemental PSM 11 (employer.ein + Boxes 3/5/6) has completed its full
 track: fixed, diagnosed as recovering real incumbent failures, and
 confirmed at controlled clean-150 scale (+4 fields, zero regressions,
 +52% latency). It is not promoted -- the accuracy/latency trade-off is
-reported for the user to weigh, not decided here. What remains is that
-promotion decision, the PaddleOCR-vs-Tesseract incumbent decision, and an
-optional follow-up investigation into a newly discovered rotation
-artifact -- all the user's to decide.
+reported for the user to weigh, not decided here. The rotated
+employee-name label-bleed bug has also been fully diagnosed (root cause
+found, confirmed backend-neutral -- both Tesseract and PaddleOCR fail
+identically, correcting a prior documentation error) with a recommended
+fix identified but NOT implemented, per that investigation's explicit
+scope. What remains is: implementing that fix (or not), the PaddleOCR-vs-
+Tesseract incumbent decision, and the PSM 11 promotion decision -- all the
+user's to decide.
 ```
 
 Sequence: unit tests -> 5-doc CPU smoke -> GPU enablement -> 5-doc GPU
@@ -428,24 +437,46 @@ What remains a genuine decision rather than a rerun:
   every measured dimension: clean-150 accuracy (100.0% vs. 99.28%) and
   speed (1.44s vs. 2.33s/doc), and 600-document robustness aggregate
   (97.62% vs. 88.98%), including a perfect score on the variant (blurred)
-  where Tesseract is weakest. The one caveat: PaddleOCR GPU's rotated-image
-  `employee.first_name` complete failure (0/150) is a newly discovered
-  weakness with no Tesseract equivalent at that severity (Tesseract's
-  rotated `employee.first_name` is 53.67%, weak but non-zero). Whether to
-  promote PaddleOCR GPU to incumbent — and whether that rotation artifact
-  needs to be fixed first — is an explicit product/architecture decision
-  for the user; this project state document does not make that call on its
-  own.
-- **A new investigation candidate: PaddleOCR's rotated-image
-  `employee.first_name` label-bleed artifact.** The predicted value appends
-  the printed field-label text (e.g. `"Lori e Employee's first name and
-  initial"` instead of `"Lori"`) on every one of the 150 rotated documents —
-  a complete, systematic failure, not a partial degradation. This is
-  unrelated to checkbox vision and was not previously measured (no prior
-  PaddleOCR robustness benchmark existed). Root-causing and fixing this
-  (likely a word-row reconstruction issue specific to how PaddleOCR's
-  rotated-image OCR output is parsed) is optional follow-up work, not yet
-  scoped or started.
+  where Tesseract is weakest. **Correction (see the rotation-name
+  investigation below): the rotated-image `employee.first_name` complete
+  failure (0/150) is NOT a PaddleOCR-specific weakness** — Tesseract fails
+  identically, 0/150, on the same field/variant; the previously reported
+  "53.67%, weak but non-zero" figure was Tesseract's *aggregate across all
+  four variants*, not the rotated-only figure, and was a documentation
+  error, now corrected. This removes a caveat that previously appeared to
+  weigh against PaddleOCR GPU specifically — it does not, since both
+  backends share the identical underlying bug. Whether to promote
+  PaddleOCR GPU to incumbent — and whether the (now confirmed
+  backend-neutral) rotation-name bug needs to be fixed first — is an
+  explicit product/architecture decision for the user; this project state
+  document does not make that call on its own.
+- **Rotation-name label-bleed investigation: complete (diagnosis only, no
+  fix implemented).** Full root-cause report:
+  `docs/experiments/phase4e-paddle-rotation-name-investigation.md`.
+  Root cause: the shared, backend-neutral employee-name OCR fallback
+  (`_apply_ocr_employee_layout_fallbacks`/`_zone_text` in
+  `parser_2026.py`) uses a fixed ratio-based target zone, calibrated
+  against clean-render geometry and normalized against *detected-text
+  extent* (not true image pixels). Under rotation, the printed Box e
+  field label's normalized position crosses the zone's `y0 = 0.505`
+  floor (clean: `0.4852`, safely outside; rotated: `0.5060`, just
+  inside — reproduced identically across 4 documents), so `_zone_text`
+  joins the label text into the name value (e.g. `"Lori"` ->
+  `"Lori e Employee's first name and initial"`). The missing middle
+  initial is a direct, mechanical consequence: `split_first_name_and_initial`
+  only checks the *last* whitespace-split token for a single uppercase
+  letter, and the trailing junk tokens from the merged label push the true
+  initial out of that position. PaddleOCR's own raw `predict()` output
+  (verified directly, before any adapter code runs) is already correct —
+  the label and name are separate, correctly-recognized entries with
+  non-overlapping bounding boxes; this rules out Paddle's detection/
+  recognition and the adapter's coordinate conversion. Recommended fix
+  (not implemented): filter the known, static Box e label text out of
+  zone-filtered observations (backend-neutral, no ratio recalibration
+  needed) — see the report for the fuller rationale and a rejected
+  alternative (renormalizing against true image dimensions, which would
+  require recalibrating every zone constant in the fallback system, not
+  just this one).
 - **The Tesseract and PaddleOCR robustness reruns both revealed the
   checkbox-vision fix's limit:** it fully resolves `box_13.retirement_plan`
   under clean and compressed-JPEG conditions on both backends, but only
@@ -459,8 +490,9 @@ What remains a genuine decision rather than a rerun:
 - Whether `statutory_employee`/`third_party_sick_pay` visual zones are worth
   pursuing later if a genuine positive example becomes available to
   calibrate against.
-- Whether PaddleOCR GPU is worth further investment (fixing the rotation
-  label-bleed artifact, then reconsidering incumbent promotion) versus
+- Whether PaddleOCR GPU is worth further investment (the rotation
+  label-bleed fix, now scoped and backend-neutral so it would also help
+  the Tesseract incumbent, then reconsidering incumbent promotion) versus
   proceeding to Phase 5 — now a considerably stronger case than before given
   both the clean-150 and 600-document robustness results, but still gated
   on an explicit user decision.
@@ -1259,6 +1291,57 @@ incumbent.
   incumbent and all three prior PSM 11 artifacts (both smokes and the
   diagnostic) are preserved unchanged.
 
+Completed Phase 4E rotated employee-name label-bleed investigation
+(diagnosis only, no fix implemented):
+
+```text
+docs/experiments/phase4e-paddle-rotation-name-investigation.md
+```
+
+Traced the rotated-`employee.first_name` failure (0/150 on both backends;
+predicted values like `"Lori"` -> `"Lori e Employee's first name and
+initial"`) from raw PaddleOCR `predict()` output through the adapter to
+the parser, using 3 representative documents (with/without a middle
+initial, plus an accented name). Root cause: the shared, backend-neutral
+employee-name OCR fallback (`_apply_ocr_employee_layout_fallbacks`/
+`_zone_text` in `parser_2026.py`) uses a fixed ratio-based target zone
+normalized against detected-text extent (not true image pixels); under
+rotation, the printed Box e field label's normalized `y` position crosses
+the zone's `0.505` floor (clean: `0.4852`, outside; rotated: `0.5060`,
+inside — reproduced identically across 4 documents), so the label text
+gets joined into the name value. The missing middle initial follows
+mechanically: `split_first_name_and_initial` only checks the *last*
+whitespace-split token, which the merged label's trailing words push the
+true initial out of. PaddleOCR's raw output was verified correct before
+any adapter/parser code runs — the label and value are separate,
+correctly-recognized, non-overlapping entries — ruling out Paddle's
+detection/recognition and the adapter's coordinate conversion.
+
+**Correction to prior documentation**: this was previously reported (from
+the PaddleOCR 600-document robustness rerun) as a PaddleOCR-specific
+weakness ("Tesseract's rotated `employee.first_name` is 53.67%, weak but
+not zeroed"). That figure was Tesseract's *aggregate across all four
+variants*; the rotated-only figure, recomputed directly, is 0/150 (0%) —
+identical to PaddleOCR — and `employee.middle_initial` is 32/150 (21.33%)
+on both backends too. Both backends share the identical bug because it
+lives in shared parser code both routes flow through equally. This
+removes a caveat that previously appeared unique to PaddleOCR GPU in the
+incumbent-promotion comparison; corrected in "Current Phase," "Immediate
+Next Experiment," and "Current Known Weaknesses" above.
+
+Recommended fix (not implemented, per this investigation's explicit
+scope): filter the known, static Box e label text out of zone-filtered
+observations — backend-neutral, requires no ratio recalibration.
+Rejected as the primary fix: renormalizing zone ratios against true image
+dimensions, which would require recalibrating every zone constant in the
+fallback system (name, EIN, all federal box zones), not just this one —
+out of scope for "smallest evidence-supported fix." See the report for
+full detail, including why the true-image-normalization alternative was
+checked and rejected, and why the failure's severity (100%, not partial)
+is specific to this template/rotation-angle combination even though the
+underlying zone-ratio-instability mechanism is generic to any rotated
+document using this fallback pattern.
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
@@ -1302,20 +1385,37 @@ incumbent.
   essentially unchanged outside `box_13.retirement_plan`); rotation is a
   moderate degradation case for Tesseract (89.45% -> 89.97%, same caveat).
   PaddleOCR GPU has no blur weakness (100.0%) and a comparable rotation
-  result (89.97% -> Tesseract vs. 90.49% PaddleOCR), but see the new
-  rotated-image `employee.first_name` weakness below, which is unique to
-  PaddleOCR.
-- **New: PaddleOCR GPU's rotated-image `employee.first_name` is a complete,
-  systematic failure (0/150, 0%)**, discovered by its first-ever
-  600-document robustness rerun. Every failure shows the printed field-label
-  text bleeding into the predicted name (e.g. expected `"Lori"`, predicted
-  `"Lori e Employee's first name and initial"`) — a rotated-image name-zone
-  word-reconstruction artifact, unrelated to checkbox vision and not
-  previously measured (no prior PaddleOCR robustness benchmark existed).
-  `employee.middle_initial` is also weak under the same condition (21.3%).
-  Tesseract's rotated `employee.first_name` is weak (53.67%) but not zeroed,
-  so this is a PaddleOCR-specific severity, not shared with the incumbent.
-  Not yet investigated or fixed.
+  result (89.97% -> Tesseract vs. 90.49% PaddleOCR), but see the
+  rotated-image `employee.first_name` weakness below, which is
+  **backend-neutral, not unique to PaddleOCR** (corrected below).
+- **Rotated-image `employee.first_name` is a complete, systematic failure
+  (0/150, 0%) on BOTH backends — confirmed backend-neutral, root-caused,
+  not yet fixed.** Every failure shows the printed field-label text
+  bleeding into the predicted name (e.g. expected `"Lori"`, predicted
+  `"Lori e Employee's first name and initial"`); `employee.middle_initial`
+  is also weak under the same condition (32/150 = 21.33% correct, on both
+  backends identically). **Correction**: this was previously reported (from
+  the PaddleOCR 600-document robustness rerun) as a PaddleOCR-specific
+  severity ("Tesseract's rotated `employee.first_name` is weak, 53.67%,
+  but not zeroed") — that 53.67% figure was Tesseract's aggregate across
+  all four variants, not the rotated-only figure; recomputed directly,
+  Tesseract is also 0/150 (0%) on rotated `employee.first_name` and
+  32/150 (21.33%) on rotated `employee.middle_initial`, identical to
+  PaddleOCR. A full investigation
+  (`docs/experiments/phase4e-paddle-rotation-name-investigation.md`)
+  root-caused this: the shared, backend-neutral employee-name OCR fallback
+  (`_zone_text` in `parser_2026.py`) uses a fixed ratio-based zone,
+  normalized against detected-text extent rather than true image pixels,
+  that only captures the printed Box e label under rotation (clean-render
+  label ratio `0.4852`, safely outside the zone's `0.505` floor; rotated
+  `0.5060`, just inside). The missing middle initial is a direct
+  consequence of `split_first_name_and_initial` only checking the last
+  whitespace-split token. Neither OCR backend's raw output is at fault
+  (verified directly for PaddleOCR: label and name are separate,
+  correctly-recognized entries before any adapter/parser code runs). A
+  recommended fix (filtering the known, static Box e label text out of
+  zone-filtered observations, backend-neutral, no ratio recalibration
+  needed) is documented but **not implemented** — investigation only.
 - PSM 11 trades the above name/EIN/Box 13 weaknesses for a total loss of
   federal Boxes 1 and 2, so it is documented as a known failure mode rather
   than adopted.

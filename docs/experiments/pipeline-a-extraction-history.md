@@ -1420,3 +1420,101 @@ data/evaluation/results/phase4e_tesseract_supplemental_psm11_external_clean_150.
   decided here. No 600-document run, no PaddleOCR run, and no other
   configuration change were made; the incumbent and all prior PSM 11
   artifacts (both smokes and the diagnostic) are preserved unchanged.
+
+## Phase 4E Rotated Employee-Name Label-Bleed Investigation
+
+Investigation only — no fix implemented, no 150/600-document benchmark
+run, no incumbent change. Full report:
+`docs/experiments/phase4e-paddle-rotation-name-investigation.md`.
+
+Traced the `rotated_png` `employee.first_name` failure (predicted values
+like `"Lori"` -> `"Lori e Employee's first name and initial"`, 0/150
+correct) end to end — pixels, raw PaddleOCR `predict()` output (before any
+adapter code runs), `TextObservation` conversion, employee-name zone
+selection, and the name-splitting heuristic — using 3 representative
+rotated documents (with and without a middle initial, plus an accented
+name), cross-referenced against the existing Tesseract 600-document
+robustness result for contrast.
+
+**Root cause: F (employee-name zone selection), driven by H (rotation
+normalization / coordinate-space assumption).** PaddleOCR's raw
+`rec_texts`/`rec_boxes` output was verified correct: the printed Box e
+label (`"e Employee's first name and initial"`) and the name value
+(`"Lori"`, or `"Steven D"` when Paddle's line-level recognition merges a
+name with its initial) are two separate, correctly-recognized entries
+with distinct, non-overlapping bounding boxes — ruling out Paddle's text
+detection and recognition (A, B) and the adapter's coordinate conversion
+(C, D; confirmed a 1:1 unmodified passthrough). The corruption is
+introduced entirely downstream, in the shared, backend-neutral employee-
+name OCR fallback (`_apply_ocr_employee_layout_fallbacks`/`_zone_text` in
+`parser_2026.py`): its fixed target zone `(0.04, 0.28, 0.505, 0.550)` is
+normalized against *detected-text extent* (`_layout_extent`), not true
+image pixels. Measured directly on `symage_900000`: the label's
+normalized `y` position is `0.4852` on the clean render (safely below the
+zone's `0.505` floor) but `0.5060` on the rotated image (just inside) —
+reproduced to four decimal places across 4 independent documents,
+confirming a systematic, template/rotation-angle-driven effect rather
+than per-document noise. `_zone_text` then joins every observation in the
+zone (sorted by `x0`) into one string, merging the label into the name.
+E (word/line reconstruction) is not implicated — the employee-name
+fallback reads the flat zone-filtered observation list directly, without
+row grouping.
+
+**The missing middle initial is a direct, mechanical consequence (root
+cause G)**: `split_first_name_and_initial`
+(`contracts/employee_name.py`) only checks whether the *last*
+whitespace-split token is a single uppercase letter; the corrupted
+string's trailing junk words (`"...first name and initial"`) push the
+true initial (`"D"`) out of that position, so the check silently fails
+and the entire string — including the still-present `"D"` — becomes
+`first_name` instead.
+
+**Checked and rejected**: renormalizing the zone against true image
+pixels instead of detected-text extent. Using the rotated image's true
+height (3388px) instead of its detected extent (1674px) would push *both*
+the label (`0.25`) and the name value (`0.267`) outside the existing
+zone, because every zone constant across `parser_2026.py`'s OCR fallback
+system (name, EIN, all federal box zones) was calibrated relative to
+detected-text extent — switching the reference would require
+recalibrating all of them, not just this one, and was judged out of scope
+for a "smallest fix" recommendation.
+
+**Correction to prior documentation.** The PaddleOCR 600-document
+robustness rerun previously reported this as PaddleOCR-specific ("no
+Tesseract equivalent at that severity, Tesseract's rotated
+`employee.first_name` is 53.67%"). That figure was Tesseract's *aggregate
+across all four variants*, not rotated-only. Recomputed directly from the
+existing Tesseract 600-document result, filtering to `rotated_png` only:
+Tesseract is **0/150 (0%)** on rotated `employee.first_name` and **32/150
+(21.33%)** on rotated `employee.middle_initial` — identical to PaddleOCR
+on both fields. This is expected, not coincidental: the bug lives in
+parser code both backends' observations flow through equally. This
+corrects `docs/project-state.md`'s "Current Phase," "Immediate Next
+Experiment," and "Current Known Weaknesses" sections, removing a caveat
+that had previously appeared to weigh specifically against PaddleOCR GPU
+in the incumbent-promotion comparison.
+
+**Recommended fix (not implemented)**: filter the known, static Box e
+label text out of zone-filtered observations — a substring/pattern match
+against fixed form template text (not employee data), reliable regardless
+of OCR backend or how far rotation shifts the zone boundary, requiring no
+ratio recalibration. A complementary, defense-in-depth option
+(hardening `split_first_name_and_initial` to look for a single-uppercase-
+letter token near the start of the value rather than only the last token)
+was also identified but not implemented; it would reduce the blast radius
+of this and similar future zone-membership bugs (including the earlier
+PSM 11 supplemental `_zone_text` duplication finding, which shares the
+same underlying "join-all" fragility) without addressing the root
+geometric cause.
+
+**Generic vs. template-specific.** The underlying mechanism (H) is
+generic to any ratio-based fallback zone normalized against detected-text
+extent, under any transformation that changes the true-canvas-to-
+detected-extent ratio unevenly. The observed *severity* (100%, not
+partial) is specific to this W-2 template's Box e layout and Symage's
+fixed rotation angle — the identical `0.5060` label ratio recurring
+across every checked document confirms one fixed transform applied
+uniformly to one fixed template, not a general property of "any rotated
+document." No 150-document or 600-document run, no PaddleOCR settings
+change, no parser/adapter/checkbox-vision/ground-truth change, and no fix
+implementation were made, per this investigation's explicit scope.
