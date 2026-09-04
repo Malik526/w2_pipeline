@@ -308,3 +308,79 @@ Pipeline A configuration evaluated to date. Phase 4D's controlled PSM
 comparison is complete; the next planned Pipeline A experiment is Phase 4E,
 evaluating PaddleOCR as an alternate OCR backend behind the same observation
 boundary, parser, canonical schema, and evaluator.
+
+## Phase 4E PaddleOCR Backend Implementation
+
+Phase 4E added PaddleOCR as a second Pipeline A OCR backend behind the same
+`OcrAdapter` structural contract Tesseract already implemented
+(`src/w2_pipeline/extraction/ocr_backend.py`), so the deterministic parser,
+canonical schema, evaluator, and annotation isolation boundary were unchanged.
+`ObservationAcquirer` now accepts any adapter implementing `extract_image`
+and `extract_pdf_pages`; PDF-page-to-image rendering was factored out of the
+Tesseract adapter into a shared helper
+(`src/w2_pipeline/extraction/pdf_rendering.py`) so both backends use identical
+rendering rather than duplicating PyMuPDF logic. `PaddleOcrAdapter`
+(`src/w2_pipeline/extraction/ocr_paddle.py`) calls PaddleOCR 3.7.0's
+`PaddleOCR(...).predict(image_path)` pipeline and maps each result's
+`rec_texts`/`rec_boxes` into `TextObservation` values. The `run_pipeline_a`
+CLI gained `--ocr-backend {tesseract, paddleocr}` (default `tesseract`,
+unchanged) and `pyproject.toml` gained an optional `paddle` dependency group
+(`paddlepaddle`, `paddleocr`). 11 new unit tests were added
+(`tests/extraction/test_ocr_paddle.py`,
+`tests/extraction/test_pdf_rendering.py`, plus additions to
+`tests/evaluation/test_run_pipeline_a.py`); all use canned payloads or fake
+clients and do not require PaddleOCR installed. The full suite (111 tests)
+passed after the change.
+
+During implementation, `paddleocr==3.7.0` + `paddlepaddle==3.3.1` installed
+cleanly from PyPI (a much heavier dependency tree than the classic
+`paddleocr` 2.x line: it now pulls in `paddlex` and `modelscope`), but default
+CPU inference with `enable_mkldnn=True` (the PaddlePaddle default) raised
+`NotImplementedError: (Unimplemented)
+ConvertPirAttribute2RuntimeAttribute not support
+[pir::ArrayAttribute<pir::DoubleAttribute>]` for the default PP-OCRv6 models
+on the reference development machine. Disabling MKL-DNN
+(`enable_mkldnn=False`, now `PaddleOcrConfig`'s default) resolved it; plain
+CPU inference is stable. This is recorded as an environment-specific
+correctness fix, not a tuning choice, and should be revisited if a future
+PaddlePaddle/oneDNN release fixes the underlying PIR conversion gap.
+
+```text
+date: 2026-09-04
+scope: external Symage clean renders, 5 documents (smoke only)
+artifact: data/evaluation/results/phase4e_paddleocr_smoke_5.json
+markdown: data/evaluation/results/phase4e_paddleocr_smoke_5.md
+backend: paddleocr (lang=en, device=cpu, use_doc_orientation_classify=False,
+  use_doc_unwarping=False, use_textline_orientation=False, enable_mkldnn=False)
+documents: 5
+successful_documents: 5
+failed_documents: 0
+field_accuracy: 0.9826086956521739
+correct_fields: 113
+total_fields: 115
+field_failure_count: 2
+average_duration_seconds: 74.29913957080062
+```
+
+The only incorrect field across the 5 smoke documents was
+`box_13.retirement_plan` (3/5 correct) — already a known weak field under the
+Tesseract incumbent, not a PaddleOCR-specific regression. Employee first
+name, last name, and SSN; employer EIN and control number; and every federal
+money box (1 through 11) were exact on this sample.
+
+The decisive finding from the smoke run is throughput, not accuracy:
+PaddleOCR averaged `74.3` seconds/document versus the Tesseract incumbent's
+`2.05`-`2.22` seconds/document, a roughly 35-37x slowdown from deep-learning
+model inference versus classical OCR. At this rate a full 150-document
+benchmark is on the order of 3 hours of wall-clock time (longer for the
+600-document robustness set) versus roughly 5 minutes for Tesseract.
+
+Conclusion: the PaddleOCR backend implementation is functionally correct and
+passed its smoke evaluation with a strong accuracy signal, but this is
+directional evidence from 5 documents, not a statistically meaningful
+comparison against the 150-document Tesseract baseline. Per the Phase 4E
+implementation task's explicit scope, the full 150-document PaddleOCR
+benchmark was **not** run as part of this task. It is the next step before
+PaddleOCR could be evaluated as a genuine incumbent candidate, and the
+person/task requesting it should be aware of the multi-hour runtime cost
+before launching it.

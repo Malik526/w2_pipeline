@@ -4,14 +4,23 @@ Last updated: 2026-09-04
 
 ## Current Phase
 
-Phase 4D is complete: both controlled Tesseract main page-segmentation-mode
-experiments within Pipeline A have been run and documented. Phase 4D did not
-introduce a new pipeline and did not change canonical schema, ground truth
-semantics, parser logic, evaluator matching, or annotation isolation; only the
-main Tesseract PSM was the experimental variable.
+Phase 4E is in progress: the PaddleOCR alternate OCR backend has been
+implemented behind Pipeline A's existing observation boundary and has passed
+its unit tests and a 5-document smoke evaluation. The full 150-document
+PaddleOCR benchmark comparison has **not** been run yet — see "Immediate Next
+Experiment." Phase 4D (Tesseract main-PSM experiments) is complete.
 
 Most recently completed:
 
+- Phase 4E implemented `PaddleOcrAdapter`
+  (`src/w2_pipeline/extraction/ocr_paddle.py`) behind a new structural
+  `OcrAdapter` contract (`src/w2_pipeline/extraction/ocr_backend.py`) that
+  both the Tesseract and PaddleOCR adapters satisfy, added `--ocr-backend
+  {tesseract, paddleocr}` to the benchmark CLI (default `tesseract`,
+  unchanged), and added the `paddle` optional dependency group. A 5-document
+  smoke benchmark against the external clean-render set passed with 98.26%
+  field accuracy and 0 document failures, but revealed PaddleOCR is roughly
+  35-37x slower than Tesseract on CPU (~74.3s/document vs. ~2.1s/document).
 - Phase 4C corrected the Box e employee-name semantic error end to end (ground
   truth regeneration plus reruns) and reran both the 150-document external
   clean benchmark and the 600-document external robustness benchmark against
@@ -31,8 +40,9 @@ Most recently completed:
 
 The current Pipeline A incumbent configuration remains unchanged from
 Phase 4B: main Tesseract **PSM 3** plus the targeted supplemental **PSM 6**
-SSN-recovery pass. Both Phase 4D PSM experiments confirmed it as the
-strongest configuration evaluated to date.
+SSN-recovery pass. Neither the Phase 4D PSM experiments nor the Phase 4E
+PaddleOCR smoke result have displaced it; a full-scale PaddleOCR benchmark is
+required before any incumbent change could be considered.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -53,8 +63,10 @@ W-2 images, added per-field benchmark reporting, and recorded external clean
 and degraded benchmark result artifacts. Phase 4C corrected employee Box e
 name semantics in both the extractor and the external ground truth, then
 reran the clean and robustness external benchmarks. Phase 4D added configurable
-main-PSM support to Pipeline A and the benchmark CLI, and Phase 4D.1 evaluated
-PSM 11 as the first controlled sparse-text experiment.
+main-PSM support to Pipeline A and the benchmark CLI and evaluated PSM 11 and
+PSM 12 as controlled sparse-text experiments. Phase 4E introduced a
+backend-selectable OCR boundary and added PaddleOCR as a second Pipeline A OCR
+backend, validated with unit tests and a 5-document smoke benchmark.
 
 ## Authoritative Reference
 
@@ -123,6 +135,15 @@ docs/experiments/pipeline-a-extraction-history.md
   1-6, worse overall than PSM 11.
 - Both Phase 4D main-PSM experiments are complete; no further PSM values are
   currently planned for evaluation.
+- PaddleOCR is available as an alternate OCR backend via `--ocr-backend
+  paddleocr` (`src/w2_pipeline/extraction/ocr_paddle.py`), selectable behind
+  the same `OcrAdapter` contract Tesseract implements. It is **not** the
+  incumbent. Its only validated result is a 5-document smoke benchmark
+  (98.26% field accuracy, 0 failures, ~74.3s/document); the full 150-document
+  comparison has not been run.
+- `PaddleOcrConfig` defaults to `enable_mkldnn=False`; the PaddlePaddle
+  default (`True`) raised a PIR attribute-conversion error for the default
+  PP-OCRv6 models on the reference development machine.
 
 ## Encoded Assumptions
 
@@ -174,17 +195,22 @@ docs/experiments/pipeline-a-extraction-history.md
 ## Immediate Next Experiment
 
 ```text
-Phase 4E - PaddleOCR alternate OCR backend within Pipeline A
+Phase 4E (continued) - full 150-document PaddleOCR clean-render benchmark
 ```
 
-Phase 4D's Tesseract main-PSM comparison is finished (PSM 3 incumbent
-confirmed against both PSM 11 and PSM 12). The next planned experiment is
-Phase 4E: evaluating PaddleOCR as an alternate OCR backend behind the same
-common observation boundary, parser, canonical schema, and evaluator used by
-the Tesseract-based configurations. Unlike the Phase 4D PSM experiments,
-Phase 4E requires implementation work first (a PaddleOCR adapter conforming
-to the existing `TextObservation` boundary) before a benchmark can be run; it
-has not been started.
+The PaddleOCR backend implementation is done: it passed unit tests and a
+5-document smoke evaluation (98.26% field accuracy, 0 failures) against the
+external clean-render set. The next step is running the same 150-document
+external Symage clean-render benchmark used for every Tesseract PSM
+comparison, with `--ocr-backend paddleocr`, holding dataset, ground truth,
+parser, evaluator, and schema constant exactly as the Phase 4D PSM
+experiments did. **This has not been run.** Budget for it explicitly: at the
+smoke rate (~74.3s/document) a full 150-document run is on the order of 3
+hours of wall-clock time, roughly 35-37x longer than the equivalent Tesseract
+run — launch it detached per the long-running command policy and expect a
+multi-hour wait, not the few-minute turnaround of prior Pipeline A
+benchmarks. Only after that full run is complete should PaddleOCR vs.
+Tesseract be evaluated as an incumbent decision.
 
 ## Future Phases (after Phase 4E)
 
@@ -401,6 +427,48 @@ documents, corrected ground truth:
   field. Phase 4D's PSM comparison is complete; see "Immediate Next
   Experiment" for Phase 4E.
 
+Completed Phase 4E PaddleOCR backend implementation:
+
+```text
+src/w2_pipeline/extraction/ocr_backend.py
+src/w2_pipeline/extraction/ocr_paddle.py
+src/w2_pipeline/extraction/pdf_rendering.py
+src/w2_pipeline/extraction/acquisition.py
+src/w2_pipeline/evaluation/run_pipeline_a.py
+tests/extraction/test_ocr_paddle.py
+tests/extraction/test_pdf_rendering.py
+tests/evaluation/test_run_pipeline_a.py
+pyproject.toml
+data/evaluation/results/phase4e_paddleocr_smoke_5.json
+data/evaluation/results/phase4e_paddleocr_smoke_5.md
+```
+
+Added a structural `OcrAdapter` contract so `ObservationAcquirer` depends on
+any backend implementing `extract_image`/`extract_pdf_pages` rather than on
+`TesseractOcrAdapter` directly; extracted shared PDF-page-to-image rendering
+out of the Tesseract adapter so both backends use one implementation; added
+`PaddleOcrAdapter`/`PaddleOcrConfig` calling PaddleOCR 3.7.0's
+`predict()` pipeline and mapping `rec_texts`/`rec_boxes` into
+`TextObservation`; added `--ocr-backend {tesseract, paddleocr}` to the
+benchmark CLI (default unchanged); added the `paddle` optional dependency
+group. The parser, evaluator, canonical schema, and annotation isolation
+boundary were not changed. Full test suite: 111 tests passing.
+
+Smoke-validated (not yet benchmarked at scale):
+
+- 5-document external Symage clean-render smoke run: `field_accuracy =
+  0.9826086956521739` (113/115 correct), `failed_documents = 0`, average
+  `74.29913957080062` seconds/document. Only miss: `box_13.retirement_plan`
+  (3/5), an existing known weakness, not a new regression.
+- `enable_mkldnn=True` (PaddlePaddle's own default) crashed CPU inference
+  with a PIR attribute-conversion `NotImplementedError` on the reference
+  development machine; `PaddleOcrConfig` defaults to `enable_mkldnn=False`
+  as a correctness fix.
+- Conclusion so far: PaddleOCR is functionally correct and shows a strong
+  accuracy signal on 5 documents, but is roughly 35-37x slower than Tesseract
+  on CPU. The full 150-document comparison needed to make an incumbent
+  decision has **not** been run; see "Immediate Next Experiment."
+
 ## Current Known Weaknesses
 
 - Employee first name and middle initial remain the weakest fields under the
@@ -417,10 +485,16 @@ documents, corrected ground truth:
   weaknesses away and additionally zeroes federal Boxes 1-6, employee last
   name, and employer EIN, so it is rejected outright rather than considered a
   partial trade-off.
+- PaddleOCR's only known weakness so far is throughput, not accuracy: ~74.3
+  seconds/document (~35-37x slower than Tesseract) on the 5-document smoke
+  set, which makes a full-scale benchmark a multi-hour undertaking. Its
+  accuracy profile at scale (150/600 documents) is unknown until that
+  benchmark is run.
 
 ## Unimplemented Capabilities
 
-- Phase 4E (PaddleOCR alternate OCR backend) has not been started.
+- The full 150-document PaddleOCR benchmark (Phase 4E completion) has not
+  been run; only a 5-document smoke result exists.
 - Phase 5 (Pipeline B document-vision/VLM challenger) has not been started.
 - Review routing, confidence calibration, validation engines, persistence,
   FastAPI/API layer, frontend, CSV export, and cost tracking remain

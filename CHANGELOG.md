@@ -2,6 +2,42 @@
 
 ## 2026-09-04
 
+### Phase 4E - PaddleOCR Backend Implementation
+
+- Added a structural `OcrAdapter` contract
+  (`src/w2_pipeline/extraction/ocr_backend.py`) so Pipeline A's
+  `ObservationAcquirer` depends on any backend implementing
+  `extract_image`/`extract_pdf_pages` instead of `TesseractOcrAdapter`
+  directly. Both Tesseract and the new PaddleOCR adapter satisfy it.
+- Extracted PDF-page-to-image rendering out of the Tesseract adapter into a
+  shared helper (`src/w2_pipeline/extraction/pdf_rendering.py`) so both OCR
+  backends use identical PyMuPDF rendering instead of duplicating it.
+- Added `PaddleOcrAdapter`/`PaddleOcrConfig`
+  (`src/w2_pipeline/extraction/ocr_paddle.py`), calling PaddleOCR 3.7.0's
+  `predict()` pipeline and mapping `rec_texts`/`rec_boxes` into the common
+  `TextObservation` representation. Defaults to `enable_mkldnn=False` because
+  PaddlePaddle's own default crashed CPU inference with a PIR
+  attribute-conversion error on the reference development machine.
+- Added `--ocr-backend {tesseract, paddleocr}` to the `run_pipeline_a`
+  benchmark CLI (default `tesseract`, unchanged) and a `paddle` optional
+  dependency group in `pyproject.toml`.
+- Added 11 new unit tests (`tests/extraction/test_ocr_paddle.py`,
+  `tests/extraction/test_pdf_rendering.py`, and additions to
+  `tests/evaluation/test_run_pipeline_a.py`) using canned payloads/fake
+  clients; none require PaddleOCR installed. Full suite: 111 tests passing.
+- Ran a 5-document PaddleOCR smoke benchmark against the external Symage
+  clean-render set per the implementation task's explicit requirement to
+  validate before any larger run: `field_accuracy = 0.9826086956521739`
+  (113/115 correct), 0 document failures, average `74.3`
+  seconds/document (~35-37x slower than the Tesseract incumbent's
+  ~2.1s/document). Result artifacts:
+  `data/evaluation/results/phase4e_paddleocr_smoke_5.json` and `.md`.
+- Did **not** run the full 150-document PaddleOCR benchmark, per the task's
+  explicit scope; updated `docs/project-state.md` and
+  `docs/experiments/pipeline-a-extraction-history.md` to record that as the
+  immediate next step, with an explicit multi-hour runtime warning.
+- Tesseract remains the unchanged incumbent OCR backend and default.
+
 ### Phase 4D.2 - Tesseract PSM 12 Results
 
 - Added completed Phase 4D.2 PSM 12 clean-render benchmark artifacts:

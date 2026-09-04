@@ -8,12 +8,10 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from tempfile import TemporaryDirectory
-
-import pymupdf
 
 from w2_pipeline.extraction.errors import MissingOcrDependencyError, OcrExecutionError
 from w2_pipeline.extraction.models import BoundingBox, ObservationSource, TextObservation
+from w2_pipeline.extraction.pdf_rendering import rendered_pdf_pages
 
 _TOP_IDENTIFIER_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES = (3, 11, 12)
@@ -117,15 +115,9 @@ class TesseractOcrAdapter:
 
         self.ensure_available()
         observations: list[TextObservation] = []
-        with TemporaryDirectory(prefix="w2_pipeline_ocr_") as temp_dir:
-            with pymupdf.open(Path(pdf_path)) as document:
-                for page_index, page in enumerate(document, start=1):
-                    if page_numbers is not None and page_index not in page_numbers:
-                        continue
-                    image_path = Path(temp_dir) / f"page_{page_index}.png"
-                    pixmap = page.get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
-                    pixmap.save(image_path)
-                    observations.extend(self.extract_image(image_path, page_number=page_index))
+        with rendered_pdf_pages(pdf_path, page_numbers=page_numbers) as pages:
+            for page_index, image_path in pages:
+                observations.extend(self.extract_image(image_path, page_number=page_index))
         return observations
 
     def _run_tesseract(self, image_path: Path, *, page_segmentation_mode: int) -> str:

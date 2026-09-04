@@ -19,7 +19,11 @@ from w2_pipeline.extraction.ocr import (
     TesseractOcrAdapter,
     TesseractOcrConfig,
 )
+from w2_pipeline.extraction.ocr_backend import OcrAdapter
+from w2_pipeline.extraction.ocr_paddle import PaddleOcrAdapter, PaddleOcrConfig
 from w2_pipeline.extraction.pipeline_a import PipelineAExtractor
+
+SUPPORTED_OCR_BACKENDS = ("tesseract", "paddleocr")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -30,7 +34,7 @@ def main(argv: list[str] | None = None) -> None:
 
     manifest = load_manifest_jsonl(args.manifest)
     entries = _filter_entries(manifest.entries, variant_id=args.variant_id, limit=args.limit)
-    extractor = _pipeline_a_extractor(tesseract_psm=args.tesseract_psm)
+    extractor = _pipeline_a_extractor(ocr_backend=args.ocr_backend, tesseract_psm=args.tesseract_psm)
     result = evaluate_manifest(
         entries=entries,
         manifest_base_dir=args.manifest.parent,
@@ -66,8 +70,19 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES,
         default=3,
         help=(
-            "Main full-page Tesseract page segmentation mode. "
-            "Supplemental targeted PSM 6 SSN recovery remains enabled."
+            "Main full-page Tesseract page segmentation mode, used only when "
+            "--ocr-backend tesseract is selected. Supplemental targeted PSM 6 "
+            "SSN recovery remains enabled."
+        ),
+    )
+    parser.add_argument(
+        "--ocr-backend",
+        choices=SUPPORTED_OCR_BACKENDS,
+        default="tesseract",
+        help=(
+            "OCR backend behind Pipeline A's common observation boundary. "
+            "PaddleOCR is the Phase 4E alternate backend under evaluation "
+            "against the Tesseract incumbent."
         ),
     )
     parser.add_argument("--output-json", type=Path, default=None, help="Optional summary JSON path.")
@@ -79,13 +94,18 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _pipeline_a_extractor(*, tesseract_psm: int) -> PipelineAExtractor:
-    config = TesseractOcrConfig(page_segmentation_mode=tesseract_psm)
+def _pipeline_a_extractor(*, ocr_backend: str = "tesseract", tesseract_psm: int = 3) -> PipelineAExtractor:
     return PipelineAExtractor(
-        observation_acquirer=ObservationAcquirer(
-            ocr_adapter=TesseractOcrAdapter(config=config),
-        )
+        observation_acquirer=ObservationAcquirer(ocr_adapter=_build_ocr_adapter(ocr_backend, tesseract_psm))
     )
+
+
+def _build_ocr_adapter(ocr_backend: str, tesseract_psm: int) -> OcrAdapter:
+    if ocr_backend == "paddleocr":
+        return PaddleOcrAdapter(config=PaddleOcrConfig())
+    if ocr_backend == "tesseract":
+        return TesseractOcrAdapter(config=TesseractOcrConfig(page_segmentation_mode=tesseract_psm))
+    raise ValueError(f"Unsupported OCR backend {ocr_backend!r}; expected one of: {SUPPORTED_OCR_BACKENDS}.")
 
 
 def _filter_entries(
@@ -104,15 +124,34 @@ def _pipeline_a_metadata(extractor: PipelineAExtractor, *, variant_id: str | Non
     ocr_adapter = extractor.observation_acquirer.ocr_adapter
     return {
         "git_commit": _git_commit(),
-        "ocr_backend": "tesseract",
-        "ocr_configuration": {
-            "main_page_segmentation_mode": ocr_adapter.page_segmentation_mode,
-            "page_segmentation_mode": ocr_adapter.page_segmentation_mode,
-            "supplemental_page_segmentation_modes": list(
-                ocr_adapter.supplemental_page_segmentation_modes
-            ),
-        },
+        "ocr_backend": _ocr_backend_name(ocr_adapter),
+        "ocr_configuration": _ocr_configuration_metadata(ocr_adapter),
         "variant_filter": variant_id,
+    }
+
+
+def _ocr_backend_name(ocr_adapter: OcrAdapter) -> str:
+    if isinstance(ocr_adapter, PaddleOcrAdapter):
+        return "paddleocr"
+    return "tesseract"
+
+
+def _ocr_configuration_metadata(ocr_adapter: OcrAdapter) -> dict:
+    if isinstance(ocr_adapter, PaddleOcrAdapter):
+        config = ocr_adapter.config
+        return {
+            "lang": config.lang,
+            "device": config.device,
+            "use_doc_orientation_classify": config.use_doc_orientation_classify,
+            "use_doc_unwarping": config.use_doc_unwarping,
+            "use_textline_orientation": config.use_textline_orientation,
+        }
+    return {
+        "main_page_segmentation_mode": ocr_adapter.page_segmentation_mode,
+        "page_segmentation_mode": ocr_adapter.page_segmentation_mode,
+        "supplemental_page_segmentation_modes": list(
+            ocr_adapter.supplemental_page_segmentation_modes
+        ),
     }
 
 

@@ -244,3 +244,29 @@ result_path=data/evaluation/results/${run_name}.json
 
 setsid -f sh -c 'trap "" HUP; echo $$ > data/evaluation/results/phase4d_psm12_external_clean_150.pid; exec env PYTHONPATH=src python3 -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --tesseract-psm 12 --output-json data/evaluation/results/phase4d_psm12_external_clean_150.json > data/evaluation/results/phase4d_psm12_external_clean_150.log 2>&1'
 ```
+
+## Phase 4E PaddleOCR Backend Commands
+
+Pipeline A supports PaddleOCR as a second OCR backend behind the same
+`OcrAdapter` contract used by Tesseract, selected with `--ocr-backend
+paddleocr`. Install it first with the optional dependency group:
+
+```bash
+pip install '.[paddle]'
+```
+
+Run a tiny PaddleOCR smoke check before trusting a larger run:
+
+```bash
+python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --ocr-backend paddleocr --limit 5
+```
+
+**Runtime warning:** PaddleOCR is substantially slower than Tesseract on CPU.
+The Phase 4E smoke benchmark averaged approximately 74.3 seconds/document,
+roughly 35-37x slower than Tesseract's approximately 2.1 seconds/document. A
+full 150-document PaddleOCR run is on the order of 3 hours of wall-clock time
+(longer for the 600-document robustness set), not the few minutes a
+comparable Tesseract run takes. Always launch a full PaddleOCR benchmark
+detached using the long-running command pattern above, and budget for a
+multi-hour wait before checking results — do not treat the usual few-minute
+completion window from Tesseract runs as a guide for when to check back.

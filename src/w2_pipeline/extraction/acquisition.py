@@ -7,14 +7,20 @@ from pathlib import Path
 from w2_pipeline.extraction.models import AcquisitionRoute, ObservationSet
 from w2_pipeline.extraction.native_pdf import extract_native_pdf_observations
 from w2_pipeline.extraction.ocr import TesseractOcrAdapter
+from w2_pipeline.extraction.ocr_backend import OcrAdapter
 from w2_pipeline.ingestion.models import IngestedDocument, PdfTextMode, SourceDocumentType
 from w2_pipeline.ingestion.pdf_inspector import inspect_pdf
 
 
 class ObservationAcquirer:
-    """Build common observations from an already-ingested source document."""
+    """Build common observations from an already-ingested source document.
 
-    def __init__(self, ocr_adapter: TesseractOcrAdapter | None = None) -> None:
+    `ocr_adapter` accepts any backend implementing the `OcrAdapter` contract
+    (Tesseract by default, or PaddleOCR); the routing and parsing logic below
+    is backend-agnostic.
+    """
+
+    def __init__(self, ocr_adapter: OcrAdapter | None = None) -> None:
         self.ocr_adapter = ocr_adapter or TesseractOcrAdapter()
 
     def acquire(self, ingested_document: IngestedDocument) -> ObservationSet:
