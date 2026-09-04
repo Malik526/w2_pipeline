@@ -1756,3 +1756,62 @@ result by exactly the 6 documents this fix addresses, so a corrected
 number (expected 150/150 for `employee.middle_initial` on this variant,
 pending confirmation) is the natural next mechanical step. No Tesseract
 benchmark, no PSM 11 work, and no Pipeline B work were performed.
+
+## Phase 4E PaddleOCR GPU 150-Document `rotated_png` Rerun (Post Capital-E Fix) — Fully Confirmed, Zero Regressions
+
+Reran PaddleOCR GPU against the full 150-document `rotated_png` variant
+only, using the finalized parser with both Box e fixes in place (the
+original label-bleed fix and the capital-`"E"` denylist fix), to confirm
+the predicted recovery at scale.
+
+```text
+data/evaluation/results/phase4e_paddleocr_gpu_capital_e_fix_rotated_150.json
+data/evaluation/results/phase4e_paddleocr_gpu_capital_e_fix_rotated_150.md
+```
+
+Compared against the immediately preceding `rotated_png` result
+(`phase4e_paddleocr_gpu_box_e_fix_rotated_150`, pre-capital-E-fix:
+`field_accuracy = 0.9808695652173913`, 3,384/3,450; `employee.first_name`
+150/150; `employee.middle_initial` 144/150; `box_13.retirement_plan`
+90/150).
+
+- **`employee.middle_initial`: 144/150 (96.0%) -> 150/150 (100%). All 6
+  capital-`"E"` failures recovered, confirmed by exact document ID** —
+  `symage_900023`, `symage_900028`, `symage_900047`, `symage_900063`,
+  `symage_900067`, `symage_900080` (the same 6 identified in the prior
+  task) are precisely the 6 documents whose `employee.middle_initial`
+  moved from failing to passing; no other document's `middle_initial`
+  status changed.
+- **`employee.first_name`: 150/150 (100%), unchanged** — remained
+  perfect, as expected (the capital-E fix does not touch this field's
+  already-correct behavior).
+- **`box_13.retirement_plan`: 90/150 (60.0%), unchanged** — correctly
+  unaffected, confirming this fix stayed scoped to the employee-name
+  fallback and did not touch the separate, already-documented
+  checkbox-vision rotation-calibration limitation.
+- **Overall: `field_accuracy = 0.9826086956521739` (3,390/3,450), up from
+  `0.9808695652173913` (3,384/3,450) — exactly +6 fields, matching the 6
+  recovered `middle_initial` failures precisely.** `failed_documents = 0`.
+  Average duration `1.3417634917399603` seconds/document, slightly
+  *faster* than the pre-fix rerun's `1.427s`/document (within normal
+  GPU-run-to-run variance; removing one entry from a lookup set has no
+  meaningful cost either way).
+- **Zero regressions**, confirmed by an exhaustive document-and-field-
+  level diff against the pre-capital-E-fix result: exactly 6 fields
+  recovered (the 6 `employee.middle_initial` cases above), 0 fields newly
+  failing, and all 60 remaining failures (all `box_13.retirement_plan`)
+  present in both results unchanged.
+
+**Conclusion**: this closes out the reconfirmation this fix's own
+implementation task flagged as outstanding. Both Box e fixes — the
+original label-bleed filter and the capital-`"E"` denylist correction —
+are now fully verified at 150-document scale on PaddleOCR GPU's
+`rotated_png` variant: `employee.first_name` and `employee.middle_initial`
+are both 100% correct, with the sole remaining weakness
+(`box_13.retirement_plan` at 60.0%) being the separate, already-diagnosed
+checkbox-vision rotation-calibration limitation, out of scope for this
+line of work. The full 600-document benchmark (all four variants) and the
+equivalent Tesseract rerun remain outstanding and were not run, per this
+task's explicit scope; no PSM 11 work and no Pipeline B work were
+performed. All prior historical artifacts, including both earlier
+`rotated_png` PaddleOCR results, are preserved unchanged.

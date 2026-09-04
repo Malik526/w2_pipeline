@@ -564,6 +564,38 @@
   `docs/project-state.md` accordingly (Current Phase, Immediate Next
   Experiment, Current Known Weaknesses, Completed Phase History).
 
+### Phase 4E - PaddleOCR GPU 150-Document `rotated_png` Rerun (Post Capital-E Fix, Fully Confirmed)
+
+- Reran PaddleOCR GPU against the full 150-document `rotated_png`
+  variant with both Box e fixes in place (label-bleed filter + capital-E
+  denylist correction), closing out the reconfirmation the capital-E fix
+  task flagged as outstanding.
+- Added `data/evaluation/results/phase4e_paddleocr_gpu_capital_e_fix_rotated_150.json`
+  and the matching `.md`; all prior `rotated_png` PaddleOCR artifacts
+  (including the immediately preceding pre-capital-E-fix result) were
+  left untouched.
+- Result vs. the pre-capital-E-fix rerun (90.49% original, 98.09%
+  post-label-bleed-fix, 3,384/3,450): `employee.middle_initial`
+  **144/150 -> 150/150 (100%)**, all 6 capital-`"E"` failures recovered
+  by exact document ID (`symage_900023`/`900028`/`900047`/`900063`/
+  `900067`/`900080`, matching the 6 identified previously);
+  `employee.first_name` unchanged at 150/150 (100%);
+  `box_13.retirement_plan` unchanged at 90/150 (60.0%, a separate
+  limitation, correctly unaffected); overall `field_accuracy =
+  0.9826086956521739` (3,390/3,450), up exactly +6 fields; average
+  `1.342s`/document (within normal GPU run-to-run variance).
+  `failed_documents = 0`.
+- Zero regressions, confirmed by an exhaustive document-and-field-level
+  diff: exactly 6 fields recovered, 0 newly failing.
+- Conclusion: both Box e fixes are now fully verified at 150-document
+  scale on PaddleOCR GPU's `rotated_png` variant. The full 600-document
+  benchmark and the equivalent Tesseract rerun remain outstanding and
+  were not run, per this task's explicit scope; no PSM 11 work and no
+  Pipeline B work were performed. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Current Phase, Immediate Next
+  Experiment, Current Known Weaknesses, Completed Phase History).
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the
