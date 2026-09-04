@@ -1358,3 +1358,65 @@ finding zero such regressions).
   the existing historical result), no PaddleOCR run, and no other
   configuration change were made; all historical artifacts, including
   both prior PSM 11 smokes, are preserved unchanged.
+
+## Phase 4E Controlled Clean-150 Benchmark for Targeted Supplemental PSM 11 — Confirmed Gain, Zero Regressions
+
+The recovery diagnostic's justification was acted on: main PSM 3 +
+targeted supplemental PSM 6 + targeted supplemental PSM 11
+(`--tesseract-supplemental-psm 6,11`, PSM 11 restricted to `employer.ein`
+and federal Boxes 3/5/6 only), full 150-document external clean-render
+set, checkbox vision enabled, same corrected ground truth/parser/evaluator/
+schema as the incumbent result.
+
+```text
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_external_clean_150.json
+data/evaluation/results/phase4e_tesseract_supplemental_psm11_external_clean_150.md
+```
+
+- `field_accuracy = 0.9939130434782608` (3,429/3,450 correct), up from the
+  incumbent's `0.9927536231884058` (3,425/3,450); `failed_documents = 0`;
+  `field_failure_count = 21`, down from 25; average `3.541479775440033`
+  seconds/document, up from `2.330209926666645` (**+51.98%**, +1.211s/doc).
+- **Per-field changes, exactly matching the recovery diagnostic's
+  prediction at full scale:**
+  - `employer.ein`: 98.67% -> **100.0%** (148/150 -> 150/150, +2)
+  - `federal_wages_and_taxes.box_5_medicare_wages_and_tips`: 99.33% ->
+    **100.0%** (149/150 -> 150/150, +1)
+  - `federal_wages_and_taxes.box_6_medicare_tax_withheld`: 98.67% ->
+    99.33% (148/150 -> 149/150, +1)
+  - `federal_wages_and_taxes.box_3_social_security_wages`: unchanged,
+    99.33% (149/150) — the one `"mismatch"`-kind Box 3 failure
+    (`symage_900075`, primary path reads `"81"` instead of `"8.15E+4"`)
+    remains, as predicted, since the `None`-only fallback gate cannot
+    address a non-`None` wrong value.
+  - No other field changed at all.
+- **Document-level recovery, cross-checked exactly against the incumbent's
+  `field_failures`:** 4 fields recovered
+  (`symage_900021.employer.ein`, `symage_900119.employer.ein`,
+  `symage_900063.box_5_medicare_wages_and_tips`,
+  `symage_900063.box_6_medicare_tax_withheld` — all four were
+  `"missing"`-kind), **zero new failures anywhere** (the regressed set is
+  empty), and all 21 remaining failures have **bit-for-bit identical**
+  predicted values to the incumbent (same wrong text, same missing
+  fields) — nothing was disturbed, only filled in. This is the full-scale
+  confirmation of the 5-document diagnostic's 4/6 (66.7%) recovery
+  result — every recoverable failure the diagnostic found (all 4
+  `"missing"`-kind ones, spread across the same 3 documents) recovered
+  identically at 150-document scale, and both `"mismatch"`-kind failures
+  the diagnostic correctly predicted would not recover (`box_3` on
+  `symage_900075`, `box_6` on `symage_900123`) did not recover here
+  either.
+- Conclusion, applying the decision rule for this task: **accuracy
+  improved (99.28% -> 99.39%, +4 fields) with zero regressions** — this
+  clears the bar for "record the gain," not rejection. The gain is small
+  in absolute terms (0.116 percentage points, 4 of 3,450 fields, 3 of 150
+  documents affected) and costs a substantial, consistent latency
+  penalty (+52%, from running a full second full-page OCR pass) for every
+  document processed, not just the ones that benefit. **This result does
+  not automatically promote any incumbent** — the accuracy/latency
+  trade-off (a real but narrow correctness gain, concentrated in
+  `employer.ein` and Box 5/6 recovery only, against a substantial
+  per-document runtime cost) is reported for the user to weigh, not
+  decided here. No 600-document run, no PaddleOCR run, and no other
+  configuration change were made; the incumbent and all prior PSM 11
+  artifacts (both smokes and the diagnostic) are preserved unchanged.

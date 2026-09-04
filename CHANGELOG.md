@@ -356,6 +356,40 @@
   `docs/project-state.md` accordingly. Did not run the full 150 or 600
   documents, PaddleOCR, or any other configuration.
 
+### Phase 4E - Controlled Clean-150 Benchmark for Targeted Supplemental PSM 11 (Confirmed Gain, Not Promoted)
+
+- Acted on the recovery diagnostic's justification: main PSM 3 + targeted
+  supplemental PSM 6 + targeted supplemental PSM 11 (`employer.ein`/Box
+  3/5/6 only), full 150-document external clean-render set, checkbox
+  vision enabled.
+- Added `data/evaluation/results/phase4e_tesseract_supplemental_psm11_external_clean_150.json`
+  and the matching `.md`; the incumbent and all three prior PSM 11
+  artifacts (both smokes and the diagnostic) were left untouched.
+- Result: `field_accuracy = 0.9939130434782608` (3,429/3,450), up from the
+  incumbent's `0.9927536231884058` (3,425/3,450), `failed_documents = 0`,
+  average `3.541479775440033` seconds/document (**+51.98%** vs. the
+  incumbent's `2.330s`).
+- Per-field: `employer.ein` 98.67% -> **100.0%** (+2), `box_5` 99.33% ->
+  **100.0%** (+1), `box_6` 98.67% -> 99.33% (+1), `box_3` unchanged
+  (99.33%, its one failure is `"mismatch"`-kind and structurally
+  unrecoverable by the existing `None`-only fallback gate). No other
+  field changed.
+- Document-level cross-check against the incumbent confirms exactly the
+  4 recoveries the diagnostic predicted and **zero new failures anywhere**
+  — the regressed-field set is empty, and all 21 remaining failures have
+  bit-for-bit identical predictions to the incumbent.
+- Conclusion: a real but narrow accuracy gain (0.116 percentage points, 3
+  of 150 documents affected) at a substantial, universal latency cost
+  (+52% per document, on every document regardless of benefit). Per the
+  decision rule for this task, this is recorded as confirmed with zero
+  regressions, **not automatically promoted** — the incumbent
+  configuration is unchanged, and the accuracy/latency trade-off is left
+  for the user to decide. Updated
+  `docs/contracts/extraction-pipeline-a.md`,
+  `docs/experiments/pipeline-a-extraction-history.md`, and
+  `docs/project-state.md` accordingly. Did not run 600 documents,
+  PaddleOCR, or any other configuration.
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the

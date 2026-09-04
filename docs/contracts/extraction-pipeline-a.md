@@ -128,8 +128,14 @@ or Box 3/5/6 to recover from). A follow-up diagnostic that deliberately
 sampled documents where the incumbent *does* fail one of these fields
 found 4/6 (66.7%) of those known failures recovered, with zero leakage
 outside scope — a targeted diagnostic, not a representative benchmark, but
-meaningful recovery, so this configuration is now marked **justified for a
-controlled clean-150 benchmark** (not yet run) — see
+meaningful recovery, so this configuration was marked justified for a
+controlled clean-150 benchmark, which has since confirmed the gain at full
+scale: `field_accuracy = 0.9939130434782608` (3,429/3,450, up from the
+incumbent's 3,425/3,450) with **zero regressions**, at **+51.98%** average
+latency (`2.330s` -> `3.541s`/document). This is a real but narrow gain (3
+of 150 documents affected) against a substantial universal latency cost —
+**not promoted**; the accuracy/latency trade-off is reported for an
+explicit user decision, not resolved automatically. See
 `docs/project-state.md`'s "Immediate Next Experiment".
 
 ### OCR Backend Boundary

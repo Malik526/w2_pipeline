@@ -1,0 +1,399 @@
+{
+  "accuracy_by_route": {
+    "ocr": {
+      "correct_fields": 3429,
+      "documents": 150,
+      "field_accuracy": 0.9939130434782608,
+      "total_fields": 3450
+    }
+  },
+  "accuracy_by_variant": {
+    "external_clean_render": {
+      "correct_fields": 3429,
+      "documents": 150,
+      "field_accuracy": 0.9939130434782608,
+      "total_fields": 3450
+    }
+  },
+  "average_duration_seconds": 3.541479775440033,
+  "benchmark_metadata": {
+    "git_commit": "6dbbe84ab91161185c1703c2503fe5da0165e511",
+    "ocr_backend": "tesseract",
+    "ocr_configuration": {
+      "main_page_segmentation_mode": 3,
+      "page_segmentation_mode": 3,
+      "supplemental_page_segmentation_modes": [
+        6,
+        11
+      ]
+    },
+    "pipeline_id": "pipeline_a",
+    "run_timestamp": "2026-09-04T21:26:24.633615+00:00",
+    "schema_version": 2026,
+    "source_datasets": [
+      "Symage/synthetic-us-forms-preview"
+    ],
+    "variant_filter": "external_clean_render",
+    "variant_scope": [
+      "external_clean_render"
+    ]
+  },
+  "correct_fields": 3429,
+  "document_conditions": [
+    "external_clean_render"
+  ],
+  "documents": 150,
+  "failed_documents": 0,
+  "failure_rate": 0.0,
+  "field_accuracy": 0.9939130434782608,
+  "field_failure_count": 21,
+  "field_failures": [
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "Jes\u00fas",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Jesus",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": "Alexis",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Alexis Ss",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": "S",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900037-irs_w2_single_page_2026-p0",
+      "expected": "Julie",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "dalle",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": "John",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "John WwW",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": "W",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "expected": "\u00d3liver",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Oliver",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "Alicia",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Alicia ici",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900075-irs_w2_single_page_2026-p0",
+      "expected": "8.15E+4",
+      "failure_kind": "mismatch",
+      "field_path": "federal_wages_and_taxes.box_3_social_security_wages",
+      "predicted": "81",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900083-irs_w2_single_page_2026-p0",
+      "expected": "C",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900088-irs_w2_single_page_2026-p0",
+      "expected": "Ethan",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Ethan WwW",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900088-irs_w2_single_page_2026-p0",
+      "expected": "W",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900102-irs_w2_single_page_2026-p0",
+      "expected": "C",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": "Ad\u00e1n",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "Adan WwW",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": "W",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": "Jeffrey",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "veffrey",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": "A",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900123-irs_w2_single_page_2026-p0",
+      "expected": "1294.85",
+      "failure_kind": "mismatch",
+      "field_path": "federal_wages_and_taxes.box_6_medicare_tax_withheld",
+      "predicted": "1204.85",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900135-irs_w2_single_page_2026-p0",
+      "expected": "I",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900143-irs_w2_single_page_2026-p0",
+      "expected": "William",
+      "failure_kind": "mismatch",
+      "field_path": "employee.first_name",
+      "predicted": "William Wi",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "document_id": "symage_900147-irs_w2_single_page_2026-p0",
+      "expected": "C",
+      "failure_kind": "missing",
+      "field_path": "employee.middle_initial",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "external_clean_render"
+    }
+  ],
+  "per_field_accuracy": {
+    "box_13.retirement_plan": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "box_13.statutory_employee": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "box_13.third_party_sick_pay": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.first_name": {
+      "correct": 140,
+      "field_accuracy": 0.9333333333333333,
+      "incorrect": 10,
+      "total": 150
+    },
+    "employee.last_name": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.middle_initial": {
+      "correct": 141,
+      "field_accuracy": 0.94,
+      "incorrect": 9,
+      "total": 150
+    },
+    "employee.ssn": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employee.suffix": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.control_number": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "employer.ein": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "correct": 149,
+      "field_accuracy": 0.9933333333333333,
+      "incorrect": 1,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "correct": 149,
+      "field_accuracy": 0.9933333333333333,
+      "incorrect": 1,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.document_type": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.schema_version": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    },
+    "metadata.tax_year": {
+      "correct": 150,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 150
+    }
+  },
+  "pipeline_id": "pipeline_a",
+  "source_datasets": [
+    "Symage/synthetic-us-forms-preview"
+  ],
+  "successful_documents": 150,
+  "total_fields": 3450
+}
