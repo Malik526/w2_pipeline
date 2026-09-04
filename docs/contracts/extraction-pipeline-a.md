@@ -45,6 +45,9 @@ native observations for text pages and OCR observations for image-only pages.
 
 Phase 4 selects Tesseract as the single OCR baseline. The Python package calls
 the local `tesseract` system binary and parses TSV output into observations.
+Phase 4B sets full-page segmentation mode `--psm 3` as the default and uses a
+supplemental `--psm 6` pass only to retain recognized SSN-like text in the top
+identifier region.
 
 If Tesseract is unavailable, Pipeline A raises `MissingOcrDependencyError` with
 an actionable installation message. Unit tests do not require the system OCR
@@ -57,6 +60,9 @@ The initial 2026 W-2 parser uses explicit deterministic rules:
 - layout-aware employee and employer identity regions
 - label/value parsing for federal Boxes 1-8, 10, and 11
 - exact `Decimal` money parsing without float conversion
+- OCR word-row reconstruction for Tesseract word observations
+- OCR full-page geometry/zone fallbacks for employee name/SSN, employer EIN,
+  federal money boxes, and Box 13 checkbox markers
 - repeated Box 12 code/value rows
 - Box 13 checkbox text markers
 - Box 14a amount or text values
@@ -94,11 +100,9 @@ Full external prepared benchmark:
 python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl
 ```
 
-## Baseline Results On 2026-09-03
+## Baseline Results
 
-This environment does not have the `tesseract` system binary installed.
-
-Internal generated clean PDFs use the native PDF route:
+The initial Phase 4 native-PDF smoke check used internal generated clean PDFs:
 
 ```text
 documents: 5
@@ -107,25 +111,39 @@ failure_rate: 0.0
 route: native_pdf
 ```
 
-External Symage clean renders require OCR:
+Phase 4B installed and exercised Tesseract end to end for external Symage image
+benchmarks. The external clean-render benchmark result is:
 
 ```text
 documents: 150
-field_accuracy: 0.0
-failure_rate: 1.0
+field_accuracy: 0.9887878787878788
+failure_rate: 0.0
+average_duration_seconds: 2.1432020549401445
 route: ocr
-reason: missing Tesseract runtime
 ```
 
-All prepared external variants:
+The full prepared external-variant benchmark result is:
 
 ```text
 documents: 600
-field_accuracy: 0.0
-failure_rate: 1.0
+field_accuracy: 0.8926515151515152
+failure_rate: 0.0
+average_duration_seconds: 2.1310415448267
 route: ocr
-reason: missing Tesseract runtime
 ```
 
-These numbers confirm benchmark execution and failure isolation. They are not
-evidence of OCR quality until Tesseract is installed and the OCR route can run.
+Variant accuracy:
+
+```text
+external_clean_render: 0.9887878787878788
+compressed_jpeg: 0.9796969696969697
+rotated_png: 0.9245454545454546
+blurred_png: 0.6775757575757576
+```
+
+Pipeline A performs strongly on clean and compressed external W-2 images,
+degrades moderately under rotation, and degrades substantially under blur.
+Known weaknesses include employee first-name extraction, Box 13 retirement-plan
+checkbox detection, employee SSN/employer EIN under degraded variants, and
+blurred federal Boxes 1-6. These results establish a deterministic measured
+baseline, not a final production extraction architecture.

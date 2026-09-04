@@ -15,7 +15,8 @@ W-2 ingestion
 ## Current Phase
 
 The project has completed Phase 4: Pipeline A Deterministic Native Text/OCR
-Extraction Baseline.
+Extraction Baseline, including Phase 4B external OCR benchmark hardening and
+result reconciliation.
 
 Phase 0 established the project vocabulary and boundaries. Phase 1 adds the
 typed canonical W-2 structure every future extractor must produce. Phase 2 adds
@@ -27,7 +28,9 @@ evaluator. Phase 3B extends that harness with an external synthetic Hugging
 Face benchmark adapter while enforcing annotation leakage prevention. Phase 4
 adds Pipeline A, the first deterministic extractor, with PyMuPDF native text
 acquisition, a Tesseract OCR baseline, common text/layout observations, and
-rule-based 2026 W-2 parsing.
+rule-based 2026 W-2 parsing. Phase 4B exercises the OCR route end to end
+against external Symage W-2 images and records clean and degraded benchmark
+results.
 
 The current schema contract lives at:
 
@@ -90,6 +93,8 @@ Pipeline A uses native PDF text when Phase 2 identifies usable embedded text.
 Images and image-only PDF pages route to Tesseract OCR. If the `tesseract`
 system binary is missing, OCR documents fail with an explicit
 `MissingOcrDependencyError` instead of silently producing empty predictions.
+In the completed Phase 4B environment, Tesseract was installed and exercised
+end to end for the external Symage benchmark.
 
 Prepare the external Symage Hugging Face 2026 W-2 subset with:
 
@@ -187,14 +192,30 @@ and cost per document where paid APIs or models are used. Extractor confidence
 scores are exploratory and must not be treated as correctness.
 
 Phase 3 implements field accuracy, failure classification, and latency capture
-support. Review routing, confidence thresholds, cost tracking, OCR, and model
+support. Review routing, confidence thresholds, cost tracking, and model
 extraction remain future work.
 
 Phase 4 implements Pipeline A benchmark execution and route-aware evaluation
-metadata. In this environment, the internal generated clean-PDF smoke benchmark
+metadata. Phase 4B adds per-field benchmark reporting and records completed
+external OCR benchmarks. The internal generated clean-PDF smoke benchmark
 reached `1.0` field accuracy through the native PDF route. The external Symage
-image benchmark ran but failed all OCR documents because the local `tesseract`
-runtime is not installed.
+clean-render benchmark reached 98.88% field accuracy across 150 OCR documents.
+The 600-variant external robustness benchmark reached 89.27% aggregate field
+accuracy with 0 document failures, with strong clean/compressed performance,
+moderate rotation degradation, and substantial blur degradation.
+
+Human-readable Phase 4B results are summarized in:
+
+```text
+docs/results/phase4b-pipeline-a-benchmark.md
+```
+
+Machine-readable result artifacts live in:
+
+```text
+data/evaluation/results/phase4b_external_clean_150.json
+data/evaluation/results/phase4b_external_all_variants_600.json
+```
 
 Benchmark isolation is explicit: primary end-to-end extractors receive only the
 document image/path and production-realistic non-answer metadata. Dataset

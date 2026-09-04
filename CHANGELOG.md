@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-04
+
+### Phase 4B - External OCR Benchmark Closure
+
+- Added a concise human-readable Phase 4B benchmark report for Pipeline A
+  external Symage clean and degraded OCR results.
+- Updated README, project state, evaluation, extraction, and evaluation-data
+  docs to replace stale missing-Tesseract benchmark notes with the completed
+  150-document clean OCR and 600-document robustness results.
+- Documented Phase 4B Tesseract/parser hardening already present in the prior
+  implementation commit: full-page Tesseract segmentation, supplemental top
+  identifier OCR, OCR word-row reconstruction, deterministic geometry/zone
+  fallbacks, Box 13 layout detection, and per-field benchmark reporting.
+- Recorded the verified committed result artifacts:
+  `phase4b_external_clean_150.json` and
+  `phase4b_external_all_variants_600.json`.
+- Preserved the distinction between the internal generated clean-PDF smoke
+  benchmark, the external Symage clean OCR realism benchmark, and the external
+  degradation benchmark.
+
 ## 2026-09-03
 
 ### Phase 4 - Pipeline A Deterministic Extraction Baseline
@@ -21,9 +41,9 @@
 - Added extraction tests for observations, native PDF acquisition, OCR TSV
   adaptation and missing-runtime handling, parser rules, monetary parsing,
   benchmark isolation, and evaluation integration.
-- Recorded baseline results: internal clean PDFs reached `1.0` field accuracy
-  on 5 documents via native PDF extraction; external Symage OCR benchmarks ran
-  but failed because the local `tesseract` binary is not installed.
+- Recorded the initial Phase 4 baseline: internal clean PDFs reached `1.0`
+  field accuracy on 5 documents via native PDF extraction; external Symage OCR
+  execution was deferred until the Phase 4B Tesseract runtime/hardening pass.
 
 ### Phase 3B - External Synthetic W-2 Benchmark Isolation
 

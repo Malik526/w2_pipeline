@@ -139,3 +139,20 @@ python -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/external/symage-
 
 Pipeline A never receives external annotations. It receives only the document
 path and production-realistic metadata through `ExtractionInput`.
+
+Recorded Phase 4B Pipeline A result artifacts live in:
+
+```text
+data/evaluation/results/
+```
+
+The concise human-readable summary is:
+
+```text
+docs/results/phase4b-pipeline-a-benchmark.md
+```
+
+The committed external result artifacts record a completed 150-document clean
+OCR benchmark and a completed 600-document clean/compressed/rotated/blurred OCR
+robustness benchmark. The JSON files are the canonical machine-readable
+benchmark records.

@@ -1,11 +1,12 @@
 # Project State
 
-Last updated: 2026-09-03
+Last updated: 2026-09-04
 
 ## Current Phase
 
 Phase 4 is established: Pipeline A Deterministic Native Text/OCR Extraction
-Baseline.
+Baseline. Phase 4B external benchmark hardening and result reconciliation are
+complete.
 
 Phase 0 established the domain contract, architecture contract, official
 reference-form handling, data separation, and evaluation foundation. Phase 1
@@ -20,7 +21,10 @@ input boundary that prevents answer-bearing annotation leakage.
 Phase 4 added the first deterministic extraction pipeline with common
 text/layout observations, PyMuPDF native PDF acquisition, Tesseract OCR
 fallback, deterministic 2026 W-2 parsing rules, route-aware benchmark
-integration, and baseline benchmark commands.
+integration, and baseline benchmark commands. Phase 4B installed and exercised
+the OCR route end to end, hardened Tesseract/parser behavior against external
+W-2 images, added per-field benchmark reporting, and recorded external clean
+and degraded benchmark result artifacts.
 
 ## Authoritative Reference
 
@@ -89,6 +93,10 @@ docs/contracts/extraction-pipeline-a.md
   inputs or image-only PDF pages.
 - Tesseract is a system runtime dependency; when absent, OCR documents fail
   explicitly and benchmark failure isolation records the failure.
+- In the completed Phase 4B benchmark environment, Tesseract was present and
+  Pipeline A completed external OCR runs with 0 document failures.
+- Pipeline A is strong on clean and compressed external W-2 images, degrades
+  moderately under rotation, and degrades substantially under blur.
 - Confidence scores remain exploratory.
 - Real taxpayer data must not be committed.
 
@@ -178,13 +186,42 @@ Baseline on 2026-09-03:
 
 - internal generated clean PDFs, first 5 documents: `field_accuracy = 1.0`,
   `failure_rate = 0.0`, route `native_pdf`
-- external Symage clean renders, 150 documents: `field_accuracy = 0.0`,
-  `failure_rate = 1.0`, because the local `tesseract` binary is not installed
-- all prepared external variants, 600 documents: `field_accuracy = 0.0`,
-  `failure_rate = 1.0`, same missing OCR runtime limitation
+
+Completed Phase 4B benchmark hardening and results:
+
+```text
+src/w2_pipeline/extraction/ocr.py
+src/w2_pipeline/extraction/parser_2026.py
+src/w2_pipeline/evaluation/run_pipeline_a.py
+tests/extraction/
+data/evaluation/results/
+docs/results/phase4b-pipeline-a-benchmark.md
+```
+
+The Phase 4B work changed Tesseract OCR to use full-page segmentation by
+default, added a supplemental targeted OCR pass for the top identifier region,
+added OCR word-row reconstruction, deterministic full-page geometry/zone
+fallbacks for key 2026 W-2 fields, Box 13 layout detection, and per-field
+benchmark summary output.
+
+Verified Phase 4B external results:
+
+- external Symage clean renders, 150 documents: `field_accuracy =
+  0.9887878787878788`, `failure_rate = 0.0`, average 2.143 seconds/document,
+  route `ocr`
+- all prepared external variants, 600 documents: `field_accuracy =
+  0.8926515151515152`, `failure_rate = 0.0`, average 2.131 seconds/document,
+  route `ocr`
+- variant accuracy: clean 98.88%, compressed JPEG 97.97%, rotated PNG 92.45%,
+  blurred PNG 67.76%
+
+Major known weaknesses are employee first-name extraction, Box 13 retirement
+plan checkbox detection, and blur sensitivity. The next extraction experiment
+has not been finalized; possible next work includes a targeted PaddleOCR
+comparison or a Pipeline B document-vision challenger.
 
 ## Open Issues
 
-- Review routing, confidence calibration, OCR optimization, model extraction,
+- Review routing, confidence calibration, additional OCR optimization, model extraction,
   validation engines, persistence, frontend, export, and cost tracking remain
   unimplemented future-phase work.

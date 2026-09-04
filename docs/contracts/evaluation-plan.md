@@ -255,3 +255,42 @@ python -m w2_pipeline.evaluation.run_pipeline_a <manifest.jsonl>
 
 The command reports field accuracy, document failure count/rate, average
 duration, accuracy by variant, and accuracy by route.
+
+## Phase 4B External Pipeline A Results
+
+Phase 4B adds per-field summary output to Pipeline A benchmark results and
+records completed external OCR benchmark artifacts under:
+
+```text
+data/evaluation/results/
+```
+
+Human-readable results are summarized in:
+
+```text
+docs/results/phase4b-pipeline-a-benchmark.md
+```
+
+The benchmark categories are intentionally separate:
+
+- internal generated clean PDF benchmark: controlled native-PDF integration
+  check, 5 documents, 100% field accuracy, route `native_pdf`
+- external Symage clean benchmark: primary independent end-to-end Pipeline A
+  realism benchmark, 150 independently generated 2026-style W-2 images,
+  98.88% field accuracy, 0 document failures, route `ocr`
+- external degradation benchmark: 600 total OCR variants, aggregate 89.27%
+  field accuracy, 0 document failures, with clean 98.88%, compressed JPEG
+  97.97%, rotated PNG 92.45%, and blurred PNG 67.76%
+
+Result JSON includes:
+
+- `field_accuracy`
+- `failed_documents`
+- `failure_rate`
+- `average_duration_seconds`
+- `accuracy_by_variant`
+- `accuracy_by_route`
+- `per_field_accuracy`
+
+Review rate and cost per document remain future metrics. They are not
+implemented by the current local deterministic benchmark artifacts.
