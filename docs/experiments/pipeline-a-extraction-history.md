@@ -1815,3 +1815,80 @@ equivalent Tesseract rerun remain outstanding and were not run, per this
 task's explicit scope; no PSM 11 work and no Pipeline B work were
 performed. All prior historical artifacts, including both earlier
 `rotated_png` PaddleOCR results, are preserved unchanged.
+
+## Phase 4E Tesseract Incumbent 150-Document `rotated_png` Rerun (Post Box-e Fixes) — Confirms the Fix Is Fully Backend-Neutral
+
+Reran the Tesseract incumbent (main PSM 3 + targeted supplemental PSM 6,
+unchanged) against the full 150-document `rotated_png` variant only,
+using the finalized shared parser (both Box e fixes — the label-bleed
+filter and the capital-`"E"` denylist correction — in place), to confirm
+the fix on the second backend at scale, matching the two PaddleOCR GPU
+`rotated_png` reruns already completed this session.
+
+```text
+data/evaluation/results/phase4e_tesseract_capital_e_fix_rotated_150.json
+data/evaluation/results/phase4e_tesseract_capital_e_fix_rotated_150.md
+```
+
+Compared against the historical Tesseract rotated subset (filtering
+`phase4e_tesseract_checkbox_vision_external_all_variants_600.json`'s
+`field_failures` to `variant_id == "rotated_png"`: `3,104/3,450` correct,
+`89.97%`; `employee.first_name` 0/150; `employee.middle_initial` 32/150 —
+both identical to PaddleOCR's pre-fix numbers, as the earlier
+investigation established).
+
+- **`employee.first_name`: 0/150 (0%) -> 146/150 (97.33%). Massive
+  recovery, not fully perfect** (unlike PaddleOCR's 150/150). The 4
+  remaining failures are fully accounted for and none are new: 3 are
+  Tesseract's separate, pre-existing accent-recognition limitation
+  (`"Jesús"` -> `"Jesus"`, `"Óliver"` -> `"Oliver"`, `"Adán"` -> `"Adan"`
+  — the same well-documented weakness confirmed in the original label-
+  bleed fix task, present on these same documents' *clean* renders too);
+  the 4th (`symage_900118`, expected `"Logan"`) improved from a corrupted
+  wrong value (`"Employee's first name and"`, label-bleed garbage) to a
+  clean `None` (no value found) — the label-bleed corruption is gone, but
+  Tesseract's word-level detection still fails to find `"Logan"` at all in
+  this rotated document, a separate, pre-existing detection gap unrelated
+  to the label filter.
+- **`employee.middle_initial`: 32/150 (21.33%) -> 147/150 (98.0%).**
+  The 3 remaining failures (`symage_900062`/`symage_900068`, both
+  expected `"C"`; `symage_900135`, expected `"I"`) are **unchanged,
+  bit-for-bit identical `"missing"`-kind failures already present in the
+  historical pre-fix result** — pre-existing OCR-detection gaps where
+  Tesseract never recognized the initial character at all under rotation,
+  wholly unrelated to the label-bleed bug and not affected by either fix.
+- **`box_13.retirement_plan`: 90/150 (60.0%), unchanged** — correctly
+  unaffected, confirming the fix stayed scoped to the employee-name
+  fallback (same result as both PaddleOCR reruns).
+- **Overall: `field_accuracy = 0.9753623188405797` (3,365/3,450), up from
+  `0.8997101449275362` (3,104/3,450) — a +7.6 percentage point
+  improvement, closely matching PaddleOCR's own +7.6pp gain from the
+  first Box e fix.** `failed_documents = 0`. Average duration
+  `2.3608392549135653` seconds/document, essentially unchanged from the
+  historical 600-document run's aggregate rate (`2.319s`/doc across all
+  four variants) — no latency regression, as expected for a pure
+  text-processing change.
+- **Zero regressions**, confirmed by an exhaustive document-and-field-
+  level diff against the historical rotated result: 261 fields recovered,
+  0 fields newly failing. The 85 remaining failures include the 60
+  `box_13.retirement_plan` cases, the 7 employee-name cases explained
+  above, and 18 more (federal Boxes 3/5/6, `employee.ssn`, `employer.ein`,
+  `employee.last_name`) that are **all bit-for-bit unchanged from the
+  historical result** — pre-existing Tesseract rotation weaknesses in
+  fields the Box e fixes never targeted, not new failures.
+
+**Conclusion**: this confirms the Box e fixes are genuinely
+backend-neutral, exactly as the original investigation predicted — both
+PaddleOCR GPU and the Tesseract incumbent share the identical underlying
+bug (via the shared `_clean_layout_token` code path) and both benefit
+substantially from the same fix. The one meaningful backend difference is
+that Tesseract's *remaining* failures are pre-existing, independent OCR
+weaknesses (accent recognition, occasional word-level detection misses)
+that were never part of the label-bleed bug and are not addressed by
+either Box e fix — PaddleOCR simply doesn't exhibit those particular
+weaknesses on this sample, which is why it reached a clean 150/150 on
+both name fields while Tesseract reached 146/150 and 147/150. No full
+600-document benchmark, no PaddleOCR run, no PSM 11 work, and no
+Pipeline B work were performed, per this task's explicit scope. All
+historical artifacts, including the 600-document Tesseract robustness
+result, are preserved unchanged.

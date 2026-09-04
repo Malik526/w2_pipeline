@@ -596,6 +596,44 @@
   `docs/project-state.md` accordingly (Current Phase, Immediate Next
   Experiment, Current Known Weaknesses, Completed Phase History).
 
+### Phase 4E - Tesseract Incumbent 150-Document `rotated_png` Rerun (Post Both Box e Fixes, Confirms Backend-Neutrality)
+
+- Reran the Tesseract incumbent (main PSM 3 + supplemental PSM 6,
+  unchanged) against the full 150-document `rotated_png` variant with
+  both Box e fixes in place, confirming the fix on the second backend to
+  match the two PaddleOCR GPU `rotated_png` reruns.
+- Added `data/evaluation/results/phase4e_tesseract_capital_e_fix_rotated_150.json`
+  and the matching `.md`; the historical 600-document Tesseract artifact
+  and all other historical results were left untouched.
+- Result vs. the historical Tesseract rotated subset (89.97%,
+  3,104/3,450): `employee.first_name` 0/150 -> **146/150 (97.33%)**;
+  `employee.middle_initial` 32/150 -> **147/150 (98.0%)**;
+  `box_13.retirement_plan` unchanged at 90/150 (60.0%, correctly
+  unaffected); overall `field_accuracy = 0.9753623188405797`
+  (3,365/3,450), up +7.6 percentage points, closely matching PaddleOCR's
+  own gain; average `2.361s`/document, essentially unchanged from the
+  historical aggregate rate (no latency regression). Zero regressions
+  (261 fields recovered, 0 newly failing, confirmed by exhaustive diff).
+- **The small remaining gap is fully explained and confirmed pre-existing,
+  not new**: 3 of 4 remaining `first_name` failures are Tesseract's
+  well-documented accent-recognition limitation (`"Jesús"` ->
+  `"Jesus"`, etc., already present on these documents' clean renders); the
+  4th (`"Logan"`) improved from label-bleed garbage to a clean `None` but
+  Tesseract's OCR still never detects the name in that document under
+  rotation. All 3 remaining `middle_initial` failures are bit-for-bit
+  unchanged `"missing"`-kind failures already present before either fix.
+- Conclusion: both Box e fixes are confirmed genuinely backend-neutral —
+  Tesseract and PaddleOCR GPU share the identical bug via
+  `_clean_layout_token` and both benefit substantially; Tesseract's
+  remaining gap versus PaddleOCR's clean 150/150 is separate,
+  pre-existing OCR quality, not a fix limitation. The full 600-document
+  benchmark for either backend remains outstanding and was not run, per
+  this task's explicit scope; no PaddleOCR run, no PSM 11 work, and no
+  Pipeline B work were performed. Updated
+  `docs/experiments/pipeline-a-extraction-history.md` and
+  `docs/project-state.md` accordingly (Current Phase, Immediate Next
+  Experiment, Completed Phase History).
+
 ### Phase 4E - PaddleOCR `box_13.retirement_plan` Failure Investigation
 
 - Investigated why PaddleOCR GPU's entire 90-field failure surface in the
