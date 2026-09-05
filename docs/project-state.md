@@ -293,12 +293,20 @@ src/w2_pipeline/extraction/pipeline_b/
 docs/contracts/extraction-pipeline-b.md
 ```
 
+Validation and routing:
+
+```text
+src/w2_pipeline/validation/
+docs/contracts/validation-and-routing.md
+```
+
 Experiment narrative (what was tested and learned, as opposed to current
 state):
 
 ```text
 docs/experiments/pipeline-a-extraction-history.md
 docs/experiments/phase5a-pipeline-b-feasibility.md
+docs/experiments/phase6-validation-feasibility.md
 ```
 
 ## Current Pipeline A Configuration
@@ -711,18 +719,84 @@ Not attempted in Phase 5A (explicitly out of scope): a 150- or
 guided decoding, fine-tuning, quantization, batched inference, or any
 Pipeline A/B comparison or promotion decision.
 
-## Future Phases (after Phase 5A)
+## Phase 6 - Validation, Confidence Signals, And Human Review Routing
+
+Phase 6 implements the layer between extraction and downstream
+output/review: `src/w2_pipeline/validation/`. It judges an already-produced
+canonical `W2Document` (never ground truth) and routes it to `accepted` or
+`needs_review` with explainable, machine-readable issue codes. Full
+architecture: `docs/contracts/validation-and-routing.md`. Full narrative:
+`docs/experiments/phase6-validation-feasibility.md`.
+
+Backend-neutral by construction: `validate_w2_document()` imports only the
+canonical contract, never `w2_pipeline.extraction` or
+`w2_pipeline.evaluation` (enforced by an AST-based structural test), so
+Pipeline A and Pipeline B call the identical function on their own output.
+No ML/probabilistic confidence model was built -- `ExtractionSignals`
+carries pipeline-agnostic quality metadata (outcome, route, warnings) but
+deliberately no unified confidence score, since Pipeline A's deterministic
+OCR/parsing and Pipeline B's generative VLM have no comparable per-field
+confidence semantics.
+
+Ten deterministic rules run over every document: extraction signals,
+supported metadata (document type/tax year/schema version), employee
+identity required fields (`ssn`/`first_name`/`last_name`), SSN format,
+employer identity required fields (`ein`/`name`), EIN format, core
+wage/tax fields required (Boxes 1/2/5/6), monetary field validity
+(non-negative, <=2 decimal places), Box 12 code format
+(1-2 uppercase letters), and empty state/local entries. Required-field
+decisions are evidence-based from `src/w2_pipeline/evaluation/synthetic.py`'s
+own generation logic, not invented -- see the contract doc's "Required-Field
+Decisions" section, including the deliberate choice to leave Boxes 3/4
+optional (a documented, adjustable interpretation). Routing
+(`RoutingPolicy`/`decide_status`) is kept structurally separate from rule
+evaluation: the default policy sends any `error`-severity issue to review;
+`RoutingPolicy(escalate_warnings=True)` additionally escalates warning-only
+documents.
+
+56 new tests (`tests/validation/`), 268 total passing, zero regressions.
+The small integration verification (brief item 12) used only existing
+fixtures (no new inference run) and passed: known-good documents (with
+both Pipeline-A-shaped and Pipeline-B-shaped signals) accepted;
+intentionally corrupted and intentionally-missing-critical-field documents
+correctly routed to review.
+
+**Unplanned real finding, reported not fixed (Phase 6 is validation-only,
+extraction-behavior changes are out of scope):** manually running the new
+CLI against a real, already-on-disk Symage ground-truth fixture surfaced
+`employer.name = null`; checking further (not part of the committed test
+suite) confirmed this is real ground truth, not a bug, but also confirmed
+that (a) `employer.name` has never been in that record's
+`evaluated_field_paths`, so no benchmark run has ever scored it, and (b)
+actual Pipeline A extraction on the corresponding image also returns
+`employer.name = null`, consistently across 5 documents checked. This gap
+has therefore been invisible to every Pipeline A accuracy number reported
+in this document to date. Phase 6 validation caught it on the first real
+document checked, precisely because it does not depend on
+`evaluated_field_paths` or any other ground-truth-scoping mechanism. See
+`docs/experiments/phase6-validation-feasibility.md` for the full trace;
+`docs/contracts/validation-and-routing.md`'s "Known Limitations" for the
+pointer. Recommended next step for whoever picks this up: investigate
+`_parse_employer` in `parser_2026.py`.
+
+Not attempted in Phase 6 (explicitly out of scope): a review UI, CSV
+export, persistence, a routing-policy configuration UI, any ML/statistical
+confidence model, or a fix to the Pipeline A employer-name gap found above.
+
+## Future Phases (after Phase 6)
 
 ```text
-Phase 5B (not yet scoped) - larger-scale Pipeline B evaluation and/or
-Pipeline A vs. Pipeline B comparison, at the user's direction.
+Phase 7 (not yet scoped) - human review UI/workflow consuming
+ValidationResult, and/or larger-scale Pipeline B evaluation / Pipeline
+A vs. Pipeline B comparison, at the user's direction.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever
 Pipeline A configuration performs best across Phase 4D/4E, not
 automatically against the Phase 4B/4C PSM 3 baseline, and must hold the
 same dataset/ground-truth/evaluator constant the way every Pipeline A
-experiment in this document does.
+experiment in this document does. A future Phase 7 human-review UI would
+consume `ValidationResult` as its primary input contract.
 
 ## Completed Phase History
 

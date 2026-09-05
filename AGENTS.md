@@ -28,6 +28,12 @@ Use these deterministic project contracts as the authoritative project context:
   schema contract.
 - `docs/contracts/ingestion-contract.md` for the Phase 2 document ingestion
   boundary.
+- `docs/contracts/extraction-pipeline-a.md` for the Pipeline A deterministic
+  OCR/parser architecture.
+- `docs/contracts/extraction-pipeline-b.md` for the Phase 5A Pipeline B
+  vision-language-model architecture.
+- `docs/contracts/validation-and-routing.md` for the Phase 6 validation and
+  human-review-routing boundary.
 - `docs/references/irs/README.md` for official IRS reference artifact handling.
 
 ## Skills
@@ -44,15 +50,19 @@ Use these project-local skills when the current task matches their scope:
 The project has implemented Phase 0-4E: contracts, the canonical W-2 schema,
 the ingestion boundary, the evaluation harness (internal and external Symage
 benchmarks), Pipeline A (deterministic native-text/OCR extraction, including
-configurable Tesseract PSM experiments and a PaddleOCR backend), and Phase 5A
+configurable Tesseract PSM experiments and a PaddleOCR backend); Phase 5A
 (Pipeline B: a Qwen3-VL-4B-Instruct vision-language extraction challenger,
-feasibility-spike scope only -- see `docs/contracts/extraction-pipeline-b.md`
-and `docs/project-state.md`). Current phase status lives in
+feasibility-spike scope only -- see `docs/contracts/extraction-pipeline-b.md`);
+and Phase 6 (deterministic, backend-neutral validation and human-review
+routing over an already-extracted canonical `W2Document` -- see
+`docs/contracts/validation-and-routing.md`). Current phase status lives in
 `docs/project-state.md`. Do not run a large-scale Pipeline B benchmark,
 optimize its prompt, add constrained decoding, fine-tune it, or make a
-Pipeline A/B promotion decision, and do not implement validation engines,
-review UI, CSV export, RAG, persistence, frontend, or production
-integrations, unless a later brief explicitly asks for them.
+Pipeline A/B promotion decision; do not change Pipeline A or Pipeline B
+extraction behavior as part of a validation task; do not add an ML/
+statistical confidence model, a routing-policy configuration UI, a review
+UI, CSV export, RAG, persistence, frontend, or production integrations,
+unless a later brief explicitly asks for them.
 
 ## Data Handling
 

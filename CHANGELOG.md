@@ -2,6 +2,49 @@
 
 ## 2026-09-05
 
+### Phase 6 - Validation, Confidence Signals, And Human Review Routing
+
+- Added `src/w2_pipeline/validation/`: a deterministic, backend-neutral
+  validation layer that judges an already-extracted canonical `W2Document`
+  (never ground truth) and routes it to `accepted` or `needs_review` with
+  explainable, machine-readable `ValidationIssue` codes. Ten rule
+  functions cover extraction signals, supported metadata, employee/employer
+  identity required fields, SSN/EIN format, core wage/tax fields required
+  (Boxes 1/2/5/6), monetary field validity (non-negative, <=2 decimal
+  places), Box 12 code format, and empty state/local entries.
+  Required-field decisions are evidence-based from
+  `src/w2_pipeline/evaluation/synthetic.py`'s own generation logic, not
+  invented. No ML/probabilistic confidence model was built:
+  `ExtractionSignals` carries pipeline-agnostic quality metadata but
+  deliberately no unified confidence score.
+- Added `RoutingPolicy`/`decide_status` (`routing.py`), kept structurally
+  separate from rule evaluation so a firm's throughput/conservativeness
+  preference can change independently of what counts as an issue.
+- Added `redaction.py`: SSN/EIN last-4-digit masking and full redaction
+  for name/address fields before they reach a `ValidationIssue`.
+- Added `src/w2_pipeline/validation/validate_w2.py`, a CLI
+  (`python -m w2_pipeline.validation.validate_w2 <path>`) that validates
+  one canonical W2Document JSON artifact and prints the result.
+- Added 56 new unit tests (`tests/validation/`) covering redaction, every
+  rule (happy path, each required-field/format/domain check, optional-field
+  non-triggering, multi-issue non-short-circuiting), routing policy, the
+  validator (including the `document is None` path and
+  Pipeline-A/B-signal backend-neutrality), the CLI, and an AST-based
+  structural test that no validation module imports
+  `w2_pipeline.evaluation`/`w2_pipeline.extraction`/`w2_pipeline.ingestion`.
+  Full suite: 268 tests passing (212 + 56), zero regressions.
+- Small integration verification (existing fixtures only, no new
+  inference run) passed: known-good documents accepted under both
+  Pipeline-A-shaped and Pipeline-B-shaped signals; intentionally corrupted
+  and intentionally-missing-critical-field documents routed to review.
+  Manually checking real, already-on-disk fixtures additionally surfaced
+  that Pipeline A currently returns `employer.name = null` for external
+  Symage clean-render documents, a gap invisible to every benchmark result
+  reported to date because that field has never been in any Symage
+  record's `evaluated_field_paths`. Reported, not fixed -- Pipeline A
+  extraction-behavior changes are out of Phase 6's scope. See
+  `docs/experiments/phase6-validation-feasibility.md`.
+
 ### Phase 5A - Pipeline B (Qwen3-VL) Feasibility Spike
 
 - Added `src/w2_pipeline/extraction/pipeline_b/`: a vision-language model

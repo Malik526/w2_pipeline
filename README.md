@@ -135,6 +135,26 @@ and `docs/project-state.md` for current Phase 5A status. Phase 5A is a
 feasibility spike only -- no 150/600-document benchmark or Pipeline A/B
 promotion decision has been made.
 
+Validation and human-review routing (Phase 6) lives at:
+
+```text
+src/w2_pipeline/validation/
+```
+
+It judges an already-extracted canonical `W2Document` -- never ground
+truth -- and routes it to `accepted` or `needs_review` with explainable,
+machine-readable issue codes. It is backend-neutral: Pipeline A and
+Pipeline B call the same function on their own output. Run it against a
+canonical W2Document JSON file with:
+
+```bash
+python -m w2_pipeline.validation.validate_w2 data/evaluation/generated/ground_truth/w2_2026_0001.json
+```
+
+See `docs/contracts/validation-and-routing.md` for the architecture
+contract. Phase 6 does not implement an ML/statistical confidence model, a
+review UI, or CSV export.
+
 ## Working Product Assumption
 
 The primary assumed user is an accounting or tax-preparation firm processing
