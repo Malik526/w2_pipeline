@@ -308,6 +308,13 @@ src/w2_pipeline/downstream/
 docs/contracts/review-and-downstream-output.md
 ```
 
+Final architecture decision record (synthesized evidence, economics,
+final recommendation -- start here for the whole project's story):
+
+```text
+docs/architecture-decision-record.md
+```
+
 Experiment narrative (what was tested and learned, as opposed to current
 state):
 
@@ -317,6 +324,7 @@ docs/experiments/phase5a-pipeline-b-feasibility.md
 docs/experiments/phase6-validation-feasibility.md
 docs/experiments/phase6b-employer-name-investigation.md
 docs/experiments/phase7-review-workflow.md
+docs/experiments/phase8-validator-effectiveness.md
 ```
 
 ## Current Pipeline A Configuration
@@ -884,13 +892,77 @@ auto-correction mechanism; QuickBooks or any vendor-specific downstream
 integration; a reopen workflow for a `resolved` review record; and any
 change to Pipeline A, Pipeline B, or Phase 6 validation rules.
 
-## Future Phases (after Phase 7)
+## Phase 8 - Final Architecture Decision, Economics, And Take-Home Delivery
+
+Phase 8 is a synthesis phase, not a feature phase: no extraction,
+validation, or review behavior changed. It produced the final,
+CTO-readable engineering package for the take-home. Primary artifact:
+`docs/architecture-decision-record.md` (the full decision record --
+architecture, evidence, economics, security, limitations, final
+recommendation). `README.md` was fully rewritten as the take-home entry
+point, with every documented command verified to actually run against a
+freshly regenerated local dataset.
+
+**Final extraction decision** (evidence in
+`docs/architecture-decision-record.md` Sections 2-4, sourced from
+already-committed `data/evaluation/results/*.json` artifacts, no new
+150/600-document benchmark run): Pipeline A (OCR + deterministic parsing)
+is the selected primary architecture; PaddleOCR GPU is the current
+leading backend (100.0% clean/compressed/blurred accuracy, 98.3% rotated
+post-fix, 1.3-1.4s/doc); Tesseract CPU is the cost-optimized alternative
+(99.3% clean, 67.7% blurred -- its clearest weakness vs. Paddle, 2.3s/doc);
+Qwen3-VL-4B-Instruct (Pipeline B) is not selected as primary for this
+workload -- 40-50x higher latency and a much larger GPU footprint for no
+accuracy advantage over Pipeline A on the 80% of documents it completed,
+with the 100%-conditional/80%-document-success-rate distinction stated
+explicitly rather than collapsed into one number. Whether Paddle's GPU
+cost is justified by its lower review/error rate at production volume
+remains an explicit, un-costed open question (no cloud pricing was
+benchmarked) -- recorded as Section 9's outstanding decision, not
+resolved here.
+
+**New validator-effectiveness analysis**
+(`docs/experiments/phase8-validator-effectiveness.md`,
+`src/w2_pipeline/evaluation/validator_effectiveness.py`): the one small
+analytical experiment this phase ran, reusing two already-committed
+Pipeline A benchmark result artifacts with no new OCR/VLM inference.
+Ground truth was used only to score the validator's decision after the
+fact, never as an input to validation (structurally enforced and tested).
+Reconstructed real historical predictions (ground truth + the benchmark's
+own recorded field failures, since no full predicted document had ever
+been persisted) and ran them through the unmodified Phase 6 validator.
+Result: **0% false-review rate** in both analyzed conditions (rotated,
+blurred); error-detection recall is highly error-profile-dependent --
+9.2% on subtle plausible-value errors (e.g. a Box 13 checkbox flip) vs.
+88.1% on severe/missing-field corruption under blur. This directly
+quantifies the "a plausible-but-wrong value can pass format validation"
+limitation the validation/review contracts already stated qualitatively.
+The analysis immediately reproduced the Phase 6B `employer.name` gap at
+scale (every document tripped `required_field_missing` on it before
+adjustment) and reports both raw and adjusted numbers so that confound is
+visible, not hidden. 6 new tests, 346 total passing, zero regressions.
+
+**Documented, not silently fixed**: the Phase 6B-identified
+`employer.name`/`employer.address` Symage `evaluated_field_paths` gap
+remains unresolved (Section 11 of the ADR) -- changing the external
+adapter's field coverage is recorded as follow-up work, since it would
+shift the field-coverage denominator for every historical benchmark
+comparison in this document.
+
+Not attempted in Phase 8 (explicitly out of scope): a frontend; any new
+OCR/VLM optimization or additional benchmark run; authentication; a
+production database; QuickBooks or any vendor integration; and no
+extraction, validation, or review rule was changed.
+
+## Future Phases (after Phase 8)
 
 ```text
-Phase 8 (not yet scoped) - a review UI/frontend consuming ReviewRecord
-and the review/cli.py workflow, and/or larger-scale Pipeline B
-evaluation / Pipeline A vs. Pipeline B comparison, at the user's
-direction.
+Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
+consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
+pricing study to close the Paddle-vs-Tesseract economics question; the
+employer.address OCR fallback and Symage evaluated_field_paths follow-ups;
+a rotation-aware Box 13 checkbox recalibration; and/or a larger-scale
+Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

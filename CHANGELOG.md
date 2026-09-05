@@ -2,6 +2,53 @@
 
 ## 2026-09-05
 
+### Phase 8 - Final Architecture Decision, Economics, And Take-Home Delivery
+
+- Added `docs/architecture-decision-record.md`: the final synthesized
+  engineering decision record covering the full system architecture,
+  the Pipeline A vs. Pipeline B decision, the PaddleOCR vs. Tesseract
+  backend comparison (with exact figures sourced from already-committed
+  `data/evaluation/results/*.json` artifacts, no new benchmark run),
+  production economics (GPU vs. CPU cost, human-review cost, throughput
+  and its connection to customer value), the benchmark-vs-production-
+  validation distinction, the employer-name benchmark blind spot as an
+  engineering lesson, security/PII posture, known limitations, and the
+  final recommended architecture.
+- Added `src/w2_pipeline/evaluation/validator_effectiveness.py`: an
+  evaluation-side analysis (not a validation-side change) that measures
+  how well Phase 6's validator detects real historical extraction errors,
+  using two already-committed Pipeline A benchmark result artifacts with
+  no new OCR/VLM inference run. Reconstructs each document's real
+  historical prediction from ground truth plus the benchmark's own
+  recorded field failures; the validator is called only with the
+  reconstructed prediction, never ground truth (structurally enforced and
+  tested). Result: 0% false-review rate in both analyzed conditions;
+  error-detection recall is 9.2% on subtle plausible-value errors vs.
+  88.1% on severe/missing-field corruption -- a direct, measured
+  quantification of the "a plausible-but-wrong value can pass format
+  validation" limitation. The analysis also reproduced the Phase 6B
+  `employer.name` ground-truth gap at scale and reports both raw and
+  adjusted numbers so that confound is visible rather than hidden. Full
+  method and results: `docs/experiments/phase8-validator-effectiveness.md`;
+  artifacts: `data/evaluation/results/phase8_validator_effectiveness_rotated_150.json`,
+  `..._blurred_150.json`.
+- Added 6 new tests (`tests/evaluation/test_validator_effectiveness.py`);
+  full suite: 346 tests passing (340 + 6), zero regressions.
+- Fully rewrote `README.md` as the take-home entry point: problem
+  statement, architecture diagram (text and Mermaid), quick start,
+  end-to-end workflow, the Pipeline A/B comparison, a results table, the
+  architecture decision, production validation without ground truth,
+  human review, downstream output, security, known limitations, and a
+  "what I would build next" section. Every documented command was run
+  against a freshly regenerated local dataset and confirmed to work
+  exactly as written (including fixing two real reproducibility bugs
+  found in the process: a stale non-editable package install missing the
+  Phase 6/7/8 packages entirely, and every `python -m ...` example
+  referencing a `python` binary that does not exist in this environment,
+  only `python3` -- both are now `python3 -m ...` with a `PYTHONPATH=src`
+  convention that needs no install step at all).
+- No extraction, validation, or review behavior changed in this phase.
+
 ### Phase 7 - Human Review Workflow And Downstream Output
 
 - Added `src/w2_pipeline/review/`: a backend-only human review workflow

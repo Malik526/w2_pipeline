@@ -36,6 +36,8 @@ Use these deterministic project contracts as the authoritative project context:
   human-review-routing boundary.
 - `docs/contracts/review-and-downstream-output.md` for the Phase 7 review
   workflow and downstream JSON/CSV output boundary.
+- `docs/architecture-decision-record.md` for the Phase 8 final synthesized
+  architecture decision, evidence, economics, and known limitations.
 - `docs/references/irs/README.md` for official IRS reference artifact handling.
 
 ## Skills
@@ -61,12 +63,16 @@ routing over an already-extracted canonical `W2Document` -- see
 human review workflow -- `ReviewRecord` state machine, explicit
 field-path corrections, revalidation through the unmodified Phase 6
 validator -- plus downstream JSON/CSV output gated on an `accepted`
-result; see `docs/contracts/review-and-downstream-output.md`). Current
-phase status lives in `docs/project-state.md`. Do not run a large-scale
-Pipeline B benchmark, optimize its prompt, add constrained decoding,
-fine-tune it, or make a Pipeline A/B promotion decision; do not change
-Pipeline A or Pipeline B extraction behavior, or Phase 6 validation rules,
-as part of a review/downstream-output task; do not add an ML/statistical
+result; see `docs/contracts/review-and-downstream-output.md`); and
+Phase 8 (a synthesis phase: no extraction/validation/review behavior
+changed -- one small evaluation-side validator-effectiveness analysis
+plus the final architecture decision record and README rewrite; see
+`docs/architecture-decision-record.md`). Current phase status lives in
+`docs/project-state.md`. Do not run a large-scale Pipeline B benchmark,
+optimize its prompt, add constrained decoding, fine-tune it, or make a
+Pipeline A/B promotion decision; do not change Pipeline A or Pipeline B
+extraction behavior, or Phase 6 validation rules, as part of a
+review/downstream-output/synthesis task; do not add an ML/statistical
 confidence model, a routing-policy configuration UI, an AI/LLM-based
 auto-correction mechanism, a review reopen workflow, a review frontend,
 RAG, a production database, vendor-specific (e.g. QuickBooks)

@@ -1,0 +1,46 @@
+{
+  "adjusted_for_known_ground_truth_gaps": {
+    "automatic_acceptance_rate": 0.36,
+    "correct_accepted": 41,
+    "correct_documents": 41,
+    "correct_flagged_needs_review": 0,
+    "erroneous_caught_needs_review": 96,
+    "erroneous_documents": 109,
+    "erroneous_missed_accepted": 13,
+    "error_detection_recall": 0.8807339449541285,
+    "false_review_rate": 0.0,
+    "missed_erroneous_document_ids": [
+      "symage_900000-irs_w2_single_page_2026-p0",
+      "symage_900009-irs_w2_single_page_2026-p0",
+      "symage_900026-irs_w2_single_page_2026-p0",
+      "symage_900039-irs_w2_single_page_2026-p0",
+      "symage_900047-irs_w2_single_page_2026-p0",
+      "symage_900070-irs_w2_single_page_2026-p0",
+      "symage_900079-irs_w2_single_page_2026-p0",
+      "symage_900083-irs_w2_single_page_2026-p0",
+      "symage_900095-irs_w2_single_page_2026-p0",
+      "symage_900113-irs_w2_single_page_2026-p0",
+      "symage_900115-irs_w2_single_page_2026-p0",
+      "symage_900118-irs_w2_single_page_2026-p0",
+      "symage_900120-irs_w2_single_page_2026-p0"
+    ],
+    "total_documents": 150
+  },
+  "known_ground_truth_gaps_excluded_in_adjusted_view": [
+    "employer.name"
+  ],
+  "raw": {
+    "automatic_acceptance_rate": 0.0,
+    "correct_accepted": 0,
+    "correct_documents": 41,
+    "correct_flagged_needs_review": 41,
+    "erroneous_caught_needs_review": 109,
+    "erroneous_documents": 109,
+    "erroneous_missed_accepted": 0,
+    "error_detection_recall": 1.0,
+    "false_review_rate": 1.0,
+    "missed_erroneous_document_ids": [],
+    "total_documents": 150
+  },
+  "source_result_json": "data/evaluation/results/phase4e_tesseract_checkbox_vision_external_all_variants_600.json"
+}
