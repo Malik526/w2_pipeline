@@ -1,5 +1,50 @@
 # Changelog
 
+## 2026-09-05
+
+### Phase 5A - Pipeline B (Qwen3-VL) Feasibility Spike
+
+- Added `src/w2_pipeline/extraction/pipeline_b/`: a vision-language model
+  extraction challenger (`Qwen/Qwen3-VL-4B-Instruct`) that reads the same
+  rendered W-2 page image Pipeline A's OCR route uses and returns
+  structured JSON, with no OCR or deterministic parser stage. Isolated
+  from every Pipeline A extraction-logic module (Tesseract/PaddleOCR
+  adapters, `acquisition.py`, `parser_2026.py`, `checkbox_vision.py`);
+  shares only `pdf_rendering.py` (plain PyMuPDF page rasterization).
+  Converges on the same canonical `W2Document` and the same
+  pipeline-independent evaluator. See
+  `docs/contracts/extraction-pipeline-b.md` for the full architecture.
+- Added `src/w2_pipeline/evaluation/run_pipeline_b.py`, a benchmark CLI
+  mirroring `run_pipeline_a.py`'s shape (manifest/variant/limit filtering,
+  `--output-json` plus Markdown companion report).
+- Added the `vlm` optional dependency group (`torch`, `torchvision`,
+  `transformers`, `accelerate`, `jinja2`). `torchvision` and a `jinja2`
+  upgrade were added after the first smoke attempt failed: Qwen3-VL's
+  `AutoProcessor` requires `torchvision` for an internal video-processor
+  component even for still-image use, and `apply_chat_template` requires
+  `jinja2>=3.1`, newer than the reference machine's system-managed
+  `Jinja2==3.0.3`.
+- Added 53 new focused unit tests (`tests/extraction/pipeline_b/`) covering
+  prompt construction/schema-shape alignment, JSON parsing, canonical
+  mapping/validation (including a small `state_local_entries` key-alias
+  normalization found during smoke testing), image preparation, GPU
+  diagnostics, model runtime (all mocked -- no GPU or model download
+  required), extractor orchestration, and structural checks that no
+  Pipeline B module imports Pipeline A's OCR/parser code. Full suite: 212
+  tests passing, zero regressions.
+- Ran a 5-document smoke test (4 external clean-render + 1 rotated) against
+  the prepared Symage manifest: 4/5 documents produced a valid canonical
+  `W2Document` with `field_accuracy = 1.0` on every success (92/92 correct
+  fields); 1/5 failed with a specific, understood `SchemaValidationError`
+  (the model transcribed a Box 12 sub-row's printed line label instead of
+  its actual code). Results:
+  `data/evaluation/results/phase5a_pipeline_b_smoke_clean_4.json`,
+  `..._rotated_1.json`. Full narrative in
+  `docs/experiments/phase5a-pipeline-b-feasibility.md`.
+- This is a feasibility spike only: no 150/600-document benchmark, prompt
+  optimization, constrained decoding, fine-tuning, or Pipeline A/B
+  comparison/promotion decision was made.
+
 ## 2026-09-04
 
 ### Phase 4E - Backend-Neutral Box 13 Checkbox Detection

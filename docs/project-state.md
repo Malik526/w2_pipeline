@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-09-04
+Last updated: 2026-09-05
 
 ## Current Phase
 
@@ -286,11 +286,19 @@ src/w2_pipeline/extraction/
 docs/contracts/extraction-pipeline-a.md
 ```
 
+Pipeline B:
+
+```text
+src/w2_pipeline/extraction/pipeline_b/
+docs/contracts/extraction-pipeline-b.md
+```
+
 Experiment narrative (what was tested and learned, as opposed to current
 state):
 
 ```text
 docs/experiments/pipeline-a-extraction-history.md
+docs/experiments/phase5a-pipeline-b-feasibility.md
 ```
 
 ## Current Pipeline A Configuration
@@ -647,18 +655,74 @@ What remains a genuine decision rather than a rerun:
   `docs/experiments/pipeline-a-extraction-history.md` for full detail on
   all four PSM 11 supplementation runs to date.
 
-## Future Phases (after Phase 4E)
+## Phase 5A - Pipeline B (Qwen3-VL) Feasibility Spike
+
+Phase 5A implements Pipeline B as a genuinely different extraction
+architecture -- `Qwen/Qwen3-VL-4B-Instruct` reading the rendered W-2 page
+image directly and returning structured JSON, with no OCR or deterministic
+parser stage -- under `src/w2_pipeline/extraction/pipeline_b/`. Full
+architecture detail: `docs/contracts/extraction-pipeline-b.md`. Full
+narrative (what was tried, what broke, what was fixed):
+`docs/experiments/phase5a-pipeline-b-feasibility.md`.
+
+This is a feasibility spike only, not a benchmark or promotion decision.
+212 tests passing (210 baseline-equivalent + 2 for a mapping normalization
+fix found during smoke testing), zero regressions on the existing suite.
+
+**Smoke test result** (5 documents total, within the Phase 5A 1-5 document
+scope: `data/evaluation/results/phase5a_pipeline_b_smoke_clean_4.json`,
+`..._rotated_1.json`): 4 of 5 documents produced a valid canonical
+`W2Document` with **`field_accuracy = 1.0`** on every one that succeeded
+(92/92 correct fields across the 4 successes, every evaluated field type
+exact); 1 of 5 (`symage_900003`, clean render) failed with a
+`SchemaValidationError` -- the model transcribed the Box 12 sub-row's
+printed line label (`"12a"`) instead of the actual 1-2 letter code for
+that entry, exceeding the canonical `Box12Entry.code` 2-character limit. A
+specific, understood, reproducible cause, not a systemic architecture
+failure. Average duration: `58.42s`/document (clean, 4 docs), `70.20s`
+(rotated, 1 doc); model load excluded after the first call in a process
+(`QwenVlRuntime` caches the loaded model). GPU: NVIDIA GeForce RTX 3060,
+`device="auto"`/`dtype="auto"`, ~12 GB of 12 GB VRAM in use during
+generation (narrow headroom at this model size/dtype, noted as a Phase 5A
+limitation, not yet addressed).
+
+**Two runtime-dependency gaps were found and fixed** before this result
+was reached (both are missing/outdated packages, not Pipeline B code
+defects): `torchvision` (Qwen3-VL's `AutoProcessor` resolves an
+`AutoVideoProcessor` component that requires it, even for still-image-only
+use) and `jinja2>=3.1` (the reference machine's system Python has an older
+apt-managed `Jinja2==3.0.3`, too old for `apply_chat_template`; fixed by
+installing a newer `jinja2` to user site-packages, which shadows the older
+one without touching the system package). Both were added to the new `vlm`
+optional dependency group.
+
+**One mapping normalization was added** after smoke testing showed the
+model uses simplified key names (e.g. `"state"`) instead of the canonical
+`box_15_state`-style keys for `state_local_entries` specifically, while
+every other section matched the canonical schema's keys exactly on the
+same successful documents. `mapping.py` gained a small, explicit key-alias
+table for that one section -- a structural JSON key rename, not a value
+repair, so it stays within the Phase 5A boundary ("normalize representation
+into the canonical Pydantic model" is explicitly permitted;
+value-level repair is not).
+
+Not attempted in Phase 5A (explicitly out of scope): a 150- or
+600-document benchmark, prompt optimization, constrained/JSON-schema-
+guided decoding, fine-tuning, quantization, batched inference, or any
+Pipeline A/B comparison or promotion decision.
+
+## Future Phases (after Phase 5A)
 
 ```text
-Phase 5 - Pipeline B: Document Vision / Schema-Constrained Extraction
+Phase 5B (not yet scoped) - larger-scale Pipeline B evaluation and/or
+Pipeline A vs. Pipeline B comparison, at the user's direction.
 ```
 
-Phase 5 is a genuinely different document-vision/VLM architecture and should
-implement a model-based challenger that produces the same canonical
-`W2Document` and runs against the existing evaluator without changing ground
-truth or exposing annotations. Phase 5 is compared against whichever Pipeline
-A configuration performs best across Phase 4D/4E, not automatically against
-the Phase 4B/4C PSM 3 baseline.
+Any future Pipeline B benchmark should be compared against whichever
+Pipeline A configuration performs best across Phase 4D/4E, not
+automatically against the Phase 4B/4C PSM 3 baseline, and must hold the
+same dataset/ground-truth/evaluator constant the way every Pipeline A
+experiment in this document does.
 
 ## Completed Phase History
 

@@ -39,6 +39,29 @@ paddle = [
 paddle-gpu = [
     "paddleocr>=3,<4",
 ]
+# Phase 5A Pipeline B: Qwen3-VL-4B-Instruct vision-language extraction
+# challenger. `torch` is left to resolve its own CUDA-enabled wheel from
+# standard PyPI (recent Linux `torch` wheels bundle CUDA runtime
+# dependencies directly; no separate CUDA-specific index is required, unlike
+# PaddlePaddle's GPU distribution above). `accelerate` provides
+# `device_map="auto"` placement; `transformers` is pinned to a version line
+# confirmed to include native `Qwen3VLForConditionalGeneration` support.
+# `torchvision` is required transitively: Qwen3-VL's `AutoProcessor` resolves
+# an `AutoVideoProcessor` component (the model's processor supports video
+# input generically) whose backend import fails without it, even though
+# Pipeline B only ever sends still images -- confirmed by direct
+# reproduction, not assumed. `jinja2>=3.1` is pinned explicitly because the
+# reference development machine's system Python ships `Jinja2==3.0.3`
+# (apt-managed, under /usr/lib/python3/dist-packages), which is too old for
+# `processor.apply_chat_template`; installing a newer `jinja2` to user
+# site-packages shadows it without touching the system package.
+vlm = [
+    "torch>=2.4,<3",
+    "torchvision>=0.19,<1",
+    "transformers>=4.57,<5",
+    "accelerate>=1.0,<2",
+    "jinja2>=3.1,<4",
+]
 
 [tool.pytest.ini_options]
 addopts = "-q"

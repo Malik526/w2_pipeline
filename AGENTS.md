@@ -37,19 +37,22 @@ Use these project-local skills when the current task matches their scope:
 - `skills/run-pipeline-a-extraction-experiment/SKILL.md` for running or
   benchmarking a Pipeline A OCR extraction configuration (named phase
   experiments, PSM configuration runs, smoke tests, or full clean/robustness
-  benchmark runs). Pipeline A only; Pipeline B has no defined execution
-  workflow yet.
+  benchmark runs). Pipeline A only.
 
 ## Scope Guard
 
-The project has implemented Phase 0-4D: contracts, the canonical W-2 schema,
+The project has implemented Phase 0-4E: contracts, the canonical W-2 schema,
 the ingestion boundary, the evaluation harness (internal and external Symage
-benchmarks), and Pipeline A (deterministic native-text/OCR extraction,
-including configurable Tesseract PSM experiments). Current phase status lives
-in `docs/project-state.md`. Do not implement Pipeline B, model/vision
-inference, validation engines, review UI, CSV export, RAG, persistence,
-frontend, or production integrations unless a later brief explicitly asks for
-them.
+benchmarks), Pipeline A (deterministic native-text/OCR extraction, including
+configurable Tesseract PSM experiments and a PaddleOCR backend), and Phase 5A
+(Pipeline B: a Qwen3-VL-4B-Instruct vision-language extraction challenger,
+feasibility-spike scope only -- see `docs/contracts/extraction-pipeline-b.md`
+and `docs/project-state.md`). Current phase status lives in
+`docs/project-state.md`. Do not run a large-scale Pipeline B benchmark,
+optimize its prompt, add constrained decoding, fine-tune it, or make a
+Pipeline A/B promotion decision, and do not implement validation engines,
+review UI, CSV export, RAG, persistence, frontend, or production
+integrations, unless a later brief explicitly asks for them.
 
 ## Data Handling
 

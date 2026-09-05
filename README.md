@@ -112,11 +112,28 @@ The external command uses Hugging Face `datasets` to load
 under `data/evaluation/external/`. The command can also use the dataset's
 pandas parquet route with `--loader pandas`.
 
-The expected next phase is:
+Pipeline B (Phase 5A feasibility spike) lives at:
 
 ```text
-Phase 5 - Pipeline B: Document Vision / Schema-Constrained Extraction
+src/w2_pipeline/extraction/pipeline_b/
 ```
+
+It is a genuinely different extraction architecture: a vision-language model
+(`Qwen/Qwen3-VL-4B-Instruct`) reads the same rendered W-2 page image directly
+and returns structured JSON, with no OCR or deterministic parsing stage. It
+shares only page-image rendering with Pipeline A and converges on the same
+canonical `W2Document`. Install its dependencies and run a small smoke check
+with:
+
+```bash
+python3 -m pip install '.[vlm]'
+python -m w2_pipeline.evaluation.run_pipeline_b data/evaluation/external/symage-synthetic-us-forms-preview/manifest.jsonl --variant-id external_clean_render --limit 5
+```
+
+See `docs/contracts/extraction-pipeline-b.md` for the architecture contract
+and `docs/project-state.md` for current Phase 5A status. Phase 5A is a
+feasibility spike only -- no 150/600-document benchmark or Pipeline A/B
+promotion decision has been made.
 
 ## Working Product Assumption
 
