@@ -307,6 +307,7 @@ state):
 docs/experiments/pipeline-a-extraction-history.md
 docs/experiments/phase5a-pipeline-b-feasibility.md
 docs/experiments/phase6-validation-feasibility.md
+docs/experiments/phase6b-employer-name-investigation.md
 ```
 
 ## Current Pipeline A Configuration
@@ -783,7 +784,56 @@ Not attempted in Phase 6 (explicitly out of scope): a review UI, CSV
 export, persistence, a routing-policy configuration UI, any ML/statistical
 confidence model, or a fix to the Pipeline A employer-name gap found above.
 
-## Future Phases (after Phase 6)
+## Phase 6B - Employer Name Extraction Gap: Investigated And Fixed
+
+Narrow follow-up to the Phase 6 finding above. Full record:
+`docs/experiments/phase6b-employer-name-investigation.md`.
+
+**Root cause (parser-side, not OCR recognition, backend-neutral):** the
+real 2026 W-2 form's Box c ("Employer's name, address, and ZIP code") is
+one combined, unlabeled multi-line block -- confirmed via the Symage
+dataset's own evaluator-side FUNSD annotations (inspected for diagnosis
+only, never used as ground truth or injected into the pipeline) and via
+direct PaddleOCR output, which recognized `"Timberline Trading Co."`,
+`"105 Penland St"`, and `"Murphy, NC 28906"` as three clean, correctly
+segmented observations. `_parse_employer`'s primary path
+(`_value_after_label`, requiring a literal `"Name:"` line) matches only
+the internal synthetic generator's own rendering convention, never the
+external Symage render's real-form layout, and -- unlike
+`_parse_employee`, which already has a ratio-based OCR zone fallback
+covering SSN/first/last/suffix -- `employer.name` had no fallback
+recovery path at all (only `employer.ein` did).
+
+**Fix**: `parser_2026.py` gained `_first_row_text_in_zone` (isolates only
+the topmost printed line within a zone that may span multiple lines, used
+because Box c's name/address lines are stacked vertically) and
+`_apply_ocr_employer_layout_fallbacks` (mirrors the existing employee
+equivalent; fills `employer.ein`, relocated unchanged, and now
+`employer.name`) via a calibrated zone `(0.04, 0.35, 0.25, 0.33)` derived
+from FUNSD answer boxes across all 5 diagnostic documents.
+`employer.address` has the identical gap but is out of this fix's scope.
+
+**Verification**: 7 new focused tests (275 total passing, zero
+regressions) plus a real-pipeline check against all 5 diagnostic documents
+with both PaddleOCR and Tesseract -- `employer.name` now recovers exactly
+(matching the FUNSD-confirmed correct values:
+`Timberline Trading Co.`, `BlueWave Enterprises`,
+`Infinity Enterprises Inc.`, `Bright Horizons Corp`,
+`Evergreen Solutions LLC`), `employer.ein` unchanged, `employer.address`
+unchanged (still `null`, as intended), and every employee/federal field
+unchanged. No 150/600-document benchmark was run (out of scope).
+
+**Ground-truth/evaluation scope**: investigated, documented, not
+implemented. The FUNSD answer's structure
+(`"<name>\n<address>\n<city, state zip>"`) is an authoritative,
+deterministic mapping independent of any Pipeline A prediction, and would
+satisfy the criteria for adding `employer.name` to the Symage adapter's
+`evaluated_field_paths` -- but doing so requires changing
+`src/w2_pipeline/evaluation/external_symage.py` and regenerating the
+external dataset, a benchmark-harness change distinct from this parser
+fix, left as a separate follow-up task.
+
+## Future Phases (after Phase 6B)
 
 ```text
 Phase 7 (not yet scoped) - human review UI/workflow consuming

@@ -339,10 +339,13 @@ ground truth, dataset annotations, or extraction-pipeline internals.
 - Address subfields are never validated for format or requiredness.
 - A real integration check (see
   `docs/experiments/phase6-validation-feasibility.md`) surfaced that
-  Pipeline A currently returns `employer.name = null` for every external
-  Symage clean-render document checked, and that this field is not in any
-  Symage record's `evaluated_field_paths` -- so no benchmark run has ever
-  scored it. Phase 6 correctly flags this as `required_field_missing`;
-  fixing Pipeline A's employer-name extraction is out of Phase 6's scope
-  (extraction-behavior changes are explicitly excluded) and is reported as
-  a discovered issue for a future task, not fixed here.
+  Pipeline A returned `employer.name = null` for every external Symage
+  clean-render document checked, and that this field was not in any
+  Symage record's `evaluated_field_paths` -- so no benchmark run had ever
+  scored it. Phase 6 correctly flagged this as `required_field_missing`.
+  **Since fixed** in Phase 6B -- see
+  `docs/experiments/phase6b-employer-name-investigation.md`: the root
+  cause was a missing OCR zone fallback in `_parse_employer`
+  (`parser_2026.py`), not a validation defect. `employer.name` still
+  cannot be benchmark-scored until a separate, not-yet-undertaken change
+  to the Symage evaluation adapter adds it to `evaluated_field_paths`.

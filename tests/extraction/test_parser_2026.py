@@ -11,6 +11,7 @@ from w2_pipeline.extraction.models import (
 )
 from w2_pipeline.extraction.parser_2026 import (
     _clean_layout_token,
+    _first_row_text_in_zone,
     parse_money,
     parse_w2_2026_observations,
 )
@@ -707,4 +708,265 @@ def test_parser_tesseract_fragmented_label_case_still_works_after_capital_e_fix(
 
     assert warnings == []
     assert document.employee.first_name == "Steven"
+
+
+# --- Phase 6B: employer.name OCR layout fallback ---
+#
+# Investigation (docs/experiments/phase6b-employer-name-investigation.md)
+# found employer.name was never recovered under OCR routing for external
+# Symage documents: the real 2026 W-2 form's Box c is one combined,
+# unlabeled "Employer's name, address, and ZIP code" block (employer name
+# on the first line, street/city-state-ZIP on subsequent lines) with no
+# literal "Name:" text the primary label-based path can match, and unlike
+# employee fields, employer.name previously had no OCR zone fallback at
+# all. Pixel coordinates below are the actual PaddleOCR output for the
+# real symage_900001 document (see the investigation doc), the same
+# document `test_parser_extracts_external_style_ocr_word_observations`
+# above is already built from.
+
+
+def _employer_box_c_observations() -> list[TextObservation]:
+    return [
+        ocr_obs("Timberline Trading Co.", 162, 414, 342, 39),
+        ocr_obs("105 Penland St", 164, 454, 234, 34),
+        ocr_obs("Murphy, NC 28906", 163, 489, 285, 40),
+    ]
+
+
+def _realistic_external_symage_900001_observations() -> list[TextObservation]:
+    """The exact same real symage_900001 PaddleOCR output
+    `test_parser_extracts_external_style_ocr_word_observations` above uses,
+    duplicated here (rather than shared) so that already-passing test's
+    fixture can never be perturbed by this investigation's additions.
+
+    Reusing the identical observation set matters beyond convenience: every
+    OCR zone fallback (SSN, EIN, employee name, and now employer name) is a
+    *ratio* of `_layout_extent(observations)`, the maximum observed text
+    bounding box -- not the true page pixel size. A trimmed-down fixture
+    with fewer observations would shrink that computed extent and silently
+    shift every zone ratio, breaking assertions that have nothing to do
+    with employer.name. See docs/experiments/phase6b-employer-name-investigation.md.
+    """
+
+    return [
+        ocr_obs("a", 650, 165, 15),
+        ocr_obs("Employee’s", 690, 162, 150),
+        ocr_obs("social", 850, 162, 75),
+        ocr_obs("security", 935, 162, 100),
+        ocr_obs("number", 1045, 162, 100),
+        ocr_obs("242-48-4959", 805, 210, 190),
+        ocr_obs("b", 175, 262, 15),
+        ocr_obs("Employer", 210, 262, 122),
+        ocr_obs("identification", 342, 262, 164),
+        ocr_obs("number", 517, 262, 98),
+        ocr_obs("(EIN)", 624, 262, 60),
+        ocr_obs("1", 1413, 263, 10),
+        ocr_obs("Wages,", 1449, 262, 88),
+        ocr_obs("tips,", 1546, 262, 50),
+        ocr_obs("other", 1605, 262, 62),
+        ocr_obs("compensation", 1675, 262, 168),
+        ocr_obs("2", 1922, 262, 15),
+        ocr_obs("Federal", 1964, 262, 93),
+        ocr_obs("income", 2069, 262, 93),
+        ocr_obs("tax", 2171, 263, 39),
+        ocr_obs("withheld", 2220, 262, 107),
+        ocr_obs("75-5696876", 679, 310, 178),
+        ocr_obs("$114,858.00", 1689, 309, 186, 30),
+        ocr_obs("$21,930.26", 2218, 309, 167, 30),
+        ocr_obs("3", 1412, 374, 12),
+        ocr_obs("Social", 1453, 374, 88),
+        ocr_obs("security", 1541, 374, 100),
+        ocr_obs("wages", 1651, 374, 85),
+        ocr_obs("4", 1922, 374, 15),
+        ocr_obs("Social", 1963, 374, 88),
+        ocr_obs("security", 2051, 374, 100),
+        ocr_obs("tax", 2160, 374, 39),
+        ocr_obs("withheld", 2209, 374, 107),
+        ocr_obs("$122,000.00", 1693, 405, 184, 30),
+        ocr_obs("$7,564.00", 2236, 409, 147, 30),
+        ocr_obs("5", 1412, 473, 12),
+        ocr_obs("Medicare", 1454, 473, 128),
+        ocr_obs("wages", 1582, 473, 85),
+        ocr_obs("and", 1676, 473, 45),
+        ocr_obs("tips", 1732, 473, 50),
+        ocr_obs("6", 1922, 473, 15),
+        ocr_obs("Medicare", 1964, 473, 128),
+        ocr_obs("tax", 2092, 473, 39),
+        ocr_obs("withheld", 2140, 473, 107),
+        ocr_obs("$122,000.00", 1693, 492, 184, 30),
+        ocr_obs("$1,769.00", 2236, 509, 147, 30),
+        ocr_obs("e", 176, 767, 15),
+        ocr_obs("Employee’s", 210, 762, 150),
+        ocr_obs("first", 368, 762, 50),
+        ocr_obs("name", 426, 768, 72),
+        ocr_obs("and", 506, 762, 49),
+        ocr_obs("initial", 564, 762, 67),
+        ocr_obs("Last", 739, 762, 55),
+        ocr_obs("name", 802, 768, 72),
+        ocr_obs("Steven", 168, 810, 100),
+        ocr_obs("D", 282, 811, 20),
+        ocr_obs("Armstrong", 733, 806, 151, 40),
+        ocr_obs("13", 1399, 812, 30),
+        ocr_obs("Retirement", 1592, 804, 112),
+        ocr_obs("plan", 1595, 825, 46),
+        ocr_obs("[V", 1601, 850, 36, 44),
+        ocr_obs("Copy", 151, 1535, 50),
+        ocr_obs("Return.", 993, 1535, 80),
+    ]
+
+
+def test_parser_recovers_employer_name_from_ocr_full_page_layout() -> None:
+    """End-to-end reproduction of the real symage_900001 defect: the exact
+    same realistic full-page fixture as
+    `test_parser_extracts_external_style_ocr_word_observations` above,
+    plus the three employer name/address/ZIP line observations that
+    fixture deliberately omits. Before the fix, `employer.name` stayed
+    `None` with no recovery path even though every other field on this
+    same document already extracted correctly."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            *_employer_box_c_observations(),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-name-fallback",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Timberline Trading Co."
+    # The fix is scoped to employer.name only; address recovery is a
+    # separate, out-of-scope gap (see the investigation doc's "Known
+    # Limitations") and must not silently start working as a side effect.
+    assert document.employer.address.address_line_1 is None
+    # Unrelated fields recovered by other mechanisms must not regress.
+    assert document.employer.ein == "75-5696876"
+    assert document.employee.ssn == "242-48-4959"
+    assert document.employee.first_name == "Steven"
     assert document.employee.middle_initial == "D"
+    assert document.employee.last_name == "Armstrong"
+
+
+def test_parser_recovers_multiword_employer_name_with_and() -> None:
+    """A multi-word employer name containing "and" must survive intact.
+
+    This specifically guards against reusing `_clean_layout_token` (whose
+    Box e label-word denylist includes "and") for the employer-name zone:
+    that would silently drop "and" from a real name like "Smith and Sons
+    Inc." `_first_row_text_in_zone` deliberately does not use it. Built on
+    the realistic full-page fixture (see
+    `_realistic_external_symage_900001_observations`) so the zone ratio
+    calibration matches a real document, with four Tesseract-style word
+    fragments (rather than one merged PaddleOCR-style line) positioned
+    across the same real employer-name pixel footprint, confirming the
+    fix is backend-neutral at the word-fragment-reconstruction level too.
+    """
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            ocr_obs("Smith", 162, 414, 80, 39),
+            ocr_obs("and", 250, 414, 50, 39),
+            ocr_obs("Sons", 308, 414, 70, 39),
+            ocr_obs("Inc.", 386, 414, 60, 39),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-name-and",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Smith and Sons Inc."
+
+
+def test_parser_does_not_override_primary_path_employer_name() -> None:
+    """When the primary label-based path already found a name, the OCR
+    zone fallback must never override it, even if zone content exists."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            obs("Name: Synthetic Payroll Fixture 0005 LLC", 330, 115),
+            *_employer_box_c_observations(),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 993, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-name-primary-wins",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Synthetic Payroll Fixture 0005 LLC"
+
+
+def test_parser_employer_name_fallback_absent_without_zone_observations() -> None:
+    """No employer-name observations in the zone -> still None, not an
+    exception or a spurious value (matches the pre-fix, already-passing
+    `test_parser_extracts_external_style_ocr_word_observations` fixture,
+    which omits Box c entirely)."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            ocr_obs("Steven", 168, 810, 100),
+            ocr_obs("Copy", 151, 1535, 50),
+            ocr_obs("Return.", 993, 1535, 80),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-name-absent",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name is None
+
+
+def test_first_row_text_in_zone_isolates_topmost_line_from_multiline_zone() -> None:
+    """Direct unit test of the exact mechanism the root cause needed: a
+    zone spanning multiple printed lines must return only the first
+    (topmost) line, not every line concatenated together."""
+
+    observations = _employer_box_c_observations()
+
+    result = _first_row_text_in_zone(observations, (0.0, 1.0, 0.0, 1.0))
+
+    assert result == "Timberline Trading Co."
+
+
+def test_first_row_text_in_zone_joins_fragmented_words_left_to_right() -> None:
+    """Tesseract-style word fragments on one row must join in reading order."""
+
+    observations = [
+        ocr_obs("Sons", 325, 415, 80, 30),
+        ocr_obs("Smith", 170, 415, 90, 30),
+        ocr_obs("Inc.", 410, 415, 60, 30),
+        ocr_obs("and", 265, 415, 55, 30),
+    ]
+
+    result = _first_row_text_in_zone(observations, (0.0, 1.0, 0.0, 1.0))
+
+    assert result == "Smith and Sons Inc."
+
+
+def test_first_row_text_in_zone_returns_none_for_empty_zone() -> None:
+    assert _first_row_text_in_zone([], (0.04, 0.35, 0.25, 0.33)) is None

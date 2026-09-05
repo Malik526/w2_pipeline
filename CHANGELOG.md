@@ -2,6 +2,43 @@
 
 ## 2026-09-05
 
+### Phase 6B - Fix Employer Name Extraction Gap
+
+- Fixed `_parse_employer` (`src/w2_pipeline/extraction/parser_2026.py`):
+  `employer.name` had no OCR zone-based fallback at all (unlike employee
+  fields, which already had one), so it stayed `null` under OCR routing
+  for every external Symage document -- a gap Phase 6 validation surfaced
+  but did not cause. Root cause: the real 2026 W-2 form's Box c presents
+  employer name/address/ZIP as one combined, unlabeled multi-line block
+  that the primary label-based path (expecting a literal `"Name:"` line,
+  matching only the internal synthetic generator's own rendering
+  convention) can never match. Confirmed via direct PaddleOCR output that
+  the text is recognized correctly and cleanly segmented -- this was a
+  parser gap, not an OCR recognition failure, and confirmed
+  backend-neutral (Tesseract exhibited the identical gap and fix).
+- Added `_first_row_text_in_zone` (isolates the topmost printed line
+  within a zone that may span multiple lines, needed because Box c's name
+  and address lines are stacked vertically) and
+  `_apply_ocr_employer_layout_fallbacks` (mirrors the existing employee
+  equivalent; relocates the existing EIN fallback and adds the new name
+  fallback), calibrated from real FUNSD answer boxes across 5 diagnostic
+  documents. `employer.address` has the identical gap but is out of this
+  fix's scope.
+- Added 7 new focused tests (`tests/extraction/test_parser_2026.py`); full
+  suite 275 tests passing (268 + 7), zero regressions. Verified against
+  real Pipeline A extraction (both PaddleOCR and Tesseract) on all 5
+  diagnostic documents: `employer.name` now recovers correctly on every
+  one, matching FUNSD-confirmed expected values; `employer.ein` and
+  `employer.address` unchanged.
+- Investigated (not implemented) whether `employer.name` can be added to
+  the Symage adapter's `evaluated_field_paths`: the FUNSD answer's
+  structure is an authoritative, deterministic mapping independent of any
+  Pipeline A prediction and would satisfy the criteria, but doing so is a
+  separate benchmark-harness change
+  (`src/w2_pipeline/evaluation/external_symage.py` plus dataset
+  regeneration), left as a follow-up task. See
+  `docs/experiments/phase6b-employer-name-investigation.md`.
+
 ### Phase 6 - Validation, Confidence Signals, And Human Review Routing
 
 - Added `src/w2_pipeline/validation/`: a deterministic, backend-neutral

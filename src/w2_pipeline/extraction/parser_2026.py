@@ -225,8 +225,8 @@ def _parse_employer(
         ),
         control_number=_empty_to_none(_value_after_label(right_lines, "Control")),
     )
-    if _has_ocr_observations(observations) and employer.ein is None:
-        employer = employer.model_copy(update={"ein": _first_ein_from_ocr_layout(observations)})
+    if _has_ocr_observations(observations):
+        employer = _apply_ocr_employer_layout_fallbacks(employer, observations)
     return employer
 
 
@@ -355,8 +355,36 @@ def _apply_ocr_employee_layout_fallbacks(
     return employee.model_copy(update=updates)
 
 
-def _first_ein_from_ocr_layout(observations: list[TextObservation]) -> str | None:
-    return _first_regex_text_in_zone(observations, _EIN_RE, (0.20, 0.42, 0.16, 0.24))
+def _apply_ocr_employer_layout_fallbacks(
+    employer: Employer,
+    observations: list[TextObservation],
+) -> Employer:
+    """OCR full-page zone fallbacks for employer fields the label-based
+    primary path cannot reach.
+
+    The real 2026 W-2 form (and the external Symage renders that
+    replicate it) presents Box c as one combined, unlabeled multi-line
+    block: "Employer's name, address, and ZIP code" with the employer's
+    name as its first printed line and street/city-state-ZIP as
+    subsequent lines -- there is no literal "Name:" text for
+    `_value_after_label` to match, unlike the internal synthetic
+    generator's own rendering convention. `employer.name` therefore had
+    no OCR recovery path at all until this fallback was added (unlike
+    `_apply_ocr_employee_layout_fallbacks`, which already covers
+    SSN/first/last/suffix); see
+    docs/experiments/phase6b-employer-name-investigation.md for the
+    diagnosis.
+    """
+
+    if not _looks_like_full_page_ocr_form(observations):
+        return employer
+
+    updates: dict[str, object] = {}
+    if employer.ein is None:
+        updates["ein"] = _first_regex_text_in_zone(observations, _EIN_RE, (0.20, 0.42, 0.16, 0.24))
+    if employer.name is None:
+        updates["name"] = _first_row_text_in_zone(observations, (0.04, 0.35, 0.25, 0.33))
+    return employer.model_copy(update=updates) if updates else employer
 
 
 def _apply_ocr_box_13_layout_fallbacks(
@@ -436,6 +464,36 @@ def _zone_text(
         for observation in zone_observations
         if (cleaned := _clean_layout_token(observation.text)) is not None
     ]
+    return " ".join(tokens) or None
+
+
+def _first_row_text_in_zone(
+    observations: list[TextObservation],
+    zone: tuple[float, float, float, float],
+) -> str | None:
+    """Return the topmost printed line within a zone, tokens joined left-to-right.
+
+    Unlike `_zone_text` (which joins every observation found anywhere in
+    the zone, appropriate for a zone that holds exactly one line), this
+    isolates only the first (topmost) row via `_group_observation_rows` so
+    a zone that spans a multi-line answer -- e.g. Box c's combined
+    employer name/address/ZIP block -- returns only the first line rather
+    than concatenating every line together. Deliberately does not use
+    `_clean_layout_token`: that filter's Box e label-word denylist
+    (`"and"`, `"name"`, ...) is specific to guarding the employee-name zone
+    against the rotated Box e label-bleed bug and would risk stripping a
+    legitimate word from an unrelated field (e.g. "and" in a real employer
+    name like "Smith and Sons Inc.").
+    """
+
+    zone_observations = _observations_in_zone(observations, zone)
+    if not zone_observations:
+        return None
+    rows = _group_observation_rows(zone_observations)
+    first_row = min(
+        rows, key=lambda row: min(_vertical_center(observation) for observation in row)
+    )
+    tokens = [text for observation in first_row if (text := observation.text.strip())]
     return " ".join(tokens) or None
 
 

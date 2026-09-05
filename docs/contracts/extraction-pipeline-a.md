@@ -298,8 +298,8 @@ The initial 2026 W-2 parser uses explicit deterministic rules:
 - label/value parsing for federal Boxes 1-8, 10, and 11
 - exact `Decimal` money parsing without float conversion
 - OCR word-row reconstruction for Tesseract word observations
-- OCR full-page geometry/zone fallbacks for employee name/SSN, employer EIN,
-  federal money boxes, and Box 13 checkbox markers
+- OCR full-page geometry/zone fallbacks for employee name/SSN, employer
+  EIN/name, federal money boxes, and Box 13 checkbox markers
 - Box e employee-name parsing that reads the first-name-and-initial region
   left-to-right, splits a trailing uppercase single-letter token into
   `employee.middle_initial`, and keeps `employee.last_name` and
@@ -320,6 +320,28 @@ prevents the renderer from inventing unsupported Box 9 content.
 Pipeline A does not transliterate or normalize employee-name accents. Strings
 are preserved as recognized and compared exactly by the evaluator; for
 example, `Jesús` and `Jesus` remain different semantic values.
+
+### Employer Name OCR Fallback (Phase 6B)
+
+`_apply_ocr_employer_layout_fallbacks` (`parser_2026.py`) fills
+`employer.ein` (relocated, unchanged logic) and `employer.name` whenever
+the primary label-based path (`_value_after_label`, which requires a
+literal `"Name:"` line) leaves them `None`. This exists because the real
+2026 W-2 form's Box c presents employer name/address/ZIP as one combined,
+unlabeled multi-line block -- the internal synthetic generator's own
+rendering convention (explicit `"Name:"`/`"Address 1:"` lines) does not
+match the external Symage renders' real-form layout, and `employer.name`
+had no OCR recovery path at all before this fix (unlike employee fields,
+which already had `_apply_ocr_employee_layout_fallbacks`). `employer.name`
+uses a new helper, `_first_row_text_in_zone`, which isolates only the
+topmost printed line within a zone -- required because the calibrated
+zone `(0.04, 0.35, 0.25, 0.33)` necessarily spans the employer's address
+lines too (Box c's three lines are stacked vertically, not laid out
+side-by-side the way Box e's name/last-name/suffix sub-fields are).
+`employer.address` is not populated by this fallback -- it has the
+identical architectural gap but is out of this fix's scope. See
+`docs/experiments/phase6b-employer-name-investigation.md` for the full
+root-cause investigation and verification.
 
 ## Box 13 Visual Checkbox Detection
 
