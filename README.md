@@ -152,8 +152,35 @@ python -m w2_pipeline.validation.validate_w2 data/evaluation/generated/ground_tr
 ```
 
 See `docs/contracts/validation-and-routing.md` for the architecture
-contract. Phase 6 does not implement an ML/statistical confidence model, a
-review UI, or CSV export.
+contract. Phase 6 does not implement an ML/statistical confidence model or
+a review UI.
+
+The human review workflow and downstream output (Phase 7) live at:
+
+```text
+src/w2_pipeline/review/
+src/w2_pipeline/downstream/
+```
+
+`needs_review` documents get a durable, auditable `ReviewRecord`: a human
+applies explicit corrections by canonical field path, and the corrected
+document is revalidated through the same unmodified Phase 6 validator.
+Only an `accepted` document (whether immediately, or after a review
+resolves) can be finalized into downstream JSON or CSV output. One
+orchestrating CLI demonstrates the whole workflow without a frontend:
+
+```bash
+python -m w2_pipeline.review.cli export-document data/evaluation/generated/ground_truth/w2_2026_0001.json --format json
+python -m w2_pipeline.review.cli review-create <needs-review-w2.json> --repo-dir data/review
+python -m w2_pipeline.review.cli review-correct <review_id> --repo-dir data/review --field-path employee.ssn --new-value '"123-45-6789"'
+python -m w2_pipeline.review.cli review-revalidate <review_id> --repo-dir data/review
+python -m w2_pipeline.review.cli export-review <review_id> --repo-dir data/review --format csv
+```
+
+See `docs/contracts/review-and-downstream-output.md` for the full
+lifecycle contract. Phase 7 does not implement a frontend, authentication,
+a production database, or any vendor-specific (e.g. QuickBooks)
+integration.
 
 ## Working Product Assumption
 

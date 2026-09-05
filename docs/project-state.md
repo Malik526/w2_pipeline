@@ -300,6 +300,14 @@ src/w2_pipeline/validation/
 docs/contracts/validation-and-routing.md
 ```
 
+Review workflow and downstream output:
+
+```text
+src/w2_pipeline/review/
+src/w2_pipeline/downstream/
+docs/contracts/review-and-downstream-output.md
+```
+
 Experiment narrative (what was tested and learned, as opposed to current
 state):
 
@@ -308,6 +316,7 @@ docs/experiments/pipeline-a-extraction-history.md
 docs/experiments/phase5a-pipeline-b-feasibility.md
 docs/experiments/phase6-validation-feasibility.md
 docs/experiments/phase6b-employer-name-investigation.md
+docs/experiments/phase7-review-workflow.md
 ```
 
 ## Current Pipeline A Configuration
@@ -833,20 +842,65 @@ satisfy the criteria for adding `employer.name` to the Symage adapter's
 external dataset, a benchmark-harness change distinct from this parser
 fix, left as a separate follow-up task.
 
-## Future Phases (after Phase 6B)
+## Phase 7 - Human Review Workflow And Downstream Output
+
+Phase 7 completes the take-home's explicit end-to-end story:
+`ingestion -> extraction -> validation -> downstream output`, with a
+backend-first (no frontend) review workflow for the `needs_review`
+branch. Full architecture: `docs/contracts/review-and-downstream-output.md`.
+Full implementation record: `docs/experiments/phase7-review-workflow.md`.
+
+Two new packages: `src/w2_pipeline/review/` (a durable, auditable
+`ReviewRecord` state machine -- `pending -> in_review -> resolved` --
+built entirely on top of the unmodified Phase 6 `validate_w2_document`,
+never duplicating a rule) and `src/w2_pipeline/downstream/` (`FinalizedW2`
++ `finalize_document`, the single gate ensuring only `accepted` documents
+reach downstream output, plus JSON and CSV export adapters and a
+`Protocol` documenting where a future database/tax-software/REST/webhook/
+QuickBooks-style adapter would plug in -- none implemented). A corrected
+document is never produced by inferring or predicting a value: every
+correction is an explicit, human-supplied `field_path`/`new_value` pair,
+validated against the canonical schema's own structure via
+`get_field`/`set_field_value` before being accepted. Both packages are
+backend-neutral and ground-truth-isolated by the same AST-based structural
+test technique Phase 6 established (`test_dependency_isolation.py`).
+
+One orchestrating CLI (`review/cli.py`) demonstrates the whole workflow
+without a frontend: `validate`, `review-create`, `review-correct`,
+`review-revalidate`, `export-document`, `export-review`.
+
+65 new tests (340 total passing, zero regressions). Both required
+end-to-end flows are committed tests, not just manually run once: Flow A
+(a known-good document validates `accepted` and finalizes directly) and
+Flow B (a document missing a required field validates `needs_review`,
+gets a `ReviewRecord`, is corrected, revalidates to `accepted`, resolves,
+and exports) -- the latter driven both directly through the Python API
+and entirely through the CLI, each confirming only the corrected field
+differs between the original and corrected document.
+
+Not attempted in Phase 7 (explicitly out of scope): any frontend,
+authentication, or production database; any new AI/LLM-based reviewer or
+auto-correction mechanism; QuickBooks or any vendor-specific downstream
+integration; a reopen workflow for a `resolved` review record; and any
+change to Pipeline A, Pipeline B, or Phase 6 validation rules.
+
+## Future Phases (after Phase 7)
 
 ```text
-Phase 7 (not yet scoped) - human review UI/workflow consuming
-ValidationResult, and/or larger-scale Pipeline B evaluation / Pipeline
-A vs. Pipeline B comparison, at the user's direction.
+Phase 8 (not yet scoped) - a review UI/frontend consuming ReviewRecord
+and the review/cli.py workflow, and/or larger-scale Pipeline B
+evaluation / Pipeline A vs. Pipeline B comparison, at the user's
+direction.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever
 Pipeline A configuration performs best across Phase 4D/4E, not
 automatically against the Phase 4B/4C PSM 3 baseline, and must hold the
 same dataset/ground-truth/evaluator constant the way every Pipeline A
-experiment in this document does. A future Phase 7 human-review UI would
-consume `ValidationResult` as its primary input contract.
+experiment in this document does. A future review frontend would consume
+`ReviewRecord`/`ValidationResult` as its primary input contract and call
+`w2_pipeline.review.workflow` for every state transition rather than
+reimplementing the state machine.
 
 ## Completed Phase History
 

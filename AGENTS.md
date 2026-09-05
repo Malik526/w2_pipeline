@@ -34,6 +34,8 @@ Use these deterministic project contracts as the authoritative project context:
   vision-language-model architecture.
 - `docs/contracts/validation-and-routing.md` for the Phase 6 validation and
   human-review-routing boundary.
+- `docs/contracts/review-and-downstream-output.md` for the Phase 7 review
+  workflow and downstream JSON/CSV output boundary.
 - `docs/references/irs/README.md` for official IRS reference artifact handling.
 
 ## Skills
@@ -53,16 +55,23 @@ benchmarks), Pipeline A (deterministic native-text/OCR extraction, including
 configurable Tesseract PSM experiments and a PaddleOCR backend); Phase 5A
 (Pipeline B: a Qwen3-VL-4B-Instruct vision-language extraction challenger,
 feasibility-spike scope only -- see `docs/contracts/extraction-pipeline-b.md`);
-and Phase 6 (deterministic, backend-neutral validation and human-review
+Phase 6 (deterministic, backend-neutral validation and human-review
 routing over an already-extracted canonical `W2Document` -- see
-`docs/contracts/validation-and-routing.md`). Current phase status lives in
-`docs/project-state.md`. Do not run a large-scale Pipeline B benchmark,
-optimize its prompt, add constrained decoding, fine-tune it, or make a
-Pipeline A/B promotion decision; do not change Pipeline A or Pipeline B
-extraction behavior as part of a validation task; do not add an ML/
-statistical confidence model, a routing-policy configuration UI, a review
-UI, CSV export, RAG, persistence, frontend, or production integrations,
-unless a later brief explicitly asks for them.
+`docs/contracts/validation-and-routing.md`); and Phase 7 (a backend-only
+human review workflow -- `ReviewRecord` state machine, explicit
+field-path corrections, revalidation through the unmodified Phase 6
+validator -- plus downstream JSON/CSV output gated on an `accepted`
+result; see `docs/contracts/review-and-downstream-output.md`). Current
+phase status lives in `docs/project-state.md`. Do not run a large-scale
+Pipeline B benchmark, optimize its prompt, add constrained decoding,
+fine-tune it, or make a Pipeline A/B promotion decision; do not change
+Pipeline A or Pipeline B extraction behavior, or Phase 6 validation rules,
+as part of a review/downstream-output task; do not add an ML/statistical
+confidence model, a routing-policy configuration UI, an AI/LLM-based
+auto-correction mechanism, a review reopen workflow, a review frontend,
+RAG, a production database, vendor-specific (e.g. QuickBooks)
+integrations, or authentication, unless a later brief explicitly asks for
+them.
 
 ## Data Handling
 

@@ -2,6 +2,54 @@
 
 ## 2026-09-05
 
+### Phase 7 - Human Review Workflow And Downstream Output
+
+- Added `src/w2_pipeline/review/`: a backend-only human review workflow
+  consuming Phase 6's `ValidationResult` without duplicating any rule. A
+  `ReviewRecord` state machine (`pending -> in_review -> resolved`,
+  `resolved` terminal) tracks an immutable `original_document`, an
+  append-only `corrections` audit trail, and both the pre-review and
+  post-correction `ValidationResult`s side by side. `field_paths.py`
+  provides safe by-path get/set against the canonical schema's own
+  structure (`get_field`/`set_field_value`), rejecting unknown paths and
+  invalid new values explicitly. `workflow.py` provides
+  `start_review`/`apply_correction`/`revalidate`; `revalidate` calls the
+  unmodified Phase 6 `validate_w2_document` with fresh
+  `ExtractionSignals` (the corrected content, not the original extraction
+  attempt, is what is being judged). `repository.py` provides a
+  `ReviewRepository` protocol plus a `FileReviewRepository`
+  implementation (one JSON file per record, named by review ID only,
+  never a document ID/name/SSN/EIN).
+- Added `src/w2_pipeline/downstream/`: `FinalizedW2` +
+  `finalize_document`, the single gate ensuring only an `accepted`
+  document can become downstream output, plus `export_json`/`export_csv`
+  adapters and an `OutputAdapter` protocol documenting where a future
+  database/tax-software/REST/webhook/QuickBooks-style adapter would plug
+  in (none implemented). CSV output flattens scalar fields into one row
+  per document and JSON-string-encodes the four repeated structures
+  (Box 12/14 entries, tipped occupation codes, state/local entries) into
+  single cells.
+- Added `src/w2_pipeline/review/cli.py`, one orchestrating CLI covering
+  the full workflow: `validate`, `review-create`, `review-correct`,
+  `review-revalidate`, `export-document`, `export-review`.
+- Added `data/review/` (gitignored, `README.md` added) as the default
+  `FileReviewRepository` location, matching the existing
+  `data/documents/` PII-handling convention.
+- Added 65 new tests (`tests/review/`, `tests/downstream/`) covering
+  field-path get/set, state transitions, workflow orchestration
+  (including the full review flow end to end), repository round-tripping
+  and PII-safe filenames, `FinalizedW2` gating, both output adapters, the
+  CLI driving both flows end to end, and structural AST-based isolation
+  checks (no `w2_pipeline.evaluation`/`w2_pipeline.extraction`
+  dependency). Full suite: 340 tests passing (275 + 65), zero
+  regressions.
+- Verified both required end-to-end flows as committed tests: Flow A (a
+  known-good document validates `accepted` and finalizes directly) and
+  Flow B (a document missing a required field validates `needs_review`,
+  gets corrected through a `ReviewRecord`, revalidates to `accepted`, and
+  exports) -- the latter both via the Python API and entirely through the
+  CLI. See `docs/experiments/phase7-review-workflow.md`.
+
 ### Phase 6B - Fix Employer Name Extraction Gap
 
 - Fixed `_parse_employer` (`src/w2_pipeline/extraction/parser_2026.py`):

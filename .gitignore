@@ -40,3 +40,8 @@ data/evaluation/external/**
 # Local long-running benchmark run-control files.
 data/evaluation/results/*.log
 data/evaluation/results/*.pid
+
+# Review records may carry real taxpayer PII in production use; keep local.
+data/review/**
+!data/review/
+!data/review/README.md
