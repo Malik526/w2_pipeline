@@ -2,6 +2,54 @@
 
 ## 2026-09-06
 
+### Phase 8D.1 - Downstream JSON/CSV Verification
+
+- Verified the existing Phase 7 downstream layer
+  (`w2_pipeline.downstream`) end-to-end against real Phase 8C.11/8C.12
+  predictions, not just synthetic fixtures: a real accepted, checked-
+  retirement-plan document exports cleanly to both JSON and CSV, and a
+  real known `employer.name` `rotated_png` residual (`needs_review`) is
+  correctly blocked by `finalize_document` before any file is written.
+- Confirmed directly (not assumed): JSON booleans are real `true`/`false`;
+  money (`Decimal`) serializes as an exact-precision string in both
+  formats (no float rounding artifact possible); SSN/EIN leading zeros
+  are preserved exactly (both `str`, never `int`); CSV escapes commas/
+  quotes/apostrophes correctly via the existing `csv` module usage;
+  `False` and `null` are always distinguishable in both formats; repeated
+  exports of the same finalized document are byte-identical; a 40-field
+  JSON/CSV consistency check on the real example found 0 mismatches
+  (`field_observations` is the one intentional, documented JSON-only
+  field).
+- **Real finding, fixed**: `FinalizedW2.status` was a bare `str`, so a
+  caller constructing `FinalizedW2` directly (bypassing
+  `finalize_document` entirely) could set any status string --
+  including fabricating `"accepted"`, or leaving `"needs_review"` and
+  having both export adapters serialize it anyway -- despite the
+  module's docstring claiming no such path existed. Tightened to
+  `status: Literal["accepted"]`; behavior-neutral for every real caller
+  in this codebase (`finalize_document` is the only one), closes the
+  literal-status bypass, verified with a dedicated regression test.
+  Residual limitation (documented, not fixed): `FinalizedW2` still
+  cannot verify its `document` was the one actually validated, since it
+  holds no `ValidationResult` reference -- closing that would duplicate
+  `finalize_document`'s own responsibility.
+- Documented, previously unwritten: CSV renders booleans as Python's
+  capitalized `"True"`/`"False"`, not JSON-style `true`/`false` or
+  `1`/`0` -- deterministic, but a real JSON/CSV representation
+  difference a consumer must normalize for.
+- No batch export exists and none was added (out of scope per the
+  brief); verified the single-document primitive composes correctly
+  across repeated calls (identical CSV headers, no cross-document
+  contamination) for a caller who wants to batch it themselves.
+- Performance: JSON ~12.4 microseconds/doc, CSV ~65.1 microseconds/doc
+  across all 596 real accepted Phase 8C.12 documents -- negligible next
+  to PaddleOCR's ~1.2s/doc.
+- 13 new tests; full suite: **547 tests passing, up from 534, zero
+  unintended regressions.**
+- Decision: A. Production-ready downstream contract, with one real gap
+  found and closed during verification.
+- Full record: `docs/experiments/phase8d1-downstream-json-csv-verification.md`.
+
 ### Phase 8C.12 - Checkbox-Specific Validation for `box_13.retirement_plan`
 
 - Adds a dedicated Phase 6 validator rule set judging the Phase 8C.11

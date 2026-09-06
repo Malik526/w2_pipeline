@@ -1,0 +1,67 @@
+{
+  "document_id": "symage_900001-irs_w2_single_page_2026-p0:external_clean_render",
+  "status": "accepted",
+  "schema_version": 2026,
+  "tax_year": 2026,
+  "document": {
+    "metadata": {
+      "document_type": "W-2",
+      "tax_year": 2026,
+      "schema_version": 2026,
+      "document_id": "symage_900001-irs_w2_single_page_2026-p0:external_clean_render",
+      "source_filename": "symage_900001-irs_w2_single_page_2026-p0_external_clean_render.png",
+      "source_file_type": "png"
+    },
+    "employee": {
+      "ssn": "242-48-4959",
+      "first_name": "Steven",
+      "middle_initial": "D",
+      "last_name": "Armstrong",
+      "suffix": null,
+      "address": {
+        "address_line_1": null,
+        "address_line_2": null,
+        "city": null,
+        "state": null,
+        "postal_code": null,
+        "country": null
+      }
+    },
+    "employer": {
+      "ein": "75-5696876",
+      "name": "Timberline Trading Co.",
+      "address": {
+        "address_line_1": null,
+        "address_line_2": null,
+        "city": null,
+        "state": null,
+        "postal_code": null,
+        "country": null
+      },
+      "control_number": null
+    },
+    "federal_wages_and_taxes": {
+      "box_1_wages_tips_other_compensation": "114858.00",
+      "box_2_federal_income_tax_withheld": "21930.26",
+      "box_3_social_security_wages": "122000.00",
+      "box_4_social_security_tax_withheld": "7564.00",
+      "box_5_medicare_wages_and_tips": "122000.00",
+      "box_6_medicare_tax_withheld": "1769.00",
+      "box_7_social_security_tips": null,
+      "box_8_allocated_tips": null,
+      "box_9_verification_code": null,
+      "box_10_dependent_care_benefits": null,
+      "box_11_nonqualified_plans": null
+    },
+    "box_12_entries": [],
+    "box_13": {
+      "statutory_employee": false,
+      "retirement_plan": true,
+      "third_party_sick_pay": false
+    },
+    "box_14_entries": [],
+    "tipped_occupation_codes": [],
+    "state_local_entries": [],
+    "field_observations": []
+  }
+}

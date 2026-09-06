@@ -1499,6 +1499,44 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.1 - Downstream JSON/CSV Verification
+
+Full record: `docs/experiments/phase8d1-downstream-json-csv-verification.md`.
+
+Verification-only phase over the existing, already-substantially-built
+Phase 7 downstream layer (`w2_pipeline.downstream`): `finalize_document`
+gates on `ValidationResult.status == accepted`, `export_json`/`export_csv`
+each take one `FinalizedW2`. Verified end-to-end against **real** Phase
+8C.11/8C.12 predictions rather than only synthetic fixtures: a real
+accepted, checked-`retirement_plan` document exports cleanly to both
+formats (40/40 JSON/CSV fields consistent, 0 mismatches), and a real
+known `employer.name` `rotated_png` residual is correctly blocked by the
+export gate before any file is written.
+
+Confirmed directly: JSON booleans are real `true`/`false`; money
+(`Decimal`) is an exact-precision string in both formats (no float
+artifact possible); SSN/EIN leading zeros preserved (both `str`); CSV
+escaping works via the existing `csv` module; `False`/`null` always
+distinguishable; repeated exports are byte-identical.
+
+**Real finding, fixed**: `FinalizedW2.status` was a bare `str`, so direct
+construction (bypassing `finalize_document`) could fabricate any status,
+contradicting the module's own "no path skips validation" claim.
+Tightened to `status: Literal["accepted"]` -- behavior-neutral for every
+real caller, closes the literal-status bypass; residual limitation
+(cannot verify the wrapped document was actually validated) documented,
+not fixed, since closing it would duplicate `finalize_document`'s job.
+
+Documented (previously unwritten): CSV booleans render as Python's
+`"True"`/`"False"`, not JSON-style `true`/`false`. No batch export
+exists; none added (out of scope) -- single-document primitive verified
+to compose correctly across repeated calls instead. Performance: JSON
+~12.4us/doc, CSV ~65.1us/doc (negligible vs. PaddleOCR).
+
+13 new tests; full suite: **547 tests passing, up from 534, zero
+unintended regressions.** Decision: A, production-ready downstream
+contract.
+
 ### Phase 8C.12 - Checkbox-Specific Validation for `box_13.retirement_plan`
 
 Full record: `docs/experiments/phase8c12-checkbox-validator.md`.
@@ -1659,11 +1697,11 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Future Phases (after Phase 8C.12)
+## Future Phases (after Phase 8D.1)
 
 ```text
-Phase 8D.1 (not yet scoped, per the Phase 8C.12 brief) - downstream
-JSON/CSV verification.
+Phase 8D.2 (not yet scoped, per the Phase 8D.1 brief) - end-user/
+operator walkthrough of the complete backend.
 
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),

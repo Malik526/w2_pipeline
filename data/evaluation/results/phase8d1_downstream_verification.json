@@ -1,0 +1,86 @@
+{
+  "batch_composition": {
+    "distinct_document_ids": true,
+    "documents": 3,
+    "headers_identical_across_documents": true,
+    "note": "No batch export function exists (export_json/export_csv each take exactly one FinalizedW2); this checks that calling the single-document primitive repeatedly produces consistent, non-contaminating output, not a new batch feature."
+  },
+  "boolean_representation": {
+    "csv_retirement_plan": "True",
+    "json_retirement_plan": true,
+    "json_type": "bool"
+  },
+  "csv_escaping": {
+    "input": "Smith, \"Jones\" & O'Brien Corp",
+    "matches": true,
+    "round_tripped_value": "Smith, \"Jones\" & O'Brien Corp"
+  },
+  "determinism": {
+    "csv_byte_identical_on_repeat": true,
+    "json_byte_identical_on_repeat": true
+  },
+  "example_document": {
+    "document_id": "symage_900001-irs_w2_single_page_2026-p0",
+    "retirement_plan": true,
+    "variant_id": "external_clean_render"
+  },
+  "gating": {
+    "error_message": "Cannot finalize a document with validation status 'needs_review'; only 'accepted' documents may become downstream output.",
+    "export_blocked": true,
+    "residual_document": {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png"
+    },
+    "validation_issue_codes": [
+      "employer_name_address_leak",
+      "employer_name_layout_anomaly"
+    ],
+    "validation_status": "needs_review"
+  },
+  "json_csv_consistency": {
+    "field_observations_json_only": true,
+    "repeated_structure_checks": {
+      "box_12_entries": {
+        "csv_value": [],
+        "json_value": [],
+        "matches": true
+      },
+      "box_14_entries": {
+        "csv_value": [],
+        "json_value": [],
+        "matches": true
+      },
+      "state_local_entries": {
+        "csv_value": [],
+        "json_value": [],
+        "matches": true
+      },
+      "tipped_occupation_codes": {
+        "csv_value": [],
+        "json_value": [],
+        "matches": true
+      }
+    },
+    "scalar_keys_compared": 40,
+    "scalar_mismatches": []
+  },
+  "money_format": {
+    "csv_value": "114858.00",
+    "json_type": "str",
+    "json_value": "114858.00",
+    "matches": true
+  },
+  "performance": {
+    "csv_mean_microseconds_per_doc": 65.12525000069571,
+    "csv_total_seconds": 0.03881464900041465,
+    "documents": 596,
+    "json_mean_microseconds_per_doc": 12.444775165931787,
+    "json_total_seconds": 0.007417085998895345
+  },
+  "source_predictions_jsonl": "data/evaluation/results/phase8c12_checkbox_signals_600_predictions.jsonl",
+  "ssn_leading_zero_preservation": {
+    "csv_value": "012-34-5678",
+    "json_value": "012-34-5678",
+    "preserved_in_both": true
+  }
+}

@@ -197,7 +197,7 @@ methods, and nothing in `workflow.py` would need to change.
 ```python
 class FinalizedW2(BaseModel):
     document_id: str
-    status: str = "accepted"
+    status: Literal["accepted"] = "accepted"
     schema_version: int
     tax_year: int
     document: W2Document
@@ -206,27 +206,60 @@ def finalize_document(document: W2Document, validation_result: ValidationResult)
     """Raises NotAcceptedError unless validation_result.status == accepted."""
 ```
 
-`finalize_document` is the **only** place a `FinalizedW2` is constructed,
-and the only enforcement point for "a non-accepted document never reaches
-downstream output" -- every output adapter takes a `FinalizedW2`, never a
-raw `W2Document` + `ValidationResult` pair, so an adapter has no path
-around the gate. A `needs_review` document must complete the review
-workflow above and reach an `accepted` `revalidation_result` before it can
-be finalized.
+`finalize_document` is the **only** place a `FinalizedW2` is constructed
+in this codebase, and the only enforcement point for "a non-accepted
+document never reaches downstream output" -- every output adapter takes a
+`FinalizedW2`, never a raw `W2Document` + `ValidationResult` pair, so an
+adapter has no path around the gate. A `needs_review` document must
+complete the review workflow above and reach an `accepted`
+`revalidation_result` before it can be finalized. Verified directly
+against a real Phase 8C.12 `needs_review` document (one of the four known
+`employer.name` `rotated_png` residuals): `finalize_document` raises
+`NotAcceptedError` and no file is written.
+
+**`status: Literal["accepted"]`** (Phase 8D.1, tightened from a bare
+`str`): closes the one gap convention alone left open. A bare `str` field
+was previously syntactically valid for `FinalizedW2("needs_review", ...)`
+constructed *directly*, bypassing `finalize_document` entirely --
+`export_json`/`export_csv` would have serialized it without complaint,
+since neither adapter re-checks anything beyond "is this a `FinalizedW2`
+instance." The `Literal` makes that specific bypass a `pydantic.ValidationError`
+instead. This does not make `finalize_document` redundant, and does not
+close every theoretical gap: `FinalizedW2` still cannot verify that the
+`document` it was given was the one actually checked (it holds no
+`ValidationResult` reference), so a caller could in principle still
+construct one with `status="accepted"` for an unchecked document.
+Closing that would mean re-validating inside the model itself --
+duplicating `finalize_document`'s job -- so it remains a caller-discipline
+invariant, same as before this phase; only the impossible-by-construction
+status string is now actually impossible.
 
 ### JSON Output (`json_output.py`)
 
 `export_json(finalized, path=None) -> str` serializes `FinalizedW2` as-is
 via `model_dump_json` -- Unicode preserved (no `\uXXXX` escaping), field
 names/schema semantics unchanged, schema/tax-year metadata already present
-via the wrapper.
+via the wrapper. Verified directly (Phase 8D.1, against both synthetic
+fixtures and a real Phase 8C.12 prediction -- see
+`docs/experiments/phase8d1-downstream-json-csv-verification.md`):
+booleans serialize as real JSON `true`/`false` (never a string), money
+(`Money = Decimal`) serializes as an **exact-precision string** (e.g.
+`"114858.00"`, never a JSON number, so no binary-float rounding artifact
+is possible), `null` stays JSON `null` (never coerced to `""`), SSN/EIN
+leading zeros are preserved exactly (both are `str` fields, never `int`),
+and repeated identical exports of the same `FinalizedW2` are byte-for-byte
+identical.
 
 ### CSV Output (`csv_output.py`)
 
 One row per document (brief's simplest-stable option). Every scalar field
 (metadata, employee, employer, federal boxes, Box 13 flags, including
-nested address fields) flattens into its own dotted-path column, matching
-the evaluator's own flattening convention. The four repeated structures
+nested address fields) flattens into its own dotted-path column
+(`employee.first_name`, `federal_wages_and_taxes.box_1_wages_tips_other_compensation`,
+`box_13.retirement_plan`, etc. -- dots, not underscores), matching the
+evaluator's own flattening convention. Header columns are sorted
+alphabetically (`sorted(row)`), so column order is deterministic across
+runs and documents. The four repeated structures
 (`box_12_entries`, `box_14_entries`, `tipped_occupation_codes`,
 `state_local_entries`) do not flatten into a fixed column set -- a
 document can have zero, one, or several of each -- so each is
@@ -234,7 +267,35 @@ JSON-string-encoded into a single cell (brief's option A) rather than
 emitted as separate related files (option B): simpler, and the one-row-
 per-document invariant survives regardless of how many repeated entries a
 document has. `field_observations` is excluded (internal extraction
-bookkeeping, not W-2 content).
+bookkeeping, not W-2 content) -- present in JSON output, deliberately
+absent from CSV; this is the one intentional field-level difference
+between the two formats (verified, Phase 8D.1: every other scalar field
+present in JSON is present in CSV, and their values agree after the
+normalization below).
+
+**CSV has no native boolean/null/number type** (Phase 8D.1, verified
+directly against real output, not assumed): every leaf value is flattened
+via Python's own `str(value)`, so:
+
+- **Booleans** render as Python's capitalized `str(bool)`: `"True"` /
+  `"False"` -- not JSON-style lowercase `true`/`false`, not `1`/`0`. This
+  is a real, deterministic difference from the JSON output's native
+  `true`/`false`, not a bug; a consumer normalizing JSON and CSV values
+  for comparison must account for it (`str(json_bool) == csv_cell`).
+  `False` and `null` are always distinguishable: a `False` checkbox cell
+  reads exactly `"False"`, never the empty string a `null`/missing
+  optional field produces.
+- **Null/missing optional values** become an empty CSV cell (`""`).
+- **Money** (`Decimal`) becomes its exact-precision string, identical to
+  the JSON representation (`"114858.00"` in both).
+- **Strings** with commas, quotes, or apostrophes are escaped via
+  Python's `csv` module (`csv.DictWriter`), never hand-built string
+  concatenation -- standard RFC 4180 quoting, verified with a
+  constructed `Smith, "Jones" & O'Brien Corp`-style employer name that
+  round-trips exactly through `csv.DictReader`.
+- **SSN/EIN** are `str` fields end-to-end (never `int`), so a leading
+  zero (`"012-34-5678"`) is preserved exactly in both JSON and CSV --
+  verified directly, not merely inferred from the field's declared type.
 
 ### Adapter Boundary (`adapter.py`)
 
@@ -326,3 +387,17 @@ original and corrected document.
 - No authentication/authorization on any CLI command or repository
   operation -- reviewer identity (`reviewer_id`) is a free-text audit
   field, not a verified identity.
+- No batch export function exists (Phase 8D.1 confirmed, did not add
+  one): `export_json`/`export_csv` and the CLI's `export-document`/
+  `export-review` each take exactly one `FinalizedW2`. A caller wanting
+  several documents calls the single-document primitive once per
+  document -- verified (Phase 8D.1) to produce consistent, non-
+  contaminating output across repeated calls (identical CSV header,
+  distinct `metadata.document_id` per row) -- rather than a dedicated
+  multi-document API or CSV file.
+- `FinalizedW2.status: Literal["accepted"]` (Phase 8D.1) prevents
+  constructing the wrapper with any other status string, but cannot
+  verify that the `document` it wraps was the one actually validated --
+  that remains a caller-discipline invariant enforced only by
+  `finalize_document` being the sole real call site in this codebase,
+  not by the type system. See "Downstream Output Contracts" above.
