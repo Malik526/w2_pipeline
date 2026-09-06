@@ -2,6 +2,33 @@
 
 ## 2026-09-06
 
+### Phase 8C.7 - Combined Employer-Name Validation Signal Experiment
+
+- Combined Phase 8C.5's address-leak heuristic and Phase 8C.6's
+  layout-span signal for `employer.name`, purely as combination logic
+  over the two already-frozen row artifacts (no OCR rerun, neither
+  underlying signal altered). New evaluation-only code: agreement-state
+  classification, OR/AND, and confusion-matrix scoring, all taking only
+  the two already-computed signal booleans, never ground truth.
+- **Result, stated exactly as measured**: all 4 known failures fire
+  both signals; zero disagreements occur anywhere across all 600
+  documents. OR and AND therefore produce identical metrics to each
+  other and to either signal alone (100% recall, 100% precision, 0%
+  false-review rate). No performance improvement exists in this
+  measurement, and none is claimed, per the brief's explicit caveat
+  against manufacturing a gain where none exists. Disagreement-handling
+  logic was still verified correct via adversarial synthetic fixtures,
+  since the real dataset contains no disagreement case to inspect.
+- Recommendation: Tiered policy (not implemented) -- justified by
+  architectural independence and zero cost to preserve the agreement
+  state, not by a measured score improvement. Broader real-world/
+  adversarial employer-name testing remains the prerequisite before any
+  production promotion, unchanged from Phase 8C.5/8C.6's own caveats.
+- 17 new tests; full suite: 460 tests passing, up from 443, zero
+  regressions. No validation rule added, no field other than
+  `employer.name` touched. Full report:
+  `docs/experiments/phase8c7-combined-employer-name-validation-signals.md`.
+
 ### Phase 8C.6 - Employer Name Layout-Span Signal Experiment
 
 - Offline validation experiment, independent of Phase 8C.5: can pure

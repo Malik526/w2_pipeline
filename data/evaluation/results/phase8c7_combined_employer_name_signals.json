@@ -1,0 +1,96 @@
+{
+  "address_signal_definition": "C_expanded_number_and_suffix",
+  "agreement_state_counts": {
+    "address_only": 0,
+    "both": 4,
+    "layout_only": 0,
+    "neither": 596
+  },
+  "confusion_matrices": {
+    "address_alone": {
+      "false_negative_document_ids": [],
+      "false_negatives": 0,
+      "false_positive_document_ids": [],
+      "false_positives": 0,
+      "false_review_rate": 0.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "specificity": 1.0,
+      "true_negatives": 596,
+      "true_positives": 4
+    },
+    "and_combined": {
+      "false_negative_document_ids": [],
+      "false_negatives": 0,
+      "false_positive_document_ids": [],
+      "false_positives": 0,
+      "false_review_rate": 0.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "specificity": 1.0,
+      "true_negatives": 596,
+      "true_positives": 4
+    },
+    "layout_alone": {
+      "false_negative_document_ids": [],
+      "false_negatives": 0,
+      "false_positive_document_ids": [],
+      "false_positives": 0,
+      "false_review_rate": 0.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "specificity": 1.0,
+      "true_negatives": 596,
+      "true_positives": 4
+    },
+    "or_combined": {
+      "false_negative_document_ids": [],
+      "false_negatives": 0,
+      "false_positive_document_ids": [],
+      "false_positives": 0,
+      "false_review_rate": 0.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "specificity": 1.0,
+      "true_negatives": 596,
+      "true_positives": 4
+    }
+  },
+  "correct_documents": 596,
+  "disagreements": [],
+  "erroneous_documents": 4,
+  "known_failures_agreement": [
+    {
+      "address_signal": true,
+      "agreement_state": "both",
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "layout_signal": true,
+      "variant_id": "rotated_png"
+    },
+    {
+      "address_signal": true,
+      "agreement_state": "both",
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "layout_signal": true,
+      "variant_id": "rotated_png"
+    },
+    {
+      "address_signal": true,
+      "agreement_state": "both",
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "layout_signal": true,
+      "variant_id": "rotated_png"
+    },
+    {
+      "address_signal": true,
+      "agreement_state": "both",
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "layout_signal": true,
+      "variant_id": "rotated_png"
+    }
+  ],
+  "layout_signal_definition": "observation_count > 1",
+  "source_address_leak_rows": "data/evaluation/results/phase8c5_employer_name_address_leak_rows.jsonl",
+  "source_layout_span_rows": "data/evaluation/results/phase8c6_employer_name_layout_span_rows.jsonl",
+  "total_documents": 600
+}

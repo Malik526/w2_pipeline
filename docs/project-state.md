@@ -1356,23 +1356,61 @@ shapes neither signal alone was designed for.
 regressions.** No validation rule added, no OCR/parser/checkbox change,
 no combination with Phase 8C.5's heuristic.
 
-## Future Phases (after Phase 8C.6)
+### Phase 8C.7 - Combined Employer-Name Validation Signal Experiment
+
+Full record: `docs/experiments/phase8c7-combined-employer-name-validation-signals.md`.
+
+Combined Phase 8C.5's address-leak heuristic and Phase 8C.6's layout-span
+signal for `employer.name`, purely as combination logic over the two
+already-frozen row artifacts (no OCR rerun, neither underlying signal
+altered). New evaluation-only code:
+`combined_employer_name_signals.py` (agreement-state classification,
+OR/AND, confusion-matrix scoring -- every function takes only the two
+already-computed booleans, no ground truth) and
+`run_combined_employer_name_signal_analysis.py` (joins the two frozen
+artifacts, cross-checking their key sets and correctness labels for
+agreement before combining).
+
+**Result, stated exactly as measured, per the brief's explicit caveat
+about not manufacturing a gain**: all 4 known failures fire **both**
+signals; **zero disagreements** occur anywhere across all 600 documents
+(no document shows `address_signal != layout_signal`). Consequently OR
+and AND produce **identical** metrics to each other and to either signal
+alone -- 100% recall, 100% precision, 0% false-review rate. No
+performance improvement exists in this measurement, and none is claimed.
+Disagreement-handling logic was still verified correct via adversarial
+synthetic fixtures (since the real dataset contains no disagreement
+case): OR would catch a hypothetical single-signal-only true positive;
+AND would suppress a hypothetical single-signal-only false positive.
+
+**Recommendation: C. Tiered policy** (not implemented) -- not because
+"two signals beat one" on today's score (they don't, measurably), but
+because the two signals are architecturally independent (one inspects
+semantic content, the other inspects geometry) and preserving the
+both/one/neither agreement state costs nothing while keeping each
+signal's own hypothetical, not-yet-observed detection reach (address-leak
+could catch non-geometric address corruption; layout could catch
+non-address multi-observation merges). Both prior phases' own caveat
+stands unchanged: broader real-world/adversarial employer-name testing
+is still needed before any production promotion decision -- this phase
+adds architectural confidence, not additional positive examples.
+
+17 new tests; full suite: **460 tests passing, up from 443, zero
+regressions.** No validation rule added, no field other than
+`employer.name` touched.
+
+## Future Phases (after Phase 8C.7)
 
 ```text
-Phase 8C.7 (tentatively justified, not yet run) - a combined
-address-leak (Phase 8C.5) + layout-span (Phase 8C.6) signal experiment,
-to test robustness against employer.name defect shapes neither signal
-alone was designed for (e.g. a non-address merge, which layout would
-catch and the address heuristic would not).
-
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),
 including how to present the validator's demonstrated 0% catch rate
 (Phase 8C.3), native OCR confidence's demonstrated lack of signal
-(Phase 8C.4), and the two independently-perfect candidate signals
-(Phase 8C.5 address-leak, Phase 8C.6 layout-span) on the same known
-residual defect classes, and the resulting 10.33% unsafe-acceptance
-rate on rotated documents.
+(Phase 8C.4), and the two independently-perfect, architecturally
+complementary candidate signals (Phase 8C.5 address-leak, Phase 8C.6
+layout-span, Phase 8C.7 combination) on the same known residual defect
+classes, and the resulting 10.33% unsafe-acceptance rate on rotated
+documents.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
@@ -1381,10 +1419,12 @@ employer.address OCR fallback and extraction follow-up; a rotation-aware
 Box 13 checkbox recalibration (including its own, separate confidence
 signal: pixel-coverage margin, skew, geometry quality); a fix for the
 employer.name row-merge residual (would require reworking
-`_group_observation_rows`'s shared tolerance logic); promoting one or
-both Phase 8C.5/8C.6 signals into production validation, ideally after
-validating against a larger/real-world employer-name corpus; and/or a
-larger-scale Pipeline B evaluation.
+`_group_observation_rows`'s shared tolerance logic); broader real-world/
+adversarial employer-name testing (including at least one genuine
+address-vs-layout disagreement case) as the prerequisite both Phase
+8C.5/8C.6/8C.7 identified before promoting a tiered employer-name
+validation rule into production; and/or a larger-scale Pipeline B
+evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever
