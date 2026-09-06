@@ -53,6 +53,7 @@ class PipelineAExtractor:
             employer_name_observation_count=compute_employer_name_observation_count(
                 document, observations.observations
             ),
+            box_13_checkbox_evidence=observations.box_13_checkbox_evidence,
         )
 
     def extract(self, extraction_input: ExtractionInput) -> ExtractionResult:

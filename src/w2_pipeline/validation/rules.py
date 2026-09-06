@@ -70,6 +70,48 @@ _EMPLOYER_NAME_ROAD_SUFFIXES: frozenset[str] = frozenset(
 )
 _EMPLOYER_NAME_WORD_RE = re.compile(r"[A-Za-z]+")
 
+# Phase 8C.12: checkbox evidence-quality thresholds for box_13.retirement_plan.
+#
+# `_NEAR_THRESHOLD_DECISION_MARGIN`: the 600-document Phase 8C.10/8C.11
+# benchmark has NO real near-boundary examples to fit a threshold from --
+# every unchecked document has interior_ink_ratio exactly 0.0 (decision_margin
+# exactly -0.12, a hard floor, not a distribution near the boundary) and
+# every checked document is at least 0.124 above the 0.12 threshold (ratio
+# 0.244-0.298). There is a clean, unbroken 0.244-wide gap with nothing
+# observed inside it. 0.05 is chosen as a conservative buffer that is (a)
+# less than half the smallest real separation observed in either direction
+# (0.12 unchecked, 0.124 checked), so it provably cannot fire on any of this
+# benchmark's 600 real documents, while (b) still being wide enough to catch
+# a genuinely ambiguous real-world case this synthetic dataset cannot
+# produce -- e.g. print/scan artifacts or a faint partial mark landing
+# between roughly 0.07 and 0.17 interior ink ratio. See
+# docs/experiments/phase8c12-checkbox-validator.md Section 2 for the full
+# distribution analysis this is derived from.
+_NEAR_THRESHOLD_DECISION_MARGIN = 0.05
+
+# `_MIN_PLAUSIBLE_SHAPE_SCORE`: shape_score = 1.0 - min(abs(aspect_ratio -
+# 1.0), 1.0), so 0.5 means the located candidate's aspect ratio is at least
+# 2:1 (or 1:2) -- a shape no square W-2 checkbox glyph can plausibly have.
+# This is a broad structural sanity floor, not fit to the benchmark: the
+# benchmark's own observed range (0.827-0.880 across all 600 documents,
+# tight and resolution/DPI-specific to this one synthetic rendering
+# pipeline) is far above 0.5 and is deliberately NOT used as the floor,
+# since doing so would overfit this dataset's specific renderer rather than
+# reflect a genuine structural implausibility check.
+_MIN_PLAUSIBLE_SHAPE_SCORE = 0.5
+
+# `anchor_distance_px` and `horizontal_alignment_offset_px` are preserved on
+# `ExtractionSignals` but deliberately have NO numeric rule here: both are
+# raw pixel offsets (not normalized by the anchor's own line height, which
+# validation does not receive), and the benchmark's observed range (-2 to
+# 0px anchor distance, 0-3px alignment offset) is specific to one fixed
+# 2550x3300 synthetic render DPI. A raw-pixel threshold calibrated on that
+# single resolution would not generalize to a differently-scanned/DPI real
+# document -- there is not enough variation in this dataset to justify a
+# production threshold for either signal. Both remain available on
+# `ExtractionSignals` for the next phase once real-world DPI variation
+# exists to calibrate against.
+
 # Ordered so `checks_run` (== len(ALL_RULES)) reads top-to-bottom the same
 # way the module docstring and docs/contracts/validation-and-routing.md
 # describe the categories: signals, then required fields, then format,
@@ -83,6 +125,7 @@ ALL_RULE_NAMES = (
     "ein_format",
     "employer_name_address_leak",
     "employer_name_layout_anomaly",
+    "retirement_plan_checkbox_evidence",
     "core_wage_tax_fields_required",
     "monetary_fields_valid",
     "box_12_code_format",
@@ -108,6 +151,7 @@ def run_all_rules(document: W2Document, signals: ExtractionSignals) -> list[Vali
     issues.extend(_check_ein_format(document))
     issues.extend(_check_employer_name_address_leak(document))
     issues.extend(_check_employer_name_layout_anomaly(document, signals))
+    issues.extend(_check_retirement_plan_checkbox_evidence(signals))
     issues.extend(_check_core_wage_tax_fields_required(document))
     issues.extend(_check_monetary_fields_valid(document))
     issues.extend(_check_box_12_code_format(document))
@@ -299,6 +343,150 @@ def _check_employer_name_layout_anomaly(
             metadata={"observation_count": count},
         )
     ]
+
+
+def _check_retirement_plan_checkbox_evidence(signals: ExtractionSignals) -> list[ValidationIssue]:
+    """Judge `box_13.retirement_plan`'s checkbox-detector evidence quality
+    (Phase 8C.12), not the extracted boolean's validity -- a boolean is
+    structurally valid even when wrong, which is exactly why the pre-8C.12
+    validator silently accepted all 60 Phase 8C.2 checkbox errors. This
+    rule is symmetric: `True` and `False` are judged identically, purely
+    on whether the evidence behind either value is trustworthy.
+
+    Never re-opens the source image, re-runs OCR, or re-runs checkbox
+    localization/classification -- every value here was already computed
+    by extraction and threaded through `ExtractionSignals` (Phase 8C.11's
+    `Box13CheckboxEvidence`, duplicated as primitives; see that field's
+    docstring for why validation does not import the extraction type
+    directly).
+    """
+
+    method = signals.checkbox_evidence_detection_method
+    if method is None:
+        # Only Pipeline A's OCR-driven routes ("ocr", image-only PDF pages;
+        # "mixed", partially-OCR PDFs) are within Phase 8C.10/8C.11's scope
+        # and expected to carry this evidence. Two categories are
+        # deliberately exempt, not merely unhandled:
+        #   - Pipeline A's `native_pdf` route never runs any image-based
+        #     checkbox detector at all -- box_13.retirement_plan comes from
+        #     embedded-text-prefix reconstruction instead (see
+        #     acquisition.py's `PdfTextMode.EMBEDDED_TEXT` branch, which
+        #     never touches checkbox_anchor.py or checkbox_vision.py) -- so
+        #     "no evidence" there is a genuinely different mechanism, not a
+        #     gap.
+        #   - Pipeline B (`route="vlm"` by this project's convention) is an
+        #     entirely different, generative pipeline that never produces
+        #     this OCR-anchor evidence and is out of this phase's scope --
+        #     validate_w2_document is explicitly backend-neutral (see
+        #     validator.py's module docstring) and must not penalize a
+        #     pipeline this signal was never built for.
+        # This is a positive allow-list of the two routes Phase 8C.10/8C.11
+        # actually instrument, not a default-deny list: an unset/unknown
+        # `route` is exempt too, the same as `native_pdf`/`vlm`, since a
+        # route this validator cannot positively identify as
+        # anchor-relative-eligible must not be penalized for lacking
+        # evidence it was never promised to carry.
+        if signals.route not in ("ocr", "mixed"):
+            return []
+        return [
+            ValidationIssue(
+                code="retirement_plan_checkbox_evidence_missing",
+                field_path="box_13.retirement_plan",
+                severity=ValidationSeverity.ERROR,
+                message=(
+                    "No box_13.retirement_plan checkbox-detector evidence was supplied "
+                    "for this extraction route, so the extracted value cannot be "
+                    "verified as coming from the trusted anchor-relative detector."
+                ),
+                metadata={"route": signals.route} if signals.route is not None else {},
+            )
+        ]
+
+    issues: list[ValidationIssue] = []
+
+    # Rule 1: anything other than the promoted anchor-relative detector --
+    # whether an explicit fallback (fixed_zone_fallback) or a deliberate
+    # diagnostic override (fixed_zone_disabled, never expected in
+    # production per Phase 8C.11) -- used the legacy fixed-zone mechanism,
+    # which has a known historical rotation defect (Phase 8C.2: 60/600
+    # box_13.retirement_plan failures, all fixed-zone).
+    if signals.checkbox_evidence_fallback_used or method != "anchor_relative":
+        issues.append(
+            ValidationIssue(
+                code="retirement_plan_checkbox_fallback_used",
+                field_path="box_13.retirement_plan",
+                severity=ValidationSeverity.ERROR,
+                message=(
+                    f"box_13.retirement_plan was produced by {method!r}, not the "
+                    "promoted anchor-relative detector; the legacy fixed-zone "
+                    "mechanism has a known historical rotation defect and is not "
+                    "safe for automatic acceptance."
+                ),
+                observed_value=method,
+            )
+        )
+
+    # Rule 2: localization failures. Independent of Rule 1 and of each
+    # other by design -- a document can be missing both the anchor and the
+    # checkbox candidate, and each is its own root cause worth preserving.
+    if signals.checkbox_evidence_anchor_found is False:
+        issues.append(
+            ValidationIssue(
+                code="retirement_plan_checkbox_anchor_missing",
+                field_path="box_13.retirement_plan",
+                severity=ValidationSeverity.ERROR,
+                message='The "Retirement plan" label anchor could not be localized in OCR output.',
+            )
+        )
+    if signals.checkbox_evidence_checkbox_found is False:
+        issues.append(
+            ValidationIssue(
+                code="retirement_plan_checkbox_not_found",
+                field_path="box_13.retirement_plan",
+                severity=ValidationSeverity.ERROR,
+                message="No checkbox border candidate could be localized near the anchor.",
+            )
+        )
+
+    # Rule 3: decision-margin quality -- see _NEAR_THRESHOLD_DECISION_MARGIN
+    # above for the full derivation. Symmetric: fires the same way whether
+    # the ambiguous ratio would classify as checked or unchecked.
+    margin = signals.checkbox_evidence_decision_margin
+    if margin is not None and abs(margin) < _NEAR_THRESHOLD_DECISION_MARGIN:
+        issues.append(
+            ValidationIssue(
+                code="retirement_plan_checkbox_low_decision_margin",
+                field_path="box_13.retirement_plan",
+                severity=ValidationSeverity.ERROR,
+                message=(
+                    f"Checkbox interior ink ratio is within {_NEAR_THRESHOLD_DECISION_MARGIN} "
+                    "of the calibrated checked/unchecked threshold, an ambiguous "
+                    "classification margin."
+                ),
+                observed_value=margin,
+            )
+        )
+
+    # Rule 4: geometry sanity -- see _MIN_PLAUSIBLE_SHAPE_SCORE above for
+    # why only this one broad structural bound is implemented.
+    shape_score = signals.checkbox_evidence_shape_score
+    if shape_score is not None and shape_score < _MIN_PLAUSIBLE_SHAPE_SCORE:
+        issues.append(
+            ValidationIssue(
+                code="retirement_plan_checkbox_geometry_anomaly",
+                field_path="box_13.retirement_plan",
+                severity=ValidationSeverity.ERROR,
+                message=(
+                    f"Checkbox candidate shape_score {shape_score:.3f} is far from "
+                    f"square (below the {_MIN_PLAUSIBLE_SHAPE_SCORE} structural sanity "
+                    "floor), consistent with a malformed localization rather than a "
+                    "real checkbox."
+                ),
+                observed_value=shape_score,
+            )
+        )
+
+    return issues
 
 
 def _check_core_wage_tax_fields_required(document: W2Document) -> list[ValidationIssue]:

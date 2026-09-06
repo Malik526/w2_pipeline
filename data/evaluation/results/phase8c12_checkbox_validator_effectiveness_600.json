@@ -1,0 +1,135 @@
+{
+  "by_variant": {
+    "blurred_png": {
+      "accepted_documents": 150,
+      "automatic_acceptance_rate": 1.0,
+      "correct_accepted": 150,
+      "correct_documents": 150,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 0,
+      "erroneous_documents": 0,
+      "erroneous_routed_needs_review": 0,
+      "error_detection_recall": null,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 0,
+      "review_queue_precision": null,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.0
+    },
+    "compressed_jpeg": {
+      "accepted_documents": 150,
+      "automatic_acceptance_rate": 1.0,
+      "correct_accepted": 150,
+      "correct_documents": 150,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 0,
+      "erroneous_documents": 0,
+      "erroneous_routed_needs_review": 0,
+      "error_detection_recall": null,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 0,
+      "review_queue_precision": null,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.0
+    },
+    "external_clean_render": {
+      "accepted_documents": 150,
+      "automatic_acceptance_rate": 1.0,
+      "correct_accepted": 150,
+      "correct_documents": 150,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 0,
+      "erroneous_documents": 0,
+      "erroneous_routed_needs_review": 0,
+      "error_detection_recall": null,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 0,
+      "review_queue_precision": null,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.0
+    },
+    "rotated_png": {
+      "accepted_documents": 146,
+      "automatic_acceptance_rate": 0.9733333333333334,
+      "correct_accepted": 146,
+      "correct_documents": 146,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 0,
+      "erroneous_documents": 4,
+      "erroneous_routed_needs_review": 4,
+      "error_detection_recall": 1.0,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 4,
+      "review_queue_precision": 1.0,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.0
+    }
+  },
+  "distinct_failing_field_paths_observed": [
+    "employer.name"
+  ],
+  "error_classes": {
+    "box_13.retirement_plan": {
+      "accepted": 0,
+      "affected_document_ids": [],
+      "affected_documents": 0,
+      "catch_rate": null,
+      "field_path": "box_13.retirement_plan",
+      "routed_needs_review": 0
+    },
+    "employer.name": {
+      "accepted": 0,
+      "affected_document_ids": [
+        "symage_900033-irs_w2_single_page_2026-p0::rotated_png",
+        "symage_900045-irs_w2_single_page_2026-p0::rotated_png",
+        "symage_900082-irs_w2_single_page_2026-p0::rotated_png",
+        "symage_900146-irs_w2_single_page_2026-p0::rotated_png"
+      ],
+      "affected_documents": 4,
+      "catch_rate": 1.0,
+      "field_path": "employer.name",
+      "routed_needs_review": 4
+    },
+    "overlap_between_classes": {
+      "count": 0,
+      "documents_with_both_failures": []
+    }
+  },
+  "leakage_boundary": "validate_w2_document() called with only record.document and signals derived from record.status/pipeline_id/extraction_route; ground truth loaded and compared only after that call returns.",
+  "method": "complete_saved_predictions_no_reconstruction",
+  "overall": {
+    "accepted_documents": 596,
+    "automatic_acceptance_rate": 0.9933333333333333,
+    "correct_accepted": 596,
+    "correct_documents": 596,
+    "correct_routed_needs_review": 0,
+    "erroneous_accepted": 0,
+    "erroneous_documents": 4,
+    "erroneous_routed_needs_review": 4,
+    "error_detection_recall": 1.0,
+    "false_review_rate": 0.0,
+    "needs_review_documents": 4,
+    "review_queue_precision": 1.0,
+    "total_documents": 600,
+    "unsafe_acceptance_rate": 0.0
+  },
+  "source_manifest": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "source_predictions_jsonl": "data/evaluation/results/phase8c12_checkbox_signals_600_predictions.jsonl",
+  "total_field_failures": 4,
+  "validator_issue_taxonomy": [
+    {
+      "correct_document_count": 0,
+      "document_count": 4,
+      "erroneous_document_count": 4,
+      "issue_code": "employer_name_address_leak",
+      "severity": "error"
+    },
+    {
+      "correct_document_count": 0,
+      "document_count": 4,
+      "erroneous_document_count": 4,
+      "issue_code": "employer_name_layout_anomaly",
+      "severity": "error"
+    }
+  ]
+}

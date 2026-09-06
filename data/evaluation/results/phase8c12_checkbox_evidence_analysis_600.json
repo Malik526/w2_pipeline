@@ -1,0 +1,219 @@
+{
+  "by_variant": {
+    "blurred_png": {
+      "abs_decision_margin": {
+        "max": 0.17761904761904762,
+        "mean": 0.15457142857142847,
+        "median": 0.17761904761904762,
+        "min": 0.12,
+        "n": 150
+      },
+      "alignment_offset_px": {
+        "max": 1.5,
+        "mean": 1.1,
+        "median": 1.5,
+        "min": 0.5,
+        "n": 150
+      },
+      "anchor_distance_px": {
+        "max": 0.0,
+        "mean": -1.2,
+        "median": -2.0,
+        "min": -2.0,
+        "n": 150
+      },
+      "documents": 150,
+      "incorrect": 0,
+      "shape_score": {
+        "max": 0.88,
+        "mean": 0.8799999999999983,
+        "median": 0.88,
+        "min": 0.88,
+        "n": 150
+      }
+    },
+    "compressed_jpeg": {
+      "abs_decision_margin": {
+        "max": 0.14714285714285713,
+        "mean": 0.13628571428571412,
+        "median": 0.14714285714285713,
+        "min": 0.12,
+        "n": 150
+      },
+      "alignment_offset_px": {
+        "max": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "n": 150
+      },
+      "anchor_distance_px": {
+        "max": -1.0,
+        "mean": -1.0,
+        "median": -1.0,
+        "min": -1.0,
+        "n": 150
+      },
+      "documents": 150,
+      "incorrect": 0,
+      "shape_score": {
+        "max": 0.86,
+        "mean": 0.8599999999999997,
+        "median": 0.86,
+        "min": 0.86,
+        "n": 150
+      }
+    },
+    "external_clean_render": {
+      "abs_decision_margin": {
+        "max": 0.14285714285714285,
+        "mean": 0.13371428571428548,
+        "median": 0.14285714285714285,
+        "min": 0.12,
+        "n": 150
+      },
+      "alignment_offset_px": {
+        "max": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "n": 150
+      },
+      "anchor_distance_px": {
+        "max": -1.0,
+        "mean": -1.0,
+        "median": -1.0,
+        "min": -1.0,
+        "n": 150
+      },
+      "documents": 150,
+      "incorrect": 0,
+      "shape_score": {
+        "max": 0.86,
+        "mean": 0.8599999999999997,
+        "median": 0.86,
+        "min": 0.86,
+        "n": 150
+      }
+    },
+    "rotated_png": {
+      "abs_decision_margin": {
+        "max": 0.124,
+        "mean": 0.12240000000000009,
+        "median": 0.124,
+        "min": 0.12,
+        "n": 150
+      },
+      "alignment_offset_px": {
+        "max": 3.0,
+        "mean": 2.4,
+        "median": 2.0,
+        "min": 2.0,
+        "n": 150
+      },
+      "anchor_distance_px": {
+        "max": -1.0,
+        "mean": -1.6,
+        "median": -2.0,
+        "min": -2.0,
+        "n": 150
+      },
+      "documents": 150,
+      "incorrect": 0,
+      "shape_score": {
+        "max": 0.8431372549019608,
+        "mean": 0.8334087481146317,
+        "median": 0.8269230769230769,
+        "min": 0.8269230769230769,
+        "n": 150
+      }
+    }
+  },
+  "checked_documents": 360,
+  "decision_margin_by_class": {
+    "checked": {
+      "max": 0.17761904761904762,
+      "mean": 0.14790476190476176,
+      "median": 0.14714285714285713,
+      "min": 0.124,
+      "n": 360
+    },
+    "unchecked": {
+      "max": -0.12,
+      "mean": -0.12000000000000026,
+      "median": -0.12,
+      "min": -0.12,
+      "n": 240
+    }
+  },
+  "documents": 600,
+  "incorrect_documents": 0,
+  "near_threshold_margin_analysis": {
+    "candidate_margin_thresholds": {
+      "0.02": {
+        "documents_that_would_be_flagged": 0,
+        "would_flag_any_correct_document": false
+      },
+      "0.05": {
+        "documents_that_would_be_flagged": 0,
+        "would_flag_any_correct_document": false
+      },
+      "0.08": {
+        "documents_that_would_be_flagged": 0,
+        "would_flag_any_correct_document": false
+      },
+      "0.1": {
+        "documents_that_would_be_flagged": 0,
+        "would_flag_any_correct_document": false
+      },
+      "0.119": {
+        "documents_that_would_be_flagged": 0,
+        "would_flag_any_correct_document": false
+      }
+    },
+    "chosen_threshold": 0.05,
+    "chosen_threshold_flags_on_this_benchmark": 0,
+    "rationale": "0.05 is less than half the smallest real separation observed in either direction (unchecked: exactly 0.12, constant; checked: minimum 0.124), so it cannot fire on any of this benchmark's 600 real documents, while remaining wide enough to catch a genuinely ambiguous real-world interior ink ratio (roughly 0.07-0.17) that this synthetic dataset does not produce. See docs/experiments/phase8c12-checkbox-validator.md Section 2."
+  },
+  "overall": {
+    "abs_decision_margin": {
+      "max": 0.17761904761904762,
+      "mean": 0.13674285714285803,
+      "median": 0.124,
+      "min": 0.12,
+      "n": 600
+    },
+    "alignment_offset_px": {
+      "max": 3.0,
+      "mean": 0.875,
+      "median": 0.5,
+      "min": 0.0,
+      "n": 600
+    },
+    "anchor_distance_px": {
+      "max": 0.0,
+      "mean": -1.2,
+      "median": -1.0,
+      "min": -2.0,
+      "n": 600
+    },
+    "shape_score": {
+      "max": 0.88,
+      "mean": 0.8583521870286636,
+      "median": 0.86,
+      "min": 0.8269230769230769,
+      "n": 600
+    }
+  },
+  "provenance": "Phase 8C.10 checkbox_anchor.py output, unmodified by Phase 8C.11 (no retuning); Phase 8C.11's own production-path benchmark independently confirmed the identical 600/600 localization and 0/600 fallback result this file reports.",
+  "questions": {
+    "1_observed_margin_distribution": "Unchecked: constant -0.12 (interior_ink_ratio always exactly 0.0, n=240). Checked: +0.124 to +0.178 (n=360). A clean, unbroken 0.244-wide gap between the two classes with nothing observed inside it -- this dataset offers no real near-boundary example in either direction.",
+    "2_observed_shape_score_distribution": "0.8269-0.8800 across all 600 documents (tight, resolution/DPI-specific to this one synthetic renderer).",
+    "3_rotated_docs_systematically_weaker_geometry": "Slightly: rotated_png mean shape_score 0.8334 vs. 0.8667 for the other three variants, and rotated_png shows the largest alignment_offset_px (2-3px vs. 0-1.5px elsewhere) -- consistent with the rotation-induced OCR line-box noise the phase 8C.10 doc's 'Real Geometry Investigation' section describes, but still far above any plausible malformed-geometry floor.",
+    "4_correct_docs_near_plausible_uncertainty_thresholds": "No: the closest any correct document comes to the chosen 0.05 margin threshold is 0.12 (the unchecked constant), 2.4x the threshold. 0 of 600 documents fall inside the chosen 0.05 threshold (see near_threshold_margin_analysis).",
+    "5_would_proposed_thresholds_produce_false_reviews": "No at 0.05 (0 of 600 flagged; see near_threshold_margin_analysis for thresholds that WOULD start flagging correct documents -- notably anything >= 0.12 flags all 240 unchecked documents, since their margin is a hard constant at exactly -0.12).",
+    "6_which_rules_are_evidence_backed_vs_speculative": "Evidence-backed: detection_method/fallback_used (Phase 8C.10's own 600/600 vs. 540/600 A/B result), anchor_found/checkbox_found (Phase 8C.10's 600/600 localization result), decision_margin at 0.05 (this analysis's gap measurement). Structural-only, not benchmark-fit: shape_score's 0.5 floor (a broad plausibility bound, deliberately far from this benchmark's own 0.827-0.880 range so it does not overfit one renderer). Deferred, insufficient variation: anchor_distance_px and horizontal_alignment_offset_px numeric thresholds -- both are raw, non-normalized pixel offsets specific to one 2550x3300 synthetic render DPI, preserved as signals but not used in a production rule this phase."
+  },
+  "source_rows_jsonl": "data/evaluation/results/phase8c10_anchor_checkbox_rows.jsonl",
+  "unchecked_documents": 240
+}

@@ -82,4 +82,4 @@ def test_all_generator_samples_across_seeds_are_at_least_structurally_checkable(
     for document in documents:
         result = validate_w2_document(document)
         assert result.status in {ValidationStatus.ACCEPTED, ValidationStatus.NEEDS_REVIEW}
-        assert result.checks_run == 12
+        assert result.checks_run == 13

@@ -9,6 +9,20 @@ from w2_pipeline.validation.routing import RoutingPolicy
 from w2_pipeline.validation.rules import ALL_RULE_NAMES
 from w2_pipeline.validation.validator import validate_w2_document
 
+# Phase 8C.12: strong, trusted anchor-relative checkbox evidence, matching
+# what a real successful Phase 8C.11 extraction produces -- used wherever a
+# test needs an `ocr`/`mixed`-route happy path to stay ACCEPTED now that
+# missing checkbox evidence on those routes is treated as untrusted.
+_TRUSTED_CHECKBOX_EVIDENCE = {
+    "checkbox_evidence_detection_method": "anchor_relative",
+    "checkbox_evidence_fallback_used": False,
+    "checkbox_evidence_anchor_found": True,
+    "checkbox_evidence_checkbox_found": True,
+    "checkbox_evidence_shape_score": 0.86,
+    "checkbox_evidence_interior_ink_ratio": 0.27,
+    "checkbox_evidence_decision_margin": 0.15,
+}
+
 
 def test_happy_path_document_is_accepted(happy_path_document: W2Document) -> None:
     result = validate_w2_document(happy_path_document)
@@ -96,7 +110,12 @@ def test_validate_w2_document_backend_neutral_for_pipeline_a_and_b_signals(
     happy_path_document: W2Document,
 ) -> None:
     pipeline_a_result = validate_w2_document(
-        happy_path_document, signals=ExtractionSignals(pipeline_id="pipeline_a", route="ocr")
+        happy_path_document,
+        signals=ExtractionSignals(
+            pipeline_id="pipeline_a",
+            route="ocr",
+            **_TRUSTED_CHECKBOX_EVIDENCE,
+        ),
     )
     pipeline_b_result = validate_w2_document(
         happy_path_document, signals=ExtractionSignals(pipeline_id="pipeline_b", route="vlm")

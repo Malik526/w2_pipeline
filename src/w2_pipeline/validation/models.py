@@ -73,6 +73,28 @@ class ExtractionSignals(ValidationModel):
             "unavailable (e.g. Pipeline B, or employer.name is None)."
         ),
     )
+    checkbox_evidence_detection_method: str | None = Field(
+        default=None,
+        description=(
+            "Phase 8C.12: mirrors "
+            "w2_pipeline.extraction.models.Box13CheckboxEvidence.detection_method "
+            "('anchor_relative' / 'fixed_zone_fallback' / 'fixed_zone_disabled') "
+            "as a plain string, not the extraction-side pydantic type -- this "
+            "module stays independent of w2_pipeline.extraction by construction "
+            "(see validator.py's module docstring), so every "
+            "Box13CheckboxEvidence field is duplicated here as a primitive "
+            "rather than imported. None when no checkbox evidence was supplied "
+            "at all (see checkbox_evidence_* fields below)."
+        ),
+    )
+    checkbox_evidence_fallback_used: bool | None = None
+    checkbox_evidence_anchor_found: bool | None = None
+    checkbox_evidence_checkbox_found: bool | None = None
+    checkbox_evidence_anchor_distance_px: float | None = None
+    checkbox_evidence_horizontal_alignment_offset_px: float | None = None
+    checkbox_evidence_shape_score: float | None = None
+    checkbox_evidence_interior_ink_ratio: float | None = None
+    checkbox_evidence_decision_margin: float | None = None
 
 
 class ValidationIssue(ValidationModel):

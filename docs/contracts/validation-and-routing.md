@@ -294,6 +294,70 @@ checkbox-specific detection). See the Phase 8C.8 doc for full results,
 issue-agreement counts, and measured validator overhead (a few
 microseconds per document).
 
+## Checkbox Evidence Rules (Phase 8C.12)
+
+`box_13.retirement_plan` is `StrictBool` (never `None`), so a
+`required_field_missing`-style check can never fire on it -- and a
+boolean is structurally valid even when wrong, which is exactly why the
+pre-8C.12 validator silently accepted all 60 Phase 8C.2 checkbox errors
+(see `docs/experiments/phase8c2-final-paddle-production-candidate.md`).
+This rule set instead judges the *evidence quality* behind whichever
+boolean was extracted, symmetrically for `True` and `False` -- never the
+boolean's own plausibility, and never anything about which class it is.
+
+Consumes only `ExtractionSignals.checkbox_evidence_*` (nine primitive
+fields mirroring `w2_pipeline.extraction.models.Box13CheckboxEvidence`,
+Phase 8C.11's per-document detection provenance -- duplicated as
+primitives, not imported, since this module stays independent of
+`w2_pipeline.extraction` by construction; see "Backend Neutrality"
+above). Never re-opens the source image, re-runs OCR, or re-runs
+checkbox localization/classification.
+
+- **`retirement_plan_checkbox_evidence_missing`**: no checkbox evidence
+  at all (`checkbox_evidence_detection_method is None`) on a route
+  ("ocr" or "mixed") that Phase 8C.10/8C.11 instruments. `native_pdf`
+  (embedded-text-prefix reconstruction, no image-based checkbox detector
+  ever runs) and Pipeline B's `route="vlm"` (a different, generative
+  pipeline this evidence was never built for) are exempt by a positive
+  allow-list, not a default-deny fallback -- an unset/unrecognized route
+  is exempt the same way.
+- **`retirement_plan_checkbox_fallback_used`**: `detection_method` is
+  anything other than `"anchor_relative"` -- either a genuine fallback
+  (`"fixed_zone_fallback"`) or the diagnostic override
+  (`"fixed_zone_disabled"`, never expected in production). Both mean the
+  value did not come from the trusted, promoted detector.
+- **`retirement_plan_checkbox_anchor_missing`** /
+  **`retirement_plan_checkbox_not_found`**: `anchor_found is False` /
+  `checkbox_found is False`, independent of each other and of
+  fallback_used -- both can fire on the same document, each preserved as
+  its own root cause.
+- **`retirement_plan_checkbox_low_decision_margin`**: `abs(decision_margin)
+  < 0.05`. The Phase 8C.10/8C.11 600-document benchmark has no real
+  near-boundary example in either direction (unchecked is a hard
+  constant at exactly -0.12; checked never comes closer than +0.124), so
+  0.05 is a conservative buffer -- less than half the smallest real
+  separation observed -- not a value fit to this benchmark's own
+  distribution. See `docs/experiments/phase8c12-checkbox-validator.md`
+  Section 2 for the full derivation.
+- **`retirement_plan_checkbox_geometry_anomaly`**: `shape_score < 0.5`, a
+  broad structural sanity floor (aspect ratio at least 2:1), deliberately
+  far below this benchmark's own observed 0.827-0.880 range so it
+  reflects genuine implausibility rather than this one renderer's
+  specific geometry.
+- **Deliberately not implemented**: numeric thresholds on
+  `anchor_distance_px`/`horizontal_alignment_offset_px`. Both are raw,
+  non-normalized pixel offsets specific to one fixed synthetic-render
+  DPI; the benchmark has insufficient resolution variation to justify a
+  production threshold for either. Both remain preserved on
+  `ExtractionSignals` for a future phase once real-world DPI variation
+  exists to calibrate against.
+
+All five issues are `error` severity, fire independently (never
+suppress one another), and are symmetric between checked and unchecked
+values. See `docs/experiments/phase8c12-checkbox-validator.md` for the
+full offline evidence analysis and the 600-document validator
+effectiveness measurement.
+
 ## Routing Policy
 
 ```python

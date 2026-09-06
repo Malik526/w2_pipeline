@@ -234,7 +234,7 @@ def test_multiple_issues_are_all_returned_not_short_circuited(happy_path_documen
 
 
 def test_all_rule_names_documents_the_checks_run_count() -> None:
-    assert len(ALL_RULE_NAMES) == 12
+    assert len(ALL_RULE_NAMES) == 13
 
 
 # --- Phase 8C.8: employer.name address-leak rule -----------------------
@@ -398,3 +398,259 @@ def test_both_signals_fire_and_both_issues_are_preserved() -> None:
     assert "employer_name_address_leak" in codes
     assert "employer_name_layout_anomaly" in codes
     assert status.value == "needs_review"
+
+
+# --- Phase 8C.12: box_13.retirement_plan checkbox-evidence rule ----------
+
+_TRUSTED_CHECKED_EVIDENCE = ExtractionSignals(
+    route="ocr",
+    checkbox_evidence_detection_method="anchor_relative",
+    checkbox_evidence_fallback_used=False,
+    checkbox_evidence_anchor_found=True,
+    checkbox_evidence_checkbox_found=True,
+    checkbox_evidence_shape_score=0.86,
+    checkbox_evidence_interior_ink_ratio=0.27,
+    checkbox_evidence_decision_margin=0.15,
+)
+
+_TRUSTED_UNCHECKED_EVIDENCE = ExtractionSignals(
+    route="ocr",
+    checkbox_evidence_detection_method="anchor_relative",
+    checkbox_evidence_fallback_used=False,
+    checkbox_evidence_anchor_found=True,
+    checkbox_evidence_checkbox_found=True,
+    checkbox_evidence_shape_score=0.86,
+    checkbox_evidence_interior_ink_ratio=0.0,
+    checkbox_evidence_decision_margin=-0.12,
+)
+
+_CHECKBOX_CODES = frozenset(
+    {
+        "retirement_plan_checkbox_evidence_missing",
+        "retirement_plan_checkbox_fallback_used",
+        "retirement_plan_checkbox_anchor_missing",
+        "retirement_plan_checkbox_not_found",
+        "retirement_plan_checkbox_low_decision_margin",
+        "retirement_plan_checkbox_geometry_anomaly",
+    }
+)
+
+
+def _checkbox_codes(document: W2Document, signals: ExtractionSignals) -> set[str]:
+    return {issue.code for issue in run_all_rules(document, signals)} & _CHECKBOX_CODES
+
+
+def test_strong_checked_evidence_has_no_checkbox_issue(happy_path_document: W2Document) -> None:
+    assert _checkbox_codes(happy_path_document, _TRUSTED_CHECKED_EVIDENCE) == set()
+
+
+def test_strong_unchecked_evidence_has_no_checkbox_issue(happy_path_document: W2Document) -> None:
+    """Symmetric: an unchecked box with equally strong evidence is just as
+    trustworthy as a checked one -- the rule judges evidence, not class."""
+
+    assert _checkbox_codes(happy_path_document, _TRUSTED_UNCHECKED_EVIDENCE) == set()
+
+
+def test_no_route_no_checkbox_evidence_is_not_flagged(happy_path_document: W2Document) -> None:
+    """A route this validator cannot positively identify as OCR/mixed
+    (unset, Pipeline B's `vlm`, native_pdf) must not be penalized for
+    lacking evidence it was never expected to carry."""
+
+    for route in (None, "vlm", "native_pdf"):
+        signals = ExtractionSignals(route=route)
+        assert _checkbox_codes(happy_path_document, signals) == set()
+
+
+def test_ocr_route_with_no_checkbox_evidence_at_all_is_flagged(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(route="ocr")
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    matching = [issue for issue in issues if issue.code == "retirement_plan_checkbox_evidence_missing"]
+    assert len(matching) == 1
+    assert matching[0].severity == ValidationSeverity.ERROR
+    assert matching[0].field_path == "box_13.retirement_plan"
+
+
+def test_mixed_route_with_no_checkbox_evidence_at_all_is_flagged(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(route="mixed")
+
+    assert "retirement_plan_checkbox_evidence_missing" in _checkbox_codes(happy_path_document, signals)
+
+
+def test_fallback_used_is_flagged(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={
+            "checkbox_evidence_detection_method": "fixed_zone_fallback",
+            "checkbox_evidence_fallback_used": True,
+        }
+    )
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    matching = [issue for issue in issues if issue.code == "retirement_plan_checkbox_fallback_used"]
+    assert len(matching) == 1
+    assert matching[0].observed_value == "fixed_zone_fallback"
+
+
+def test_diagnostic_disabled_method_is_also_flagged_as_fallback(happy_path_document: W2Document) -> None:
+    """`fixed_zone_disabled` (the diagnostic override) is neither the
+    trusted anchor-relative detector nor a genuine fallback-on-failure, but
+    it is still the legacy mechanism -- treated the same as a real
+    fallback, since production callers should never see this method."""
+
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={
+            "checkbox_evidence_detection_method": "fixed_zone_disabled",
+            "checkbox_evidence_fallback_used": False,
+            "checkbox_evidence_anchor_found": None,
+            "checkbox_evidence_checkbox_found": None,
+        }
+    )
+
+    assert "retirement_plan_checkbox_fallback_used" in _checkbox_codes(happy_path_document, signals)
+
+
+def test_anchor_missing_is_flagged(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={
+            "checkbox_evidence_detection_method": "fixed_zone_fallback",
+            "checkbox_evidence_fallback_used": True,
+            "checkbox_evidence_anchor_found": False,
+            "checkbox_evidence_checkbox_found": False,
+        }
+    )
+
+    codes = _checkbox_codes(happy_path_document, signals)
+    assert "retirement_plan_checkbox_anchor_missing" in codes
+
+
+def test_checkbox_not_found_is_flagged(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={
+            "checkbox_evidence_detection_method": "fixed_zone_fallback",
+            "checkbox_evidence_fallback_used": True,
+            "checkbox_evidence_anchor_found": True,
+            "checkbox_evidence_checkbox_found": False,
+        }
+    )
+
+    codes = _checkbox_codes(happy_path_document, signals)
+    assert "retirement_plan_checkbox_not_found" in codes
+
+
+def test_anchor_and_checkbox_missing_are_independent_issues(happy_path_document: W2Document) -> None:
+    """Both root causes are preserved, not deduplicated -- matching how the
+    employer-name signals never suppress one fired issue for another."""
+
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={
+            "checkbox_evidence_detection_method": "fixed_zone_fallback",
+            "checkbox_evidence_fallback_used": True,
+            "checkbox_evidence_anchor_found": False,
+            "checkbox_evidence_checkbox_found": False,
+        }
+    )
+
+    codes = _checkbox_codes(happy_path_document, signals)
+    assert {
+        "retirement_plan_checkbox_fallback_used",
+        "retirement_plan_checkbox_anchor_missing",
+        "retirement_plan_checkbox_not_found",
+    } <= codes
+
+
+def test_strong_positive_margin_passes(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(update={"checkbox_evidence_decision_margin": 0.15})
+
+    assert _checkbox_codes(happy_path_document, signals) == set()
+
+
+def test_strong_negative_margin_passes(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_UNCHECKED_EVIDENCE.model_copy(update={"checkbox_evidence_decision_margin": -0.12})
+
+    assert _checkbox_codes(happy_path_document, signals) == set()
+
+
+def test_near_zero_positive_margin_is_flagged(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(update={"checkbox_evidence_decision_margin": 0.01})
+
+    assert "retirement_plan_checkbox_low_decision_margin" in _checkbox_codes(happy_path_document, signals)
+
+
+def test_near_zero_negative_margin_is_flagged(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_UNCHECKED_EVIDENCE.model_copy(update={"checkbox_evidence_decision_margin": -0.01})
+
+    assert "retirement_plan_checkbox_low_decision_margin" in _checkbox_codes(happy_path_document, signals)
+
+
+def test_margin_boundary_is_deterministic_just_inside_and_outside(
+    happy_path_document: W2Document,
+) -> None:
+    from w2_pipeline.validation.rules import _NEAR_THRESHOLD_DECISION_MARGIN
+
+    just_inside = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={"checkbox_evidence_decision_margin": _NEAR_THRESHOLD_DECISION_MARGIN - 0.001}
+    )
+    exactly_at = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={"checkbox_evidence_decision_margin": _NEAR_THRESHOLD_DECISION_MARGIN}
+    )
+    just_outside = _TRUSTED_CHECKED_EVIDENCE.model_copy(
+        update={"checkbox_evidence_decision_margin": _NEAR_THRESHOLD_DECISION_MARGIN + 0.001}
+    )
+
+    issues_inside = {issue.code for issue in run_all_rules(happy_path_document, just_inside)}
+    issues_at = {issue.code for issue in run_all_rules(happy_path_document, exactly_at)}
+    issues_outside = {issue.code for issue in run_all_rules(happy_path_document, just_outside)}
+
+    assert "retirement_plan_checkbox_low_decision_margin" in issues_inside
+    # `abs(margin) < threshold` is a strict inequality: exactly at the
+    # threshold value does not fire, matching the module's own comparison.
+    assert "retirement_plan_checkbox_low_decision_margin" not in issues_at
+    assert "retirement_plan_checkbox_low_decision_margin" not in issues_outside
+
+
+def test_malformed_shape_score_is_flagged(happy_path_document: W2Document) -> None:
+    signals = _TRUSTED_CHECKED_EVIDENCE.model_copy(update={"checkbox_evidence_shape_score": 0.2})
+
+    matching = [
+        issue
+        for issue in run_all_rules(happy_path_document, signals)
+        if issue.code == "retirement_plan_checkbox_geometry_anomaly"
+    ]
+    assert len(matching) == 1
+    assert matching[0].observed_value == 0.2
+
+
+def test_normal_shape_score_not_flagged(happy_path_document: W2Document) -> None:
+    assert _checkbox_codes(happy_path_document, _TRUSTED_CHECKED_EVIDENCE) == set()
+
+
+def test_checkbox_issue_does_not_suppress_employer_name_issues() -> None:
+    document = generate_synthetic_w2_documents_for_name("Elan Consulting Corp 2861 Geneva Ponce De Leon Rd")
+    signals = ExtractionSignals(route="ocr", employer_name_observation_count=2)
+
+    codes = {issue.code for issue in run_all_rules(document, signals)}
+
+    assert "employer_name_address_leak" in codes
+    assert "employer_name_layout_anomaly" in codes
+    assert "retirement_plan_checkbox_evidence_missing" in codes
+
+
+def test_true_and_false_checkbox_values_treated_symmetrically(happy_path_document: W2Document) -> None:
+    """Validation must not encode a class prior -- both `True` and `False`
+    pass under strong evidence and both review under weak evidence,
+    regardless of what document.box_13.retirement_plan actually is."""
+
+    checked_document = happy_path_document.model_copy(
+        update={"box_13": happy_path_document.box_13.model_copy(update={"retirement_plan": True})}
+    )
+    unchecked_document = happy_path_document.model_copy(
+        update={"box_13": happy_path_document.box_13.model_copy(update={"retirement_plan": False})}
+    )
+
+    weak_signals = ExtractionSignals(route="ocr")
+
+    assert _checkbox_codes(checked_document, _TRUSTED_CHECKED_EVIDENCE) == set()
+    assert _checkbox_codes(unchecked_document, _TRUSTED_UNCHECKED_EVIDENCE) == set()
+    assert _checkbox_codes(checked_document, weak_signals) == _checkbox_codes(unchecked_document, weak_signals)

@@ -80,14 +80,36 @@ def _signals_for_record(record: PredictionRecord) -> ExtractionSignals:
     # never fabricated for records that predate it), is threaded through
     # to the validator the same way a real caller would.
     employer_name_observation_count = None
+    checkbox_evidence: dict[str, object] | None = None
     if record.pipeline_metadata is not None:
         employer_name_observation_count = record.pipeline_metadata.get("employer_name_observation_count")
+        checkbox_evidence = record.pipeline_metadata.get("box_13_checkbox_evidence")
+
+    # Phase 8C.12: `box_13_checkbox_evidence`, the same way -- a real
+    # instrumented run populates this from
+    # `ExtractionResult.box_13_checkbox_evidence.model_dump()` (Phase
+    # 8C.11), never fabricated for records that predate it. Unpacked into
+    # individual `ExtractionSignals.checkbox_evidence_*` primitives rather
+    # than passed as a nested dict, matching how every other signal here
+    # is threaded.
+    checkbox_evidence = checkbox_evidence or {}
 
     return ExtractionSignals(
         pipeline_id=record.pipeline_id,
         route=record.extraction_route,
         outcome=outcome,
         employer_name_observation_count=employer_name_observation_count,
+        checkbox_evidence_detection_method=checkbox_evidence.get("detection_method"),
+        checkbox_evidence_fallback_used=checkbox_evidence.get("fallback_used"),
+        checkbox_evidence_anchor_found=checkbox_evidence.get("anchor_found"),
+        checkbox_evidence_checkbox_found=checkbox_evidence.get("checkbox_found"),
+        checkbox_evidence_anchor_distance_px=checkbox_evidence.get("anchor_distance_px"),
+        checkbox_evidence_horizontal_alignment_offset_px=checkbox_evidence.get(
+            "horizontal_alignment_offset_px"
+        ),
+        checkbox_evidence_shape_score=checkbox_evidence.get("shape_score"),
+        checkbox_evidence_interior_ink_ratio=checkbox_evidence.get("interior_ink_ratio"),
+        checkbox_evidence_decision_margin=checkbox_evidence.get("decision_margin"),
     )
 
 

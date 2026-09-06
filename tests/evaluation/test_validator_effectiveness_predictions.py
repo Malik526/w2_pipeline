@@ -12,6 +12,26 @@ from w2_pipeline.evaluation.validator_effectiveness_predictions import (
 from w2_pipeline.review.field_paths import set_field_value
 
 
+# Phase 8C.12: trusted checkbox evidence, matching what a real successful
+# Phase 8C.11 extraction records in `pipeline_metadata` -- attached to
+# `extraction_route="ocr"` records in this file so they exercise the
+# *other* validator behavior each test targets, not the Phase 8C.12
+# checkbox-evidence-missing rule (covered by its own dedicated tests).
+_TRUSTED_CHECKBOX_EVIDENCE_METADATA = {
+    "box_13_checkbox_evidence": {
+        "detection_method": "anchor_relative",
+        "fallback_used": False,
+        "anchor_found": True,
+        "checkbox_found": True,
+        "anchor_distance_px": -1.0,
+        "horizontal_alignment_offset_px": 0.0,
+        "shape_score": 0.86,
+        "interior_ink_ratio": 0.27,
+        "decision_margin": 0.15,
+    }
+}
+
+
 def _clean_entries(dataset_dir: Path, sample_count: int) -> list:
     generate_evaluation_dataset(dataset_dir, sample_count=sample_count, seed=2026)
     manifest = load_manifest_jsonl(dataset_dir / "manifest.jsonl")
@@ -58,6 +78,7 @@ def test_end_to_end_counts_correct_detectable_and_undetectable_errors(tmp_path: 
                 status="success",
                 document=correct_doc,
                 extraction_route="ocr",
+                pipeline_metadata=_TRUSTED_CHECKBOX_EVIDENCE_METADATA,
             ),
             PredictionRecord(
                 document_id=detectable_id,
@@ -66,6 +87,7 @@ def test_end_to_end_counts_correct_detectable_and_undetectable_errors(tmp_path: 
                 status="success",
                 document=detectable_doc,
                 extraction_route="ocr",
+                pipeline_metadata=_TRUSTED_CHECKBOX_EVIDENCE_METADATA,
             ),
             PredictionRecord(
                 document_id=undetectable_id,
@@ -74,6 +96,7 @@ def test_end_to_end_counts_correct_detectable_and_undetectable_errors(tmp_path: 
                 status="success",
                 document=undetectable_doc,
                 extraction_route="ocr",
+                pipeline_metadata=_TRUSTED_CHECKBOX_EVIDENCE_METADATA,
             ),
         ],
     )

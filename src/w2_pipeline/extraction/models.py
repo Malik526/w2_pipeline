@@ -169,3 +169,16 @@ class ExtractionResult(ExtractionModel):
             "a parser/extraction decision input."
         ),
     )
+    box_13_checkbox_evidence: Box13CheckboxEvidence | None = Field(
+        default=None,
+        description=(
+            "Carried straight through from ObservationSet.box_13_checkbox_evidence "
+            "(Phase 8C.11) for the Phase 8C.12 checkbox validator, same as "
+            "employer_name_observation_count above. None whenever the "
+            "acquisition route never populated it (see "
+            "ObservationSet.box_13_checkbox_evidence's own docstring) -- "
+            "never fabricated. Threaded to the validator via "
+            "ExtractionSignals.checkbox_evidence_* fields, never a parser/"
+            "extraction decision input."
+        ),
+    )

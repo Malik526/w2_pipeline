@@ -2,6 +2,61 @@
 
 ## 2026-09-06
 
+### Phase 8C.12 - Checkbox-Specific Validation for `box_13.retirement_plan`
+
+- Adds a dedicated Phase 6 validator rule set judging the Phase 8C.11
+  checkbox detector's *evidence quality*, not the extracted boolean's
+  validity -- symmetric between checked/unchecked, since a boolean is
+  structurally valid even when wrong (why the pre-8C.12 validator
+  silently accepted all 60 Phase 8C.2 checkbox errors).
+- Evidence wiring mirrors Phase 8C.8's employer-name-signal pattern:
+  `ObservationSet.box_13_checkbox_evidence` -> new
+  `ExtractionResult.box_13_checkbox_evidence` -> new
+  `PredictionRecord.pipeline_metadata["box_13_checkbox_evidence"]` -> new
+  `ExtractionSignals.checkbox_evidence_*` (nine primitive fields, not the
+  extraction-side pydantic type -- validation still imports nothing from
+  `w2_pipeline.extraction`, enforced by the existing
+  `test_isolation.py` AST check).
+- Six new issue codes, all `error` severity, all independent:
+  `retirement_plan_checkbox_evidence_missing` (no evidence on an
+  `ocr`/`mixed` route -- `native_pdf` and Pipeline B's `route="vlm"` are
+  exempt by a positive allow-list, not a default-deny),
+  `retirement_plan_checkbox_fallback_used` (anything but
+  `anchor_relative`), `retirement_plan_checkbox_anchor_missing`,
+  `retirement_plan_checkbox_not_found`,
+  `retirement_plan_checkbox_low_decision_margin`
+  (`abs(decision_margin) < 0.05`), `retirement_plan_checkbox_geometry_anomaly`
+  (`shape_score < 0.5`).
+- `0.05` decision-margin threshold and `0.5` shape-score floor are both
+  derived from an offline distribution analysis
+  (`run_checkbox_evidence_analysis.py`), not fit to this benchmark's own
+  near-perfect separation -- this dataset has zero real near-boundary
+  examples (unchecked margin is a hard constant at -0.12; checked never
+  comes closer than +0.124), so 0.05 is a conservative buffer, less than
+  half the smallest real separation, that provably cannot fire on any of
+  the 600 real documents. Numeric thresholds on `anchor_distance_px`/
+  `horizontal_alignment_offset_px` were deliberately not implemented --
+  insufficient DPI variation in this dataset to justify one.
+- Fresh instrumented 600-document production-path run
+  (`run_pipeline_a_with_checkbox_evidence_signals.py`, no checkbox flag
+  passed -- the Phase 8C.11 default): 600/600 documents byte-identical to
+  the frozen Phase 8C.2 baseline excluding `box_13.retirement_plan`.
+  Validator-effectiveness result: 596/600 accepted, 4/600 needs_review
+  (the same 4 pre-existing `employer.name` `rotated_png` residuals, 100%
+  caught), **0% unsafe acceptance, 0% false review**. The checkbox rules
+  fired on 0/600 documents (every extraction was `anchor_relative`, 0
+  fallback, strong evidence) -- adds zero review volume here; its value
+  is proven by 19 dedicated synthetic-evidence tests (fallback, missing
+  localization, near-threshold margin, malformed geometry all correctly
+  route to review; strong evidence of either class passes).
+- Checkbox-validator-only cost: ~0.6 microseconds/doc; full validator
+  with the new rule: ~29 microseconds/doc (~2-3% incremental).
+- 19 new tests plus 3 pre-existing fixtures updated to supply trusted
+  checkbox evidence (deliberate contract tightening, not a regression);
+  full suite: **534 tests passing, up from 515, zero unintended
+  regressions.**
+- Full record: `docs/experiments/phase8c12-checkbox-validator.md`.
+
 ### Phase 8C.11 - Promote Anchor-Relative `box_13.retirement_plan` Checkbox Detector to Default
 
 - Promotion + regression-verification only: no PaddleOCR configuration
