@@ -2,6 +2,33 @@
 
 ## 2026-09-06
 
+### Phase 8C.5 - Employer Name Address-Leak Heuristic Experiment
+
+- Offline validation experiment, no production change: can a narrow,
+  deterministic, ground-truth-free plausibility signal detect the known
+  `employer.name` row-merge residual? New evaluation-side code only
+  (`employer_name_heuristics.py`, `run_employer_name_heuristic_analysis.py`),
+  run directly against the frozen Phase 8C.2 predictions (no OCR rerun).
+- 7 candidates compared. **Best: `street number AND road suffix`
+  (expanded USPS-style abbreviation list) -- 100% recall, 100%
+  precision, 0% false-review rate**, catching all 4 known failures with
+  zero false positives among 596 correct employer names.
+- The narrow suffix list (literal brief example set) misses 2 of 4
+  (`Brg`, `Corridor`); the suffix-alone rule is noisy standalone (20%
+  precision, false-firing on ordinary words like `Path`/`Loop`/`Green`
+  in real employer names) -- demonstrating exactly why combined evidence
+  matters over a single weak signal. Bare-number-alone scored a
+  deceptively perfect result only because this dataset's employer names
+  never contain digits; flagged as a dataset property, not a generally
+  safe signal.
+- Recommendation: Strong signal for this specific defect shape, a
+  reasonable future production-validation candidate (not promoted here),
+  evaluated on only 4 positive examples. Not automatically implemented.
+- 26 new tests; full suite: 431 tests passing, up from 405, zero
+  regressions. No document ID or company name hard-coded into any rule.
+  Full report:
+  `docs/experiments/phase8c5-employer-name-address-leak-heuristic.md`.
+
 ### Phase 8C.4 - Propagate And Evaluate Native PaddleOCR Confidence
 
 - Instrumentation/evidence phase: `TextObservation` gained an optional

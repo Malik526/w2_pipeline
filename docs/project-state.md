@@ -1266,15 +1266,59 @@ combined confidence score invented; no rule or threshold promoted to
 production. `box_13.retirement_plan` was excluded throughout (separate
 pixel-based checkbox detector, not OCR text).
 
-## Future Phases (after Phase 8C.4)
+### Phase 8C.5 - Employer Name Address-Leak Heuristic Experiment
+
+Full record: `docs/experiments/phase8c5-employer-name-address-leak-heuristic.md`.
+
+Offline validation experiment (no production change): can a narrow,
+deterministic, ground-truth-free plausibility signal -- "does
+`employer.name` look like it has street address text appended?" --
+detect the known row-merge residual without an unacceptable false-review
+cost? New evaluation-side code only
+(`employer_name_heuristics.py`, `run_employer_name_heuristic_analysis.py`),
+run directly against the frozen Phase 8C.2 predictions (no OCR rerun).
+
+7 candidates compared (street number alone; road-suffix alone, narrow
+and expanded USPS-style abbreviation lists; both combined, narrow and
+expanded; ZIP-pattern alone; combined-or-ZIP). **Best: `street number AND
+road suffix` (expanded list) -- 100% recall, 100% precision, 0%
+false-review rate across all 600 documents**, catching all 4 known
+failures (`symage_900033/45/82/146`) with zero false positives among the
+596 correct employer names. The narrow suffix list (literal brief
+example set) misses 2 of 4 (`Brg`, `Corridor` are standard USPS
+abbreviations not in that list); the suffix-alone rule (no number
+requirement) is noisy on its own (20% precision, 2.68% false-review
+rate, false-firing on ordinary words that double as suffix abbreviations
+-- `Path`, `Loop`, `Green` in real employer names from this dataset),
+demonstrating exactly why the brief called for combined evidence over a
+weak standalone signal. Bare-street-number-alone scored a deceptively
+perfect 100%/100%/0% only because this specific dataset's employer names
+never happen to contain digits -- flagged explicitly as a dataset
+property, not a generally safe signal, with adversarial test cases
+(`3M Corporation`, `7-Eleven Inc.`) confirming the combined rule still
+handles them conservatively.
+
+Recommendation: **Strong signal** for this specific, already-diagnosed
+defect shape -- a reasonable candidate for future production-validation
+consideration (not promoted in this phase), evaluated on only 4 positive
+examples so not to be read as "solved." A layout-span analysis remains a
+separately useful future signal for defect shapes this heuristic cannot
+see (e.g. non-address merges).
+
+26 new tests; full suite: **431 tests passing, up from 405, zero
+regressions.** No validation rule added, no OCR/parser/checkbox change,
+no document ID or company name hard-coded into any rule.
+
+## Future Phases (after Phase 8C.5)
 
 ```text
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),
 including how to present the validator's demonstrated 0% catch rate
-(Phase 8C.3) and native OCR confidence's demonstrated lack of signal
-(Phase 8C.4) on the same two known residual defect classes, and the
-resulting 10.33% unsafe-acceptance rate on rotated documents.
+(Phase 8C.3), native OCR confidence's demonstrated lack of signal
+(Phase 8C.4), and the promising address-leak heuristic (Phase 8C.5) on
+the same known residual defect classes, and the resulting 10.33%
+unsafe-acceptance rate on rotated documents.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
@@ -1283,11 +1327,12 @@ employer.address OCR fallback and extraction follow-up; a rotation-aware
 Box 13 checkbox recalibration (including its own, separate confidence
 signal: pixel-coverage margin, skew, geometry quality); a fix for the
 employer.name row-merge residual (would require reworking
-`_group_observation_rows`'s shared tolerance logic); new validator
-plausibility rules to close the 0% catch-rate gap Phase 8C.3 found (e.g.
-a length/shape sanity check on `employer.name`, since Phase 8C.4 showed
-OCR confidence cannot substitute for one); and/or a larger-scale
-Pipeline B evaluation.
+`_group_observation_rows`'s shared tolerance logic); promoting the Phase
+8C.5 address-leak heuristic (combined street-number-and-road-suffix
+variant only) into production validation, ideally after validating
+against a larger/real-world employer-name corpus; an employer-name
+layout-span analysis for defect shapes the address-leak heuristic
+cannot see; and/or a larger-scale Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever
