@@ -14,13 +14,18 @@ evaluated field set is not changed, and Box 13 checkbox rotation geometry
 (a separate, pre-existing, already-documented failure class) is not
 touched here.
 
-## Outcome: FIXED
+## Outcome: FIXED (the reported bug); one distinct, rarer defect found and reported, not fixed
 
-Root cause confirmed by direct diagnosis against the real failing image
-(not assumed from the Phase 8B report alone), a smallest-safe
-backend-neutral fix implemented, focused and full test suites pass, and
-real-pipeline verification on 4 real rotated documents (both the exact
-diagnosed document and 3 others) confirms recovery with zero regressions.
+Root cause of the reported 150/150 label-bleed bug confirmed by direct
+diagnosis against the real failing image (not assumed from the Phase 8B
+report alone). Two fixes were needed -- one per backend's OCR output
+shape -- both backend-neutral in code (no Paddle-specific or
+Tesseract-specific branch). Full 150-document `rotated_png` verification
+on both backends (not just a handful of documents) confirms
+`employer.name` recovers from 0/150 to 149/150 (Tesseract) and 146/150
+(PaddleOCR), zero test regressions. The small residual on both backends
+is a distinct, rarer defect (see below), deliberately not fixed here as
+it falls outside this task's narrow scope.
 
 ## Background: Why This Wasn't Caught Before Phase 8B
 
@@ -133,6 +138,10 @@ Box c needed a row-level (not token-level) discriminator instead.
   `_first_row_text_in_zone`. No other branch (EIN, Box 13, employee
   fallbacks) is touched -- the fix is scoped to exactly the one call site
   that produced the reported failures.
+- `_looks_like_employer_name_label_row` also returns `True` for a row
+  whose entire text is a single alphabetic character -- added after
+  150-document Tesseract verification surfaced a second, related defect;
+  see "A Second, Tesseract-Specific Defect Found At Scale" below for why.
 
 **Zone geometry is unchanged.** This is a selection-logic fix within the
 existing calibrated zone, not a re-calibration -- consistent with "do not
@@ -149,8 +158,10 @@ regression to any existing employee/employer parsing path.
 
 ## Testing
 
-9 new tests added to `tests/extraction/test_parser_2026.py`:
+13 new tests added to `tests/extraction/test_parser_2026.py`, across both
+fixes:
 
+**First fix (label row skip):**
 - `test_parser_recovers_employer_name_when_rotated_label_precedes_answer_in_zone`
   -- end-to-end reproduction of the real bug: the realistic
   `symage_900001` full-page fixture plus a merged PaddleOCR-style label
@@ -174,9 +185,26 @@ regression to any existing employee/employer parsing path.
   one marker word each -- `"Employer Solutions Group LLC"`, `"ZIP Line
   Logistics Inc."`) -- guards the false-positive side explicitly.
 
-Full suite: **368 tests passing (359 baseline + 9 new), zero regressions.**
+**Second fix (lone box-letter row skip), added after 150-document
+Tesseract verification surfaced the second defect:**
+- `test_parser_recovers_employer_name_when_box_letter_marker_forms_its_own_row`
+  -- end-to-end reproduction using the real Tesseract pixel geometry from
+  `symage_900001-...-rotated.png` (scaled to the shared fixture's own
+  layout extent), with the label's word tokens drifting enough that "c"
+  forms its own row between the (skipped) label row and the real answer.
+  Confirms recovery to `"Timberline Trading Co."`.
+- `test_looks_like_employer_name_label_row_matches_a_lone_box_letter_marker`
+  -- direct unit test that a bare `"c"`/`"C"` row is now skipped.
+- `test_looks_like_employer_name_label_row_lone_letter_rule_only_matches_single_char`
+  (parametrized) -- confirms the rule fires only for a true single
+  character, never for a real employer name.
+
+Full suite: **372 tests passing (359 baseline + 13 new), zero
+regressions.**
 
 ## Real-Pipeline Verification
+
+### First pass: 4-document spot check (PaddleOCR)
 
 Ran actual `PipelineAExtractor` with the real PaddleOCR GPU backend
 (the same backend/config used for the Phase 8B run) against 4 real
@@ -189,18 +217,129 @@ Ran actual `PipelineAExtractor` with the real PaddleOCR GPU backend
 | symage_900002 | `BlueWave Enterprises` |
 | symage_900003 | `Infinity Enterprises Inc.` |
 
-All 4 recover the correct name instead of the Box c label. No 600-document
-re-run was performed -- per the final-test integrity rule, the frozen
-Phase 8B artifacts are not regenerated or replaced by this task; a future,
-separately-scoped benchmark (Phase 8C.2 or later) may re-run the full
-600-document comparison against this fix if a new, explicitly-versioned
-benchmark is desired.
+All 4 recovered the correct name instead of the Box c label.
+
+### Second pass: full 150-document `rotated_png` scale check, both backends
+
+A 4-document spot check is not sufficient to claim "backend-neutral at
+scale," and Tesseract's word-level fragmentation is structurally
+different from PaddleOCR's merged-line output (see "A Second,
+Tesseract-Specific Defect Found At Scale" below) -- so this task ran the
+full `w2_pipeline.evaluation.run_pipeline_a` CLI (the same tool Phase 8B
+used) filtered to `--variant-id rotated_png` only (150 documents), once
+per backend, with the exact Phase 8B OCR configuration (PaddleOCR GPU;
+Tesseract PSM 3 + supplemental PSM 6), `--save-predictions` capturing
+full per-document predictions. Written to **new**, separately-named
+artifacts -- the frozen Phase 8B `..._600.*` files were never touched:
+
+```text
+data/evaluation/results/phase8c1_verify_paddleocr_gpu_rotated_150.json
+data/evaluation/results/phase8c1_verify_paddleocr_gpu_rotated_150.md
+data/evaluation/results/phase8c1_verify_paddleocr_gpu_rotated_150_predictions.jsonl
+data/evaluation/results/phase8c1_verify_tesseract_psm3_psm6_rotated_150.json
+data/evaluation/results/phase8c1_verify_tesseract_psm3_psm6_rotated_150.md
+data/evaluation/results/phase8c1_verify_tesseract_psm3_psm6_rotated_150_predictions.jsonl
+```
+
+| Metric | PaddleOCR GPU | Tesseract PSM3+6 |
+|---|---:|---:|
+| Rotated documents | 150 | 150 |
+| Failed documents | 0 | 0 |
+| `employer.name` accuracy (before this task's fix, per Phase 8B) | 0.0% (0/150) | 0.0% (0/150) |
+| `employer.name` accuracy (after fix) | **97.33% (146/150)** | **99.33% (149/150)** |
+| Overall rotated field accuracy (all fields, this variant only) | 98.22% | 97.61% |
+
+Both backends go from complete, systematic failure to near-complete
+recovery on the exact bug this task targeted. Neither backend reaches
+100% -- see the next section for the residual, which is a related but
+distinct defect, not the one reported in Phase 8B.
+
+## A Second, Tesseract-Specific Defect Found At Scale
+
+The 4-document PaddleOCR-only spot check above was not enough to
+guarantee the fix generalizes: PaddleOCR reports Box c's label as **one
+merged line observation** ("c Employer's name, address, and ZIP code"),
+so it always lands in a single row and `_looks_like_employer_name_label_row`
+catches it outright. The initial 150-document Tesseract run (before this
+second defect was found and fixed) showed **0/150 still correct** --
+identical to the pre-fix number -- because Tesseract reports each word as
+its **own** observation, including the printed Box c letter marker
+("c") as a separate one-character observation from the rest of the
+label's words.
+
+Diagnosis (direct `TesseractOcrAdapter.extract_image` inspection of
+`symage_900001-...-rotated.png`, the same document used for the original
+diagnosis): under rotation skew, each word's vertical center drifts by a
+different amount depending on its horizontal position in the line.
+`_group_observation_rows` merges words into a row only if each one falls
+within a tolerance of the row's running average center (tolerance scales
+with that word's own height). As the label's five multi-character words
+("Employer's", "name,", "address,", "and", "ZIP", "code") merge into one
+row, the running average center drifts across roughly 20 pixels; the
+short, small "c" token's own tolerance (its height is much smaller,
+around 15-16px) is no longer wide enough to absorb that accumulated
+drift, so "c" fails to merge and forms its **own** one-word row --
+positioned between the (already correctly skipped) label row and the
+real answer row. `_looks_like_employer_name_label_row`'s two-marker check
+does not match a bare "c", so this new row was returned verbatim as
+`employer.name` on all 150/150 Tesseract rotated documents.
+
+**Fix**: `_looks_like_employer_name_label_row` (same function, no new
+call sites) now also returns `True` for a row whose full text is a
+single alphabetic character -- the printed box-letter marker every W-2
+box carries ("a" through "f" etc.), never a legitimate `employer.name`
+value on its own. Re-running the same 150-document Tesseract check after
+this second fix: `employer.name` accuracy went from 0/150 to 149/150 (the
+table above already reflects the post-fix number).
+
+This finding is exactly why the brief's instinct to verify "at scale," not
+just on a handful of hand-picked documents, mattered: the first fix
+verified correctly on 4 PaddleOCR documents and looked complete, but a
+structurally different backend surfaced a related defect the small
+sample never could.
+
+## Residual: One Distinct, Rarer, Multi-Line-Merge Defect (Not Fixed Here)
+
+Both backends' 150-document runs above still show a small number of
+residual `employer.name` failures -- **not** the label-bleed bug this
+task targeted, and confirmed backend-neutral by direct inspection
+(`symage_900146` fails on *both* backends):
+
+| Document | Backend | Expected | Predicted |
+|---|---|---|---|
+| symage_900033 | PaddleOCR | `Elan Consulting Corp` | `Elan Consulting Corp 2861 Geneva Ponce De Leon Rd` |
+| symage_900045 | PaddleOCR | `Bespoke Designs LLC` | `Bespoke Designs LLC 6878 Normandy Tullahoma Rd` |
+| symage_900082 | PaddleOCR | `FutureReady Services` | `FutureReady Services 875 Francis Case Memorial Brg` |
+| symage_900146 | PaddleOCR | `Global Insights Corp` | `Global Insights Corp 4522 Eastern Transportation Corridor` |
+| symage_900146 | Tesseract | `Global Insights Corp` | `Global Insights Corp Corridor` |
+
+Direct inspection of `symage_900146`'s Tesseract observations confirmed
+the mechanism: it is the *same underlying fragility* in
+`_group_observation_rows`'s tolerance-under-rotation-skew, but the
+opposite direction from the fix above -- here, the **answer row and the
+following address line's own drifted words merge into one row**, instead
+of correctly staying separate. PaddleOCR's coarser merged-line output
+makes it merge the entire next line rather than a single trailing word.
+
+**Deliberately not fixed in this task.** This is a structurally distinct
+defect from the one Phase 8B reported and this task was chartered to fix
+(a row that shouldn't merge, merging -- rather than a label row winning
+over an answer row), it is much rarer (4/150 and 1/150 respectively, vs.
+the original 150/150), and a safe fix would need to either loosen/tighten
+`_group_observation_rows`'s shared tolerance (a change with blast radius
+across every zone and field in the parser, not scoped to `employer.name`)
+or add a second, differently-shaped `employer.name`-specific heuristic --
+either of which is new scope beyond "remediate the rotated employer.name
+label bug," which is now complete. Reported here as a result, the same
+way Phase 8B reported (without fixing) the original bug.
 
 ## What Was Deliberately Not Done
 
 - The frozen Phase 8B benchmark result files
   (`phase8b_final_*_600.json/.md/_predictions.jsonl`) were not modified,
-  regenerated, or replaced.
+  regenerated, or replaced. Verification used new, separately-named
+  `phase8c1_verify_*_rotated_150.*` artifacts instead (see "Real-Pipeline
+  Verification" above).
 - No OCR engine, mode, or configuration was changed.
 - No evaluated-field-set change was made (still the 24 fields frozen in
   Phase 8A).
@@ -208,22 +347,34 @@ benchmark is desired.
   the same Phase 8B failure taxonomy, 60/150 failures on both backends)
   was left untouched -- a separate, pre-existing, already-categorized
   visual-detector issue, out of this task's scope.
-- No new 600-document benchmark run was performed to quantify the fix's
-  effect on `employer.name` field accuracy at scale; only the 4-document
-  real-pipeline check above and the focused/full test suites.
+- No full 600-document benchmark re-run was performed to produce an
+  updated, official comparison superseding Phase 8B's numbers; the
+  150-document `rotated_png`-only runs above exist purely to verify this
+  fix at the scale the original bug was found at, not to replace or
+  extend the frozen benchmark.
+- The residual multi-line-merge defect found during this verification
+  (4/150 PaddleOCR, 1/150 Tesseract, both on `symage_900146`) was
+  diagnosed and reported but deliberately not fixed -- see "Residual"
+  above for why it is out of this task's scope.
 
 ## Remaining Limitations
 
-- The fix addresses only `employer.name`'s rotation label-bleed. If a
-  future rotation variant shifts the label into an even earlier row
+- The fix addresses only `employer.name`'s rotation label-bleed (both the
+  merged-line and lone-box-letter-row shapes it takes across backends).
+  If a future rotation variant shifts the label into an even earlier row
   position (e.g. above `b Employer identification number (EIN)`'s own
   zone) or shifts the answer itself out of the calibrated zone entirely,
-  this specific discriminator would not help -- it only handles "label
-  and answer both land in the zone, label first," which is exactly what
-  was observed across all 150 real failing documents.
+  this specific discriminator would not help.
+- The residual multi-line-merge defect (documented above, 4/150 and
+  1/150) remains: under sufficiently large rotation skew, the answer row
+  can still merge with part or all of the following address line. A
+  proper fix likely requires reworking `_group_observation_rows`'s
+  tolerance to account for accumulated per-row skew directly, rather than
+  per-token height alone -- a larger, shared-subsystem change
+  appropriately scoped to its own future task.
 - `employer.address` (street/city/state/ZIP) still has no equivalent
   fallback at all (pre-existing gap, noted in the Phase 6B doc, out of
   scope here).
 - A fresh 600-document benchmark re-run to produce an updated, separately
-  versioned comparison against this fix is a natural follow-up but was
+  versioned comparison against these fixes is a natural follow-up but was
   intentionally not done as part of this narrow remediation.

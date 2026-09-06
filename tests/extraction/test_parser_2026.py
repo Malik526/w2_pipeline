@@ -1006,6 +1006,68 @@ def test_parser_recovers_employer_name_when_rotated_label_fragmented_precedes_an
     assert document.employer.name == "Timberline Trading Co."
 
 
+def test_parser_recovers_employer_name_when_box_letter_marker_forms_its_own_row() -> None:
+    """Reproduction of a second, Tesseract-specific rotation defect found
+    only via at-scale (150-document) real-pipeline verification after the
+    first rotation fix above landed: Tesseract reports the printed Box c
+    letter marker ("c") as its own word-level observation, and under
+    rotation skew the per-row vertical-center drift accumulated across the
+    label's other, taller word tokens can push "c" outside
+    `_group_observation_rows`'s tolerance of them -- landing in its own
+    row, positioned between the (correctly skipped) label row and the real
+    answer row. Before this fix this "c" row was returned as
+    `employer.name` verbatim on all 150/150 real rotated documents
+    (verified via `--save-predictions` against the full rotated_png
+    variant). Geometry is the real pixel layout Tesseract reported for
+    `symage_900001-...-rotated.png` (diagnosed directly, not guessed),
+    scaled to this fixture's own layout extent: the label's own tokens
+    drift enough across the row that only the letter "c" falls outside
+    `_group_observation_rows`'s tolerance of the rest, landing in its own
+    row. See docs/experiments/phase8c1-employer-name-rotation-remediation.md."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            ocr_obs("c", 189, 420, 16, 15),
+            ocr_obs("Employer's", 223, 411, 154, 27),
+            ocr_obs("name,", 377, 413, 88, 18),
+            ocr_obs("address,", 465, 405, 121, 21),
+            ocr_obs("and", 586, 402, 57, 21),
+            ocr_obs("ZIP", 643, 400, 52, 20),
+            ocr_obs("code", 695, 398, 56, 21),
+            ocr_obs("Timberline", 182, 468, 92, 26),
+            ocr_obs("Trading", 347, 464, 71, 28),
+            ocr_obs("Co.", 471, 461, 47, 24),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-name-rotated-box-letter-marker",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Timberline Trading Co."
+
+
+def test_looks_like_employer_name_label_row_matches_a_lone_box_letter_marker() -> None:
+    assert _looks_like_employer_name_label_row("c")
+    assert _looks_like_employer_name_label_row("C")
+
+
+@pytest.mark.parametrize("employer_name", ["Timberline Trading Co.", "A"])
+def test_looks_like_employer_name_label_row_lone_letter_rule_only_matches_single_char(
+    employer_name: str,
+) -> None:
+    """A single-letter row is skipped (`"A"`), but any real multi-word or
+    multi-character employer name is untouched by this rule."""
+
+    assert _looks_like_employer_name_label_row(employer_name) == (employer_name == "A")
+
+
 def test_first_row_text_in_zone_skips_rows_matched_by_skip_row_predicate() -> None:
     """Direct unit test of the new `skip_row` parameter in isolation: the
     topmost row is skipped when the predicate matches it, and the next

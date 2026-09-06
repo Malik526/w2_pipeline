@@ -21,9 +21,24 @@
   new `_looks_like_employer_name_label_row` requires both "employer" and
   "zip code" together before treating a row as the label. Only the
   `employer.name` fallback call site uses it; zone geometry unchanged.
-- 9 new focused tests added (368 total passing, up from 359, zero
-  regressions); real-pipeline verification against 4 real `rotated_png`
-  documents with PaddleOCR GPU confirms recovery.
+- A 4-document PaddleOCR spot check looked complete, but a full
+  150-document `rotated_png`-only verification run (both backends, same
+  Phase 8B OCR config, `--save-predictions`, new `phase8c1_verify_*`
+  artifacts -- frozen Phase 8B files untouched) found a second,
+  Tesseract-specific defect: the printed Box c letter marker ("c") can
+  drift into its own row under rotation skew, which the first fix's
+  detector didn't catch. `_looks_like_employer_name_label_row` now also
+  skips a row whose entire text is a single letter.
+- Result: `employer.name` accuracy on rotated documents went from 0/150
+  to 149/150 (99.33%) on Tesseract and 146/150 (97.33%) on PaddleOCR. A
+  small residual on both backends -- the answer row merging with the
+  following address line under especially large skew, confirmed
+  backend-neutral (`symage_900146` fails on both) -- is a distinct,
+  rarer defect, diagnosed and reported but deliberately not fixed (out
+  of this task's narrow scope; would touch shared row-grouping tolerance
+  logic used by every field).
+- 13 new focused tests added (372 total passing, up from 359, zero
+  regressions).
 - Did not modify the frozen Phase 8B benchmark artifacts, did not tune
   OCR, did not change the evaluated field set, and did not touch Box 13
   checkbox rotation geometry (per the brief's explicit scope). Full

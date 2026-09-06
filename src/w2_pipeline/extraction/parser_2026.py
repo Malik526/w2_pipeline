@@ -533,9 +533,21 @@ def _looks_like_employer_name_label_row(row_text: str) -> bool:
     "employer") keeps a false positive on a real employer name
     effectively impossible -- no real company name is going to contain
     both "employer" and "zip code".
+
+    Also skips a row whose entire text is a single letter, e.g. `"c"`.
+    Tesseract reports the printed box-letter marker ("c") as its own
+    word-level observation, and under rotation skew the row-grouping
+    tolerance in `_group_observation_rows` can accumulate enough drift
+    across the label's other, taller word tokens that "c" no longer
+    falls within tolerance of them -- landing in its own row, positioned
+    between the (now correctly skipped) label row and the real answer
+    row. A single bare letter is never a legitimate `employer.name`
+    fallback answer on its own, so skipping it here is safe.
     """
 
-    normalized = row_text.lower()
+    normalized = row_text.strip().lower()
+    if len(normalized) == 1 and normalized.isalpha():
+        return True
     return all(marker in normalized for marker in _EMPLOYER_NAME_LABEL_MARKERS)
 
 

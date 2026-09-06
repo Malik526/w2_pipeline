@@ -1093,14 +1093,34 @@ predicate -- no other zone, backend, or geometry was touched. Zone
 calibration itself is unchanged (a selection-logic fix, not a
 re-tuning).
 
-**Verification**: 9 new focused tests (368 total passing, up from 359,
-zero regressions) plus real-pipeline verification against 4 real
-`rotated_png` documents with the actual PaddleOCR GPU backend, all 4
-recovering the correct employer name instead of the label. Per the
-final-test integrity rule, the frozen Phase 8B benchmark artifacts
-(`phase8b_final_*_600.json/.md/_predictions.jsonl`) were **not**
-regenerated or modified; no new 600-document benchmark was run to
-quantify the fix's accuracy impact at scale.
+**A second, Tesseract-specific defect was found via at-scale
+verification** (see below): Tesseract reports the printed Box c letter
+marker ("c") as its own one-character observation, and under rotation
+skew it can drift outside `_group_observation_rows`'s tolerance of the
+label's other words, landing in its own row that the first fix's
+detector didn't catch. `_looks_like_employer_name_label_row` now also
+skips any row whose entire text is a single letter.
+
+**Verification**: 13 new focused tests (372 total passing, up from 359,
+zero regressions). Real-pipeline verification ran in two passes: first a
+4-document PaddleOCR spot check (all 4 recovered correctly), then --
+since that was not enough to claim backend-neutrality at scale -- the
+full `run_pipeline_a` CLI filtered to the 150 `rotated_png` documents,
+once per backend, with the exact Phase 8B OCR configuration, written to
+new `phase8c1_verify_*_rotated_150.*` artifacts (not the frozen Phase 8B
+files). Result: `employer.name` accuracy on rotated documents went from
+0/150 to 149/150 (99.33%) on Tesseract and 146/150 (97.33%) on
+PaddleOCR. The small residual on both backends is a **distinct, rarer**
+defect -- the answer row merging with part or all of the following
+address line under especially large rotation skew (confirmed
+backend-neutral: `symage_900146` fails on both) -- diagnosed and
+reported but deliberately not fixed here, as it is a different failure
+shape than the reported bug and a safe fix would touch
+`_group_observation_rows`'s shared tolerance logic used by every zone in
+the parser. Per the final-test integrity rule, the frozen Phase 8B
+benchmark artifacts (`phase8b_final_*_600.json/.md/_predictions.jsonl`)
+were **not** regenerated or modified; no full 600-document benchmark was
+run to produce an updated official comparison.
 
 ## Future Phases (after Phase 8C.1)
 
