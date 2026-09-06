@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 import re
 from pathlib import Path
@@ -373,7 +374,9 @@ def _apply_ocr_employer_layout_fallbacks(
     `_apply_ocr_employee_layout_fallbacks`, which already covers
     SSN/first/last/suffix); see
     docs/experiments/phase6b-employer-name-investigation.md for the
-    diagnosis.
+    original diagnosis and
+    docs/experiments/phase8c1-employer-name-rotation-remediation.md for
+    the rotation-specific label-row skip added afterward.
     """
 
     if not _looks_like_full_page_ocr_form(observations):
@@ -383,7 +386,11 @@ def _apply_ocr_employer_layout_fallbacks(
     if employer.ein is None:
         updates["ein"] = _first_regex_text_in_zone(observations, _EIN_RE, (0.20, 0.42, 0.16, 0.24))
     if employer.name is None:
-        updates["name"] = _first_row_text_in_zone(observations, (0.04, 0.35, 0.25, 0.33))
+        updates["name"] = _first_row_text_in_zone(
+            observations,
+            (0.04, 0.35, 0.25, 0.33),
+            skip_row=_looks_like_employer_name_label_row,
+        )
     return employer.model_copy(update=updates) if updates else employer
 
 
@@ -470,31 +477,66 @@ def _zone_text(
 def _first_row_text_in_zone(
     observations: list[TextObservation],
     zone: tuple[float, float, float, float],
+    *,
+    skip_row: Callable[[str], bool] | None = None,
 ) -> str | None:
     """Return the topmost printed line within a zone, tokens joined left-to-right.
 
     Unlike `_zone_text` (which joins every observation found anywhere in
     the zone, appropriate for a zone that holds exactly one line), this
-    isolates only the first (topmost) row via `_group_observation_rows` so
-    a zone that spans a multi-line answer -- e.g. Box c's combined
-    employer name/address/ZIP block -- returns only the first line rather
-    than concatenating every line together. Deliberately does not use
+    isolates only one row via `_group_observation_rows` so a zone that
+    spans a multi-line answer -- e.g. Box c's combined employer
+    name/address/ZIP block -- returns only one line rather than
+    concatenating every line together. Deliberately does not use
     `_clean_layout_token`: that filter's Box e label-word denylist
     (`"and"`, `"name"`, ...) is specific to guarding the employee-name zone
     against the rotated Box e label-bleed bug and would risk stripping a
     legitimate word from an unrelated field (e.g. "and" in a real employer
     name like "Smith and Sons Inc.").
+
+    `skip_row`, when given, is checked against each row's joined text in
+    top-to-bottom order; the first row for which it returns `False` (or
+    that has no `skip_row` at all) is returned, rather than always the
+    single topmost row. Needed because rotation can shift a field's own
+    printed *label* into the same calibrated zone as its answer, ahead of
+    it -- see `_looks_like_employer_name_label_row` and
+    docs/experiments/phase8c1-employer-name-rotation-remediation.md.
     """
 
     zone_observations = _observations_in_zone(observations, zone)
     if not zone_observations:
         return None
-    rows = _group_observation_rows(zone_observations)
-    first_row = min(
-        rows, key=lambda row: min(_vertical_center(observation) for observation in row)
+    ordered_rows = sorted(
+        _group_observation_rows(zone_observations),
+        key=lambda row: min(_vertical_center(observation) for observation in row),
     )
-    tokens = [text for observation in first_row if (text := observation.text.strip())]
-    return " ".join(tokens) or None
+    for row in ordered_rows:
+        tokens = [text for observation in row if (text := observation.text.strip())]
+        row_text = " ".join(tokens)
+        if row_text and (skip_row is None or not skip_row(row_text)):
+            return row_text
+    return None
+
+
+_EMPLOYER_NAME_LABEL_MARKERS = ("employer", "zip code")
+
+
+def _looks_like_employer_name_label_row(row_text: str) -> bool:
+    """Detect Box c's own printed label row, not the employer's actual name.
+
+    Under rotation, the printed label ("...Employer's name, address, and
+    ZIP code") can drift into the same calibrated zone as the answer,
+    positioned ahead of it -- the same root-cause class as the earlier-
+    fixed Box e rotation label-bleed bug (confirmed by direct diagnosis:
+    `docs/experiments/phase8c1-employer-name-rotation-remediation.md`).
+    Checking for both markers together (rather than a single word like
+    "employer") keeps a false positive on a real employer name
+    effectively impossible -- no real company name is going to contain
+    both "employer" and "zip code".
+    """
+
+    normalized = row_text.lower()
+    return all(marker in normalized for marker in _EMPLOYER_NAME_LABEL_MARKERS)
 
 
 def _discard_tiny_artifacts(observations: list[TextObservation]) -> list[TextObservation]:

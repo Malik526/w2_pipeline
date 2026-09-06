@@ -2,6 +2,33 @@
 
 ## 2026-09-05
 
+### Phase 8C.1 - Remediate Rotated `employer.name` Parser/Layout Bug
+
+- Fixed the backend-neutral rotation bug Phase 8B discovered and reported
+  (below): under rotation, the printed Box c label
+  ("c Employer's name, address, and ZIP code") drifted into the same
+  calibrated zone as the real employer name, positioned topmost, causing
+  `_first_row_text_in_zone` to return the label instead of the answer on
+  100% of rotated documents for both backends.
+- Root cause confirmed by direct diagnosis against the real failing image
+  (PaddleOCR output inspected directly): same root-cause class as the
+  earlier-fixed "Rotated Employee-Name Label-Bleed" bug, but needing a
+  row-level (not token-level) discriminator so a real multi-word employer
+  name (e.g. "Smith and Sons Inc.") is never affected.
+- Fix (`src/w2_pipeline/extraction/parser_2026.py`): `_first_row_text_in_zone`
+  gained an optional `skip_row` predicate to skip a matched row and
+  continue to the next one, instead of always returning the topmost row;
+  new `_looks_like_employer_name_label_row` requires both "employer" and
+  "zip code" together before treating a row as the label. Only the
+  `employer.name` fallback call site uses it; zone geometry unchanged.
+- 9 new focused tests added (368 total passing, up from 359, zero
+  regressions); real-pipeline verification against 4 real `rotated_png`
+  documents with PaddleOCR GPU confirms recovery.
+- Did not modify the frozen Phase 8B benchmark artifacts, did not tune
+  OCR, did not change the evaluated field set, and did not touch Box 13
+  checkbox rotation geometry (per the brief's explicit scope). Full
+  report: `docs/experiments/phase8c1-employer-name-rotation-remediation.md`.
+
 ### Phase 8B - Final Head-To-Head 600-Document Benchmark
 
 - Ran the final, frozen PaddleOCR GPU and Tesseract CPU (PSM 3 +

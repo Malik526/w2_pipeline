@@ -1066,25 +1066,62 @@ backend, identical `(document_id, variant_id)` key sets between backends,
 either file. No code changed in this phase; full suite unaffected (359
 tests passing, same as Phase 8A).
 
-## Future Phases (after Phase 8B)
+### Phase 8C.1 - Rotated `employer.name` Parser/Layout Bug: FIXED
+
+Full record: `docs/experiments/phase8c1-employer-name-rotation-remediation.md`.
+
+Narrow remediation of the rotation bug reported (not fixed) in Phase 8B
+above. Direct diagnosis against the real failing image
+(`symage_900001-...-rotated.png`, PaddleOCR output inspected directly)
+confirmed the root cause: under rotation, the printed Box c label
+("c Employer's name, address, and ZIP code") drifts into the same
+calibrated zone as the real answer, positioned topmost, so
+`_first_row_text_in_zone`'s prior always-return-the-topmost-row logic
+picked the label -- the same root-cause class as the earlier-fixed
+"Rotated Employee-Name Label-Bleed" bug, but requiring a row-level (not
+token-level) fix since the employee-name fix's token denylist would strip
+"and" from a real employer name like "Smith and Sons Inc.".
+
+**Fix**: `_first_row_text_in_zone` gained an optional `skip_row` predicate
+(rows are now scanned top-to-bottom, skipping any row the predicate
+matches, instead of unconditionally returning the topmost row); a new
+`_looks_like_employer_name_label_row` detector requires both "employer"
+and "zip code" to appear together in a row before treating it as the
+label, making a false positive on a real employer name effectively
+impossible. Only the `employer.name` fallback call site passes this
+predicate -- no other zone, backend, or geometry was touched. Zone
+calibration itself is unchanged (a selection-logic fix, not a
+re-tuning).
+
+**Verification**: 9 new focused tests (368 total passing, up from 359,
+zero regressions) plus real-pipeline verification against 4 real
+`rotated_png` documents with the actual PaddleOCR GPU backend, all 4
+recovering the correct employer name instead of the label. Per the
+final-test integrity rule, the frozen Phase 8B benchmark artifacts
+(`phase8b_final_*_600.json/.md/_predictions.jsonl`) were **not**
+regenerated or modified; no new 600-document benchmark was run to
+quantify the fix's accuracy impact at scale.
+
+## Future Phases (after Phase 8C.1)
 
 ```text
-Phase 8C (prescribed next step) - run the validator-effectiveness
+Phase 8C.2 (not yet scoped) - run the validator-effectiveness
 analysis (src/w2_pipeline/evaluation/validator_effectiveness.py) against
-these exact saved Phase 8B prediction artifacts, now that they exist as
-complete per-document predictions rather than needing reconstruction.
+the Phase 8B prediction artifacts, now that they exist as complete
+per-document predictions rather than needing reconstruction. Optionally,
+a fresh 600-document benchmark re-run (separately versioned, not
+replacing the frozen Phase 8B artifacts) to quantify Phase 8C.1's
+employer.name accuracy impact at scale.
 
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
-evidence feeds into (docs/architecture-decision-record.md update),
-including whether/how to address the newly discovered employer.name
-rotation bug.
+evidence feeds into (docs/architecture-decision-record.md update).
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
 employer.address OCR fallback and extraction follow-up; a rotation-aware
-Box 13 checkbox recalibration; the newly discovered employer.name
-rotation-bleed fix; and/or a larger-scale Pipeline B evaluation.
+Box 13 checkbox recalibration; and/or a larger-scale Pipeline B
+evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

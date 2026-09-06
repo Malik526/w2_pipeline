@@ -12,6 +12,7 @@ from w2_pipeline.extraction.models import (
 from w2_pipeline.extraction.parser_2026 import (
     _clean_layout_token,
     _first_row_text_in_zone,
+    _looks_like_employer_name_label_row,
     parse_money,
     parse_w2_2026_observations,
 )
@@ -939,6 +940,130 @@ def test_parser_employer_name_fallback_absent_without_zone_observations() -> Non
 
     assert warnings == []
     assert document.employer.name is None
+
+
+def test_parser_recovers_employer_name_when_rotated_label_precedes_answer_in_zone() -> None:
+    """Reproduction of the real Phase 8B rotation bug found on
+    `symage_900001-...-rotated.png`: under rotation, PaddleOCR reads the
+    printed Box c label ("c Employer's name, address, and ZIP code") as
+    one merged line positioned topmost in the same calibrated zone as the
+    real answer immediately below it. Before this fix,
+    `_first_row_text_in_zone` always returned the single topmost row,
+    yielding the label text as `employer.name` instead of the answer, on
+    all 150/150 rotated documents for both backends. See
+    docs/experiments/phase8c1-employer-name-rotation-remediation.md."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            ocr_obs("c Employer's name, address, and ZIP code", 162, 390, 550, 15),
+            *_employer_box_c_observations(),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-name-rotated-label-bleed",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Timberline Trading Co."
+
+
+def test_parser_recovers_employer_name_when_rotated_label_fragmented_precedes_answer() -> None:
+    """Same rotation label-bleed scenario as above, but with the label
+    split into Tesseract-style word fragments rather than one merged
+    PaddleOCR-style line, confirming the fix is backend-neutral (matches
+    the real finding: zero overlap between the two backends' 150 failing
+    documents each, same failure mode on both)."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            ocr_obs("c", 162, 390, 15, 15),
+            ocr_obs("Employer's", 185, 390, 120, 15),
+            ocr_obs("name,", 313, 390, 60, 15),
+            ocr_obs("address,", 381, 390, 90, 15),
+            ocr_obs("and", 479, 390, 40, 15),
+            ocr_obs("ZIP", 527, 390, 50, 15),
+            ocr_obs("code", 585, 390, 60, 15),
+            *_employer_box_c_observations(),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-name-rotated-label-bleed-fragmented",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Timberline Trading Co."
+
+
+def test_first_row_text_in_zone_skips_rows_matched_by_skip_row_predicate() -> None:
+    """Direct unit test of the new `skip_row` parameter in isolation: the
+    topmost row is skipped when the predicate matches it, and the next
+    row down is returned instead."""
+
+    observations = [
+        ocr_obs("c Employer's name, address, and ZIP code", 162, 390, 550, 15),
+        *_employer_box_c_observations(),
+    ]
+
+    result = _first_row_text_in_zone(
+        observations,
+        (0.0, 1.0, 0.0, 1.0),
+        skip_row=_looks_like_employer_name_label_row,
+    )
+
+    assert result == "Timberline Trading Co."
+
+
+def test_first_row_text_in_zone_skip_row_none_preserves_old_topmost_behavior() -> None:
+    """Without `skip_row`, behavior is unchanged from before this fix: the
+    topmost row wins even if it is the label."""
+
+    observations = [
+        ocr_obs("c Employer's name, address, and ZIP code", 162, 390, 550, 15),
+        *_employer_box_c_observations(),
+    ]
+
+    result = _first_row_text_in_zone(observations, (0.0, 1.0, 0.0, 1.0))
+
+    assert result == "c Employer's name, address, and ZIP code"
+
+
+def test_looks_like_employer_name_label_row_matches_the_real_printed_label() -> None:
+    assert _looks_like_employer_name_label_row(
+        "c Employer's name, address, and ZIP code"
+    )
+    assert _looks_like_employer_name_label_row("EMPLOYER'S NAME, ADDRESS, AND ZIP CODE")
+
+
+@pytest.mark.parametrize(
+    "employer_name",
+    [
+        "Timberline Trading Co.",
+        "Smith and Sons Inc.",
+        "Employer Solutions Group LLC",
+        "ZIP Line Logistics Inc.",
+    ],
+)
+def test_looks_like_employer_name_label_row_does_not_match_real_employer_names(
+    employer_name: str,
+) -> None:
+    """Guards the false-positive side: a real employer name must never be
+    mistaken for the label, even one that happens to contain one of the
+    two marker words alone ("Employer Solutions Group LLC", "ZIP Line
+    Logistics Inc."). Both markers together is required."""
+
+    assert not _looks_like_employer_name_label_row(employer_name)
 
 
 def test_first_row_text_in_zone_isolates_topmost_line_from_multiline_zone() -> None:
