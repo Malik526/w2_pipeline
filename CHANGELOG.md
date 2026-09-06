@@ -2,6 +2,34 @@
 
 ## 2026-09-05
 
+### Phase 8C.2 - Final PaddleOCR 600-Document Production-Candidate Run: FROZEN
+
+- Re-ran the full 600-document, 24-field, all-four-variant benchmark on
+  PaddleOCR GPU with the post-Phase-8C.1 code, identical OCR
+  configuration and dataset to Phase 8B, written to new
+  `phase8c2_final_paddleocr_gpu_all_variants_600.*` artifacts. No OCR,
+  parser, checkbox, or field-coverage change was made before or during
+  this run; the frozen Phase 8B artifacts were not touched.
+- Result: full-pipeline accuracy 99.56% (14,336/14,400), up from 98.54%;
+  text/parser-subsystem accuracy 99.97% (13,796/13,800), up from 98.91%;
+  clean/compressed/blurred still 100.0%; rotated 98.22%, up from 94.17%.
+  Only 64 field failures total (down from 210), across just two fields.
+- `employer.name`: 99.33% (596/600), up from 75.00%. The reported
+  150/150 rotation label-capture failure is confirmed gone. The 4
+  remaining misses are the exact same documents and predicted values
+  already diagnosed as the row-merge residual in Phase 8C.1 -- not new.
+- `box_13.retirement_plan`: 90.00% (540/600), confirmed byte-for-byte
+  identical to Phase 8B by direct failing-document-ID set comparison --
+  zero change to checkbox detection logic, as required.
+- Every other field (22 of 24) is 100.0% across all 600 documents; no
+  new systematic parser/layout defect found anywhere in the scan.
+- **Freeze decision: all freeze-rule conditions satisfied. Extraction is
+  declared frozen as of this run.** No further extraction tuning
+  performed. Full report:
+  `docs/experiments/phase8c2-final-paddle-production-candidate.md`.
+- No source code changed; full suite unaffected (372 tests passing, same
+  as Phase 8C.1).
+
 ### Phase 8C.1 - Remediate Rotated `employer.name` Parser/Layout Bug
 
 - Fixed the backend-neutral rotation bug Phase 8B discovered and reported

@@ -1122,16 +1122,57 @@ benchmark artifacts (`phase8b_final_*_600.json/.md/_predictions.jsonl`)
 were **not** regenerated or modified; no full 600-document benchmark was
 run to produce an updated official comparison.
 
-## Future Phases (after Phase 8C.1)
+### Phase 8C.2 - Final PaddleOCR 600-Document Production-Candidate Run: FROZEN
+
+Full record: `docs/experiments/phase8c2-final-paddle-production-candidate.md`.
+
+Re-ran the full 600-document, 24-field, all-four-variant benchmark on
+PaddleOCR GPU with the current post-Phase-8C.1 code (git commit
+`467f327`), same OCR configuration and dataset as Phase 8B, written to
+new `phase8c2_final_paddleocr_gpu_all_variants_600.*` artifacts (frozen
+Phase 8B files untouched). No OCR, parser, checkbox, or field-coverage
+change was made before or during this run.
+
+**Result**: full-pipeline accuracy **99.56%** (14,336/14,400), up from
+Phase 8B's 98.54%; text/parser-subsystem accuracy (23 fields, excl.
+`box_13.retirement_plan`) **99.97%** (13,796/13,800), up from 98.91%;
+clean/compressed/blurred all still 100.0%; rotated **98.22%**, up from
+94.17%. Only 64 field failures total (down from 210), across only two
+fields:
+
+- `employer.name`: **99.33%** (596/600), up from 75.00% -- the reported
+  150/150 rotation label-capture failure is confirmed gone (zero
+  documents predict the label text or a bare "c" in this run). The 4
+  remaining misses are the exact same 4 documents (`symage_900033`,
+  `symage_900045`, `symage_900082`, `symage_900146`) and predicted
+  values already diagnosed as the row-merge residual in Phase 8C.1 --
+  not a new finding.
+- `box_13.retirement_plan`: 90.00% (540/600), **byte-for-byte identical**
+  to Phase 8B -- confirmed the exact same 60 failing document IDs by
+  direct set comparison against the frozen Phase 8B result, verifying
+  zero change to checkbox detection logic.
+
+Every other field (22 of 24) is 100.0% across all 600 documents. No new
+systematic parser/layout defect appears anywhere in the scan.
+
+**Freeze decision: all freeze-rule conditions satisfied** -- clean/JPEG/
+blur still perfect, rotated `employer.name` remediation behaves exactly
+as expected, remaining failures map entirely onto already-understood
+categories, no new defect found. **Extraction is declared frozen as of
+this run.** No further extraction tuning was performed as a result of
+these numbers.
+
+Full suite unaffected (no source code changed, only new result artifacts
+and documentation): 372 tests passing, same as after Phase 8C.1.
+
+## Future Phases (after Phase 8C.2)
 
 ```text
-Phase 8C.2 (not yet scoped) - run the validator-effectiveness
+Phase 8C.3 (not yet scoped) - run the validator-effectiveness
 analysis (src/w2_pipeline/evaluation/validator_effectiveness.py) against
-the Phase 8B prediction artifacts, now that they exist as complete
-per-document predictions rather than needing reconstruction. Optionally,
-a fresh 600-document benchmark re-run (separately versioned, not
-replacing the frozen Phase 8B artifacts) to quantify Phase 8C.1's
-employer.name accuracy impact at scale.
+the frozen Phase 8C.2 prediction artifacts, now that extraction itself is
+frozen and this is the final production-candidate prediction set to
+validate against.
 
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update).
@@ -1140,8 +1181,9 @@ Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
 employer.address OCR fallback and extraction follow-up; a rotation-aware
-Box 13 checkbox recalibration; and/or a larger-scale Pipeline B
-evaluation.
+Box 13 checkbox recalibration; a fix for the employer.name row-merge
+residual (would require reworking `_group_observation_rows`'s shared
+tolerance logic); and/or a larger-scale Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever
