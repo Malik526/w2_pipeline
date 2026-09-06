@@ -1,0 +1,8 @@
+{
+  "correct_fields": 12743,
+  "documents": 600,
+  "field_accuracy": 0.8849305555555556,
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "threshold_degrees": 0.75,
+  "total_fields": 14400
+}

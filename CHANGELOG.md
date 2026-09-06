@@ -2,6 +2,39 @@
 
 ## 2026-09-06
 
+### Phase 8C.9 - Conditional Small-Angle Scan-Deskew Experiment: NOT PROMOTED
+
+- Tested whether image-derived small-angle deskew (pixel content only --
+  no `variant_id`/filename/ground-truth dependency) could eliminate the
+  remaining rotation-driven `employer.name` and `box_13.retirement_plan`
+  failures. New opt-in module `extraction/deskew.py`
+  (`enable_conditional_deskew=False` by default, no production caller),
+  a Pillow-only horizontal-projection-profile angle search (an OCR-box
+  row-slope method was tried and rejected first, with direct evidence of
+  false cross-column row merges). 600-document uncorrected scan found
+  exactly 0.000-degree skew on all 450 clean/JPEG/blur documents and a
+  consistent ~2.0-2.1-degree skew on all 150 rotated documents; threshold
+  set to 0.75 degrees on technical grounds.
+- Result: `employer.name` completely fixed (150/150 rotated documents
+  correct, up from 146/150) -- but the same correction catastrophically
+  regresses ten other fields. Full 600-document benchmark: clean/JPEG/
+  blur unchanged at 100%, but rotated accuracy collapses from 98.22% to
+  53.97% (every corrected document gains new field errors, 11.05
+  average). Root cause, directly diagnosed: OCR reads text correctly,
+  but full-page zone-based fallbacks are calibrated against the clean
+  render's specific canvas geometry, which the corrected image's canvas
+  proportions no longer match -- values get read correctly but assigned
+  to the wrong field zones. `box_13.retirement_plan` is completely
+  unaffected either way (identical 60/150 failing document IDs).
+- Decision: C. Harmful/unstable overall -- not promoted, per the brief's
+  explicit instruction not to accept a rotated improvement that causes
+  regressions elsewhere. Phase 8C.5-8C.8's employer-name validation
+  signals remain the production mechanism for this defect class,
+  explicitly preserved and unmodified.
+- 12 new tests; full suite: 489 tests passing, up from 477, zero
+  regressions. Full report:
+  `docs/experiments/phase8c9-conditional-scan-deskew.md`.
+
 ### Phase 8C.8 - Promote Employer-Name Signals Into The Production Validator
 
 - Promoted Phase 8C.5's address-leak heuristic and Phase 8C.6's

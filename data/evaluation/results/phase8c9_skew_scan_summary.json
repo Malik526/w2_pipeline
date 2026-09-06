@@ -1,0 +1,5 @@
+{
+  "documents": 600,
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "threshold_degrees": 0.75
+}

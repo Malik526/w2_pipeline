@@ -1445,15 +1445,71 @@ quantified rather than assumed.
 zero regressions.** This is a development-baseline update, not a final
 project freeze; checkbox remediation was not started.
 
-## Future Phases (after Phase 8C.8)
+### Phase 8C.9 - Conditional Small-Angle Scan-Deskew Experiment: NOT PROMOTED (Harmful Overall)
+
+Full record: `docs/experiments/phase8c9-conditional-scan-deskew.md`.
+
+Tested whether image-derived small-angle deskew (no `variant_id`,
+filename, or ground-truth dependency -- pixel content only) could
+eliminate the remaining rotation-driven `employer.name` and
+`box_13.retirement_plan` failures. New opt-in module,
+`extraction/deskew.py` (`enable_conditional_deskew=False` by default on
+`ObservationAcquirer`, no production caller enables it), using a
+Pillow-only horizontal-projection-profile angle search (an OCR-box
+row-slope method was tried first and rejected with direct evidence:
+`_group_observation_rows` chain-merges unrelated same-height text across
+a two-column page into false "rows" with wildly inconsistent slopes).
+The 600-document uncorrected scan found exactly 0.000-degree skew on all
+450 clean/JPEG/blur documents and a consistent ~2.0-2.1-degree skew on
+all 150 rotated documents -- complete, non-overlapping separation;
+threshold set to 0.75 degrees on technical grounds (margin above
+detector resolution and below the rotated population's floor), not
+because it merely separates this one dataset.
+
+**Result: `employer.name` is completely, genuinely fixed (150/150
+rotated documents correct, up from 146/150) -- but the same correction
+catastrophically regresses ten other fields.** Full 600-document
+benchmark (identical OCR/parser/checkbox/schema/24-field/evaluator to
+Phase 8C.2, only the deskew step varies): clean/JPEG/blur remain
+byte-for-byte unchanged at 100% (zero triggers, as required), but rotated
+accuracy collapses from 98.22% to **53.97%** -- every one of the 150
+corrected documents gains new field errors (11.05 average, out of 24),
+with `employee.ssn`, `employer.ein`, `employee.suffix`,
+`employee.last_name`, and federal Boxes 1/2/4/6/7/8 failing on
+essentially every document. Root cause, directly diagnosed (not
+assumed): OCR text is read correctly, but full-page zone-based fallbacks
+in `parser_2026.py` are calibrated against the clean render's specific
+canvas geometry, and the corrected image's canvas proportions (already
+different for the raw `rotated_png` variant before any correction, and
+changed again by `expand=True`'s canvas growth) no longer match --
+values get read correctly but assigned to the wrong field zones. The
+same root cause explains why `box_13.retirement_plan` is completely
+unaffected either way (identical 60/150 failing document IDs, verified
+by exact set comparison): its calibrated zone is equally misaligned
+before and after correction.
+
+**Decision: C. Harmful/unstable, overall -- not promoted**, per the
+brief's explicit instruction not to accept a rotated improvement that
+causes regressions elsewhere. `enable_conditional_deskew` stays an
+explicit, off-by-default opt-in with no production caller. Phase
+8C.5-8C.8's employer-name validation signals remain the production
+mechanism for this defect class, explicitly preserved and unmodified.
+Checkbox-specific remediation remains a fully open gap.
+
+12 new tests; full suite: **489 tests passing, up from 477, zero
+regressions.**
+
+## Future Phases (after Phase 8C.9)
 
 ```text
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),
 including the full employer-name signal-development arc (Phase
 8C.5-8C.8: measurement, promotion, and the resulting 9.67%
-unsafe-acceptance rate on rotated documents) and the still-open
-box_13.retirement_plan checkbox gap.
+unsafe-acceptance rate on rotated documents), the negative result and
+root-cause lesson from the Phase 8C.9 deskew experiment (calibrated OCR
+zones are canvas-geometry-specific, not just rotation-specific), and the
+still-open box_13.retirement_plan checkbox gap.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
@@ -1461,13 +1517,16 @@ pricing study to close the Paddle-vs-Tesseract economics question; the
 employer.address OCR fallback and extraction follow-up; a rotation-aware
 Box 13 checkbox recalibration and its own validation signal (pixel-
 coverage margin, skew, geometry quality) to close the remaining 58/60
-uncaught checkbox failures; a fix for the employer.name row-merge
-residual itself (would require reworking `_group_observation_rows`'s
-shared tolerance logic, rather than just detecting it at validation
-time); broader real-world/adversarial employer-name testing to
-stress-test the now-production address-leak/layout rules beyond this
-one synthetic dataset's 4 positive examples; and/or a larger-scale
-Pipeline B evaluation.
+uncaught checkbox failures -- Phase 8C.9 showed a bare angle-only deskew
+cannot substitute for this; a fix for the employer.name row-merge
+residual itself, either via a genuine canvas-geometry-normalizing
+preprocessing redesign (Phase 8C.9 showed a bare rotation correction is
+not sufficient and actively regresses ten other fields) or by reworking
+`_group_observation_rows`'s shared tolerance logic directly; broader
+real-world/adversarial employer-name testing to stress-test the
+now-production address-leak/layout rules beyond this one synthetic
+dataset's 4 positive examples; and/or a larger-scale Pipeline B
+evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

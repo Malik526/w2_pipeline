@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 
 from w2_pipeline.extraction.checkbox_vision import detect_box_13_retirement_plan_mark
+from w2_pipeline.extraction.deskew import DEFAULT_TRIGGER_THRESHOLD_DEGREES, deskew_image_if_needed
 from w2_pipeline.extraction.models import AcquisitionRoute, ObservationSet
 from w2_pipeline.extraction.native_pdf import extract_native_pdf_observations
 from w2_pipeline.extraction.ocr import TesseractOcrAdapter
@@ -23,10 +25,38 @@ class ObservationAcquirer:
     pixel-based Box 13 checkbox detector (`checkbox_vision`) directly on the
     page image, independent of whichever OCR backend produced the text
     observations.
+
+    `enable_conditional_deskew` (Phase 8C.9, default `False` -- an explicit
+    opt-in, not a default-on production behavior change) runs
+    `w2_pipeline.extraction.deskew` against the page image *before* OCR and
+    checkbox detection, for the plain-image acquisition path only (PDF
+    paths are unaffected -- this dataset's documents are all images, and
+    extending deskew to PDF-rendered pages is out of this phase's scope).
+    An already-upright image is passed through completely untouched (the
+    original path, never a re-saved copy); only a genuinely triggered
+    correction produces a new file, and both OCR and checkbox detection
+    then run on that corrected file so the two systems never disagree
+    about which image they saw.
     """
 
-    def __init__(self, ocr_adapter: OcrAdapter | None = None) -> None:
+    def __init__(
+        self,
+        ocr_adapter: OcrAdapter | None = None,
+        *,
+        enable_conditional_deskew: bool = False,
+        deskew_threshold_degrees: float = DEFAULT_TRIGGER_THRESHOLD_DEGREES,
+        deskew_output_dir: Path | None = None,
+    ) -> None:
         self.ocr_adapter = ocr_adapter or TesseractOcrAdapter()
+        self.enable_conditional_deskew = enable_conditional_deskew
+        self.deskew_threshold_degrees = deskew_threshold_degrees
+        self._deskew_output_dir = deskew_output_dir
+
+    @property
+    def deskew_output_dir(self) -> Path:
+        if self._deskew_output_dir is None:
+            self._deskew_output_dir = Path(tempfile.mkdtemp(prefix="w2_pipeline_deskew_"))
+        return self._deskew_output_dir
 
     def acquire(self, ingested_document: IngestedDocument) -> ObservationSet:
         """Acquire text observations using native PDF text or OCR."""
@@ -35,14 +65,23 @@ class ObservationAcquirer:
         if ingested_document.source_type == SourceDocumentType.PDF:
             return self._acquire_pdf(path, ingested_document)
 
-        observations = self.ocr_adapter.extract_image(path, page_number=1)
-        box_13_visual_marks, warnings = self._detect_box_13_visual_marks(image_paths=[path])
+        resolved_path = self._resolve_image_path(path)
+        observations = self.ocr_adapter.extract_image(resolved_path, page_number=1)
+        box_13_visual_marks, warnings = self._detect_box_13_visual_marks(image_paths=[resolved_path])
         return ObservationSet(
             observations=observations,
             route=AcquisitionRoute.OCR,
             box_13_visual_marks=box_13_visual_marks,
             warnings=warnings,
         )
+
+    def _resolve_image_path(self, path: Path) -> Path:
+        if not self.enable_conditional_deskew:
+            return path
+        resolved_path, _angle, _corrected = deskew_image_if_needed(
+            path, output_dir=self.deskew_output_dir, threshold_degrees=self.deskew_threshold_degrees
+        )
+        return resolved_path
 
     def _acquire_pdf(self, path: Path, ingested_document: IngestedDocument) -> ObservationSet:
         if ingested_document.pdf_text_mode == PdfTextMode.EMBEDDED_TEXT:
