@@ -1,0 +1,8 @@
+{
+  "correct_fields": 14396,
+  "documents": 600,
+  "field_accuracy": 0.9997222222222222,
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "non_checkbox_field_mismatches_vs_frozen_phase8c2": [],
+  "total_fields": 14400
+}

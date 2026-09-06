@@ -1499,7 +1499,62 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
-## Future Phases (after Phase 8C.9)
+### Phase 8C.10 - OCR-Anchor-Relative `box_13.retirement_plan` Checkbox Detector: PROMOTABLE (Opt-In, Not Auto-Promoted)
+
+Full record:
+`docs/experiments/phase8c10-anchor-relative-checkbox-detector.md`.
+
+Replaced the fragile fixed-page-coordinate `RETIREMENT_PLAN_ZONE`
+checkbox detector with one that locates the printed "Retirement plan"
+label in the OCR observations already produced for the page (no second
+OCR pass), derives a small search region relative to that label's own
+geometry, finds the checkbox's printed border first (not just "dark
+pixels"), and classifies checked/unchecked from interior ink only
+(border excluded via a 0.22 inset). New module:
+`extraction/checkbox_anchor.py` -- Pillow-only, takes only `image_path`
+and OCR `observations`, never `variant_id`/filename/ground truth
+(verified by signature inspection and an AST import check).
+
+Root cause (diagnosed via a real ASCII pixel-density tool, not assumed):
+the fixed zone's ratios are calibrated against one canvas geometry, but
+the checkbox stays in a stable position *relative to its own label*
+across all four variants even though its absolute page position varies
+by hundreds of pixels.
+
+**Localization: 600/600 anchor found, 600/600 checkbox found (100%),
+all four variants perfect.** **Classification: 600/600 correct (100%)**
+-- `interior_ink_ratio` shows complete separation (checked 0.244-0.298,
+unchecked exactly 0.0, zero overlap), so `DEFAULT_INTERIOR_INK_THRESHOLD
+= 0.12` sits in the middle of a wide, non-cherry-picked margin. All 60
+previously-failing Phase 8C.2 documents are fixed; zero new failures.
+
+**Full 600-document A/B benchmark**: every non-checkbox field is
+bit-identical to the frozen Phase 8C.2 prediction (0 mismatches).
+Total field accuracy **14396/14400 = 99.972%**, up from Phase 8C.2's
+14336/14400 = 99.556%. The 4 remaining failures are `employer.name` on
+`rotated_png`, identical by exact document-ID set comparison to Phase
+8C.2's pre-existing, out-of-scope residual (Phase 8C.9's already-decided
+gap, untouched here). Incremental detector-only latency: **0.056s/doc
+mean** (~4% of the dominant PaddleOCR cost).
+
+**Integration**: `ObservationAcquirer.enable_anchor_relative_checkbox`
+(default `False`, opt-in, matching the Phase 8C.9 pattern). Falls back
+explicitly to the old fixed-zone detector if the anchor/checkbox can't
+be localized, recording which detector ran in `ObservationSet.warnings`
+-- never silent, never fabricated. Flag off leaves the default path
+completely unchanged (verified by a monkeypatch call-count assertion).
+
+**Decision: A. Strictly better, evidence supports promotion, but not
+auto-promoted** per the brief -- flipping the default to `True` in the
+production caller, and whether a dedicated confidence-based checkbox
+validator is still worth building first (using the preserved
+`anchor_distance_px`/`shape_score`/`interior_ink_ratio`/`decision_margin`
+evidence fields), remain open product decisions.
+
+25 new tests (20 detector unit/architecture tests + 5 integration
+tests); full suite: **514 tests passing, up from 489, zero regressions.**
+
+## Future Phases (after Phase 8C.10)
 
 ```text
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
@@ -1509,24 +1564,24 @@ including the full employer-name signal-development arc (Phase
 unsafe-acceptance rate on rotated documents), the negative result and
 root-cause lesson from the Phase 8C.9 deskew experiment (calibrated OCR
 zones are canvas-geometry-specific, not just rotation-specific), and the
-still-open box_13.retirement_plan checkbox gap.
+product decision on promoting Phase 8C.10's anchor-relative checkbox
+detector to default-on.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
-employer.address OCR fallback and extraction follow-up; a rotation-aware
-Box 13 checkbox recalibration and its own validation signal (pixel-
-coverage margin, skew, geometry quality) to close the remaining 58/60
-uncaught checkbox failures -- Phase 8C.9 showed a bare angle-only deskew
-cannot substitute for this; a fix for the employer.name row-merge
-residual itself, either via a genuine canvas-geometry-normalizing
-preprocessing redesign (Phase 8C.9 showed a bare rotation correction is
-not sufficient and actively regresses ten other fields) or by reworking
+employer.address OCR fallback and extraction follow-up; a dedicated
+confidence-based validator for box_13.retirement_plan built on top of
+Phase 8C.10's preserved anchor/candidate/interior-ink evidence fields,
+analogous to the employer-name validator signals from Phase 8C.5-8C.8;
+a fix for the employer.name row-merge residual itself, either via a
+genuine canvas-geometry-normalizing preprocessing redesign (Phase 8C.9
+showed a bare rotation correction is not sufficient and actively
+regresses ten other fields) or by reworking
 `_group_observation_rows`'s shared tolerance logic directly; broader
-real-world/adversarial employer-name testing to stress-test the
-now-production address-leak/layout rules beyond this one synthetic
-dataset's 4 positive examples; and/or a larger-scale Pipeline B
-evaluation.
+real-world/adversarial employer-name and checkbox testing to
+stress-test both now-production mechanisms beyond this one synthetic
+dataset's variants; and/or a larger-scale Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

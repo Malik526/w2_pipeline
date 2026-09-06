@@ -5,9 +5,10 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
+from w2_pipeline.extraction.checkbox_anchor import DEFAULT_INTERIOR_INK_THRESHOLD, detect_retirement_plan
 from w2_pipeline.extraction.checkbox_vision import detect_box_13_retirement_plan_mark
 from w2_pipeline.extraction.deskew import DEFAULT_TRIGGER_THRESHOLD_DEGREES, deskew_image_if_needed
-from w2_pipeline.extraction.models import AcquisitionRoute, ObservationSet
+from w2_pipeline.extraction.models import AcquisitionRoute, ObservationSet, TextObservation
 from w2_pipeline.extraction.native_pdf import extract_native_pdf_observations
 from w2_pipeline.extraction.ocr import TesseractOcrAdapter
 from w2_pipeline.extraction.ocr_backend import OcrAdapter
@@ -37,6 +38,18 @@ class ObservationAcquirer:
     correction produces a new file, and both OCR and checkbox detection
     then run on that corrected file so the two systems never disagree
     about which image they saw.
+
+    `enable_anchor_relative_checkbox` (Phase 8C.10, default `False` --
+    an explicit opt-in) replaces the fixed-page-zone
+    `box_13.retirement_plan` detector with
+    `w2_pipeline.extraction.checkbox_anchor.detect_retirement_plan` for
+    the plain-image acquisition path, reusing the same OCR observations
+    already produced (no second OCR pass). If the anchor or checkbox
+    cannot be localized, this falls back to the original fixed-zone
+    detector rather than fabricating a result -- which detector actually
+    produced the result is recorded in `ObservationSet.warnings` (an
+    explicit, measurable note, not silent), never inferred after the
+    fact.
     """
 
     def __init__(
@@ -46,11 +59,15 @@ class ObservationAcquirer:
         enable_conditional_deskew: bool = False,
         deskew_threshold_degrees: float = DEFAULT_TRIGGER_THRESHOLD_DEGREES,
         deskew_output_dir: Path | None = None,
+        enable_anchor_relative_checkbox: bool = False,
+        checkbox_interior_ink_threshold: float = DEFAULT_INTERIOR_INK_THRESHOLD,
     ) -> None:
         self.ocr_adapter = ocr_adapter or TesseractOcrAdapter()
         self.enable_conditional_deskew = enable_conditional_deskew
         self.deskew_threshold_degrees = deskew_threshold_degrees
         self._deskew_output_dir = deskew_output_dir
+        self.enable_anchor_relative_checkbox = enable_anchor_relative_checkbox
+        self.checkbox_interior_ink_threshold = checkbox_interior_ink_threshold
 
     @property
     def deskew_output_dir(self) -> Path:
@@ -67,13 +84,43 @@ class ObservationAcquirer:
 
         resolved_path = self._resolve_image_path(path)
         observations = self.ocr_adapter.extract_image(resolved_path, page_number=1)
-        box_13_visual_marks, warnings = self._detect_box_13_visual_marks(image_paths=[resolved_path])
+        box_13_visual_marks, warnings = self._detect_box_13_visual_marks_for_image(resolved_path, observations)
         return ObservationSet(
             observations=observations,
             route=AcquisitionRoute.OCR,
             box_13_visual_marks=box_13_visual_marks,
             warnings=warnings,
         )
+
+    def _detect_box_13_visual_marks_for_image(
+        self, image_path: Path, observations: list[TextObservation]
+    ) -> tuple[dict[str, bool], list[str]]:
+        if not self.enable_anchor_relative_checkbox:
+            return self._detect_box_13_visual_marks(image_paths=[image_path])
+
+        try:
+            detection = detect_retirement_plan(
+                image_path, observations, interior_ink_threshold=self.checkbox_interior_ink_threshold
+            )
+        except Exception as exc:  # noqa: BLE001 - optional signal, never fatal
+            marks, warnings = self._detect_box_13_visual_marks(image_paths=[image_path])
+            return marks, [
+                *warnings,
+                f"Box 13 retirement_plan: anchor-relative detection raised {exc.__class__.__name__}; "
+                "fell back to fixed-zone detector.",
+            ]
+
+        if detection.retirement_plan is not None:
+            return {"retirement_plan": detection.retirement_plan}, [
+                "Box 13 retirement_plan: anchor-relative detection used."
+            ]
+
+        marks, warnings = self._detect_box_13_visual_marks(image_paths=[image_path])
+        return marks, [
+            *warnings,
+            "Box 13 retirement_plan: anchor-relative detection could not localize the "
+            "anchor/checkbox; fell back to fixed-zone detector.",
+        ]
 
     def _resolve_image_path(self, path: Path) -> Path:
         if not self.enable_conditional_deskew:

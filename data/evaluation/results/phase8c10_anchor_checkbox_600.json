@@ -1,0 +1,7 @@
+{
+  "anchor_found_count": 600,
+  "checkbox_found_count": 600,
+  "documents": 600,
+  "interior_ink_threshold": 0.12,
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl"
+}

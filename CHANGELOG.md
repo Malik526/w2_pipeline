@@ -2,6 +2,44 @@
 
 ## 2026-09-06
 
+### Phase 8C.10 - OCR-Anchor-Relative `box_13.retirement_plan` Checkbox Detector: PROMOTABLE (Opt-In, Not Auto-Promoted)
+
+- Replaced the fragile fixed-page-coordinate `RETIREMENT_PLAN_ZONE`
+  checkbox detector with one anchored to the printed "Retirement plan"
+  label's own OCR geometry: reuses the OCR observations already produced
+  (no second OCR pass), derives a small search region relative to the
+  label's position/size, locates the checkbox's printed border first
+  (not "dark pixels"), and classifies checked/unchecked from interior
+  ink only (border excluded via inset). New module:
+  `extraction/checkbox_anchor.py` -- Pillow-only, never inspects
+  `variant_id`/filename/ground truth at runtime.
+- Root cause (diagnosed directly via a real pixel-density tool): the
+  fixed zone is calibrated to one canvas geometry, but the checkbox
+  stays stable *relative to its own label* across all four dataset
+  variants even though its absolute page position varies by hundreds of
+  pixels.
+- Localization: 600/600 anchor found, 600/600 checkbox found (100%),
+  all variants. Classification: 600/600 correct (100%) -- interior ink
+  ratio shows complete separation (checked 0.244-0.298, unchecked
+  exactly 0.0). All 60 previously-failing Phase 8C.2 documents fixed,
+  zero new failures.
+- Full 600-document A/B benchmark: every non-checkbox field
+  bit-identical to the frozen Phase 8C.2 prediction. Total field
+  accuracy 14396/14400 = 99.972%, up from 14336/14400 = 99.556%. The 4
+  remaining failures (`employer.name` on `rotated_png`) are identical to
+  Phase 8C.2's pre-existing, out-of-scope residual. Incremental
+  detector-only latency: 0.056s/document mean.
+- New `ObservationAcquirer.enable_anchor_relative_checkbox` flag
+  (default `False`, opt-in); explicit fallback to the old fixed-zone
+  detector when the anchor/checkbox can't be localized, with the
+  detector method recorded in `ObservationSet.warnings`.
+- Decision: A. Strictly better, evidence supports promotion, but not
+  auto-promoted per the brief -- flipping the production default and
+  whether a dedicated checkbox validator is needed first remain open
+  product decisions.
+- 25 new tests; full suite: 514 tests passing, up from 489, zero
+  regressions.
+
 ### Phase 8C.9 - Conditional Small-Angle Scan-Deskew Experiment: NOT PROMOTED
 
 - Tested whether image-derived small-angle deskew (pixel content only --
