@@ -52,6 +52,23 @@ class TextObservation(ExtractionModel):
     page: int = Field(ge=1)
     bbox: BoundingBox
     source: ObservationSource
+    ocr_confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Native OCR engine recognition confidence for this observation, "
+            "on a 0..1 scale, or None when unavailable. PaddleOCR emits this "
+            "natively in 0..1 (`rec_scores`); Tesseract's TSV `conf` column "
+            "is native 0..100 and is divided by 100 before being stored here "
+            "so both backends share one comparable scale -- a linear "
+            "rescale of the engine's own real value, not a fabricated one. "
+            "Native PDF text observations always leave this None (there is "
+            "no OCR recognition step to have a confidence for). This is "
+            "instrumentation only: no parser or validator decision may "
+            "depend on it (Phase 8C.4)."
+        ),
+    )
     is_supplemental: bool = Field(
         default=False,
         description=(

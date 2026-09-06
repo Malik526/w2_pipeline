@@ -225,12 +225,19 @@ def parse_tesseract_tsv(
         top = _parse_float(row.get("top"))
         width = _parse_float(row.get("width"))
         height = _parse_float(row.get("height"))
+        # Tesseract's TSV `conf` is native 0..100 (confirmed against real TSV
+        # output, not assumed); rescaled to 0..1 here so it shares
+        # `TextObservation.ocr_confidence`'s scale with PaddleOCR's already
+        # native 0..1 `rec_scores` -- a linear rescale of the engine's own
+        # real value, never a fabricated one.
+        ocr_confidence = confidence / 100.0 if confidence is not None else None
         observations.append(
             TextObservation(
                 text=text,
                 page=page_number,
                 bbox=BoundingBox(x0=left, y0=top, x1=left + width, y1=top + height),
                 source=ObservationSource.OCR,
+                ocr_confidence=ocr_confidence,
                 is_supplemental=is_supplemental,
             )
         )

@@ -56,17 +56,27 @@ class PaddleOcrAdapter:
         for payload in self._run_predict(Path(image_path)):
             texts = payload.get("rec_texts", [])
             boxes = payload.get("rec_boxes", [])
-            for text, box in zip(texts, boxes):
+            # `rec_scores` is PaddleOCR's own native per-observation recognition
+            # confidence, 0..1, parallel to `rec_texts`/`rec_boxes` (confirmed
+            # against a real installed PaddleOCR 3.7.0 result, not assumed from
+            # documentation). Indexed rather than zipped with texts/boxes so a
+            # missing or short scores list can never drop or reorder a text
+            # observation -- confidence is best-effort metadata, never a
+            # condition for whether an observation exists.
+            scores = payload.get("rec_scores", [])
+            for index, (text, box) in enumerate(zip(texts, boxes)):
                 text = text.strip()
                 if not text:
                     continue
                 x0, y0, x1, y1 = (float(value) for value in box)
+                confidence = float(scores[index]) if index < len(scores) else None
                 observations.append(
                     TextObservation(
                         text=text,
                         page=page_number,
                         bbox=BoundingBox(x0=x0, y0=y0, x1=x1, y1=y1),
                         source=ObservationSource.OCR,
+                        ocr_confidence=confidence,
                     )
                 )
         return observations

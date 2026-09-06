@@ -45,6 +45,40 @@ def test_tesseract_tsv_output_converts_to_observations() -> None:
     assert observations[0].source == ObservationSource.OCR
 
 
+def test_tesseract_tsv_rescales_native_0_to_100_confidence_to_0_to_1() -> None:
+    tsv = _tsv_header()
+    tsv += "\n" + "\t".join(["5", "1", "1", "1", "1", "1", "10", "20", "30", "12", "96", "SSN"])
+
+    observations = parse_tesseract_tsv(tsv, page_number=1)
+
+    assert observations[0].ocr_confidence == pytest.approx(0.96)
+
+
+def test_tesseract_tsv_structural_rows_stay_excluded_and_word_rows_keep_confidence() -> None:
+    """conf=-1 marks a structural (page/block/par/line) row, not a word --
+    already filtered before this change; confirms that filter is unaffected
+    by the new confidence field, and a real word row still gets one."""
+
+    tsv = _tsv_header()
+    tsv += "\n" + "\t".join(["2", "1", "1", "0", "0", "0", "0", "0", "100", "50", "-1", ""])
+    tsv += "\n" + "\t".join(["5", "1", "1", "1", "1", "1", "10", "20", "30", "12", "88", "Word"])
+
+    observations = parse_tesseract_tsv(tsv, page_number=1)
+
+    assert len(observations) == 1
+    assert observations[0].text == "Word"
+    assert observations[0].ocr_confidence == pytest.approx(0.88)
+
+
+def test_tesseract_tsv_missing_confidence_leaves_field_none() -> None:
+    tsv = _tsv_header()
+    tsv += "\n" + "\t".join(["5", "1", "1", "1", "1", "1", "10", "20", "30", "12", "", "Word"])
+
+    observations = parse_tesseract_tsv(tsv, page_number=1)
+
+    assert observations[0].ocr_confidence is None
+
+
 def test_missing_tesseract_runtime_fails_clearly(tmp_path: Path) -> None:
     image_path = tmp_path / "sample.png"
     Image.new("RGB", (20, 10), color="white").save(image_path)

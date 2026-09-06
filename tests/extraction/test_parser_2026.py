@@ -1157,3 +1157,35 @@ def test_first_row_text_in_zone_joins_fragmented_words_left_to_right() -> None:
 
 def test_first_row_text_in_zone_returns_none_for_empty_zone() -> None:
     assert _first_row_text_in_zone([], (0.04, 0.35, 0.25, 0.33)) is None
+
+
+def test_parser_output_unchanged_when_observations_carry_ocr_confidence() -> None:
+    """Phase 8C.4 instrumentation safeguard: `ocr_confidence` is metadata
+    only. Parsing the exact same realistic full-page fixture with and
+    without confidence values attached to every observation must produce
+    byte-identical documents and warnings -- no parser decision may depend
+    on the new field."""
+
+    plain_observations = [
+        *_realistic_external_symage_900001_observations(),
+        *_employer_box_c_observations(),
+    ]
+    confident_observations = [
+        observation.model_copy(update={"ocr_confidence": 0.42}) for observation in plain_observations
+    ]
+
+    plain_document, plain_warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=plain_observations),
+        document_id="confidence-neutral",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+    confident_document, confident_warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=confident_observations),
+        document_id="confidence-neutral",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert confident_document == plain_document
+    assert confident_warnings == plain_warnings

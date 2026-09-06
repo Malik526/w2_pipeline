@@ -53,6 +53,48 @@ def test_paddle_adapter_converts_rec_boxes_to_observations() -> None:
     assert observation.bbox.y0 == 29
     assert observation.bbox.x1 == 143
     assert observation.bbox.y1 == 43
+    assert observation.ocr_confidence == pytest.approx(0.999)
+
+
+def test_paddle_adapter_missing_scores_leaves_confidence_none_without_dropping_text() -> None:
+    """A missing/short `rec_scores` list must never drop or reorder a text
+    observation -- confidence is best-effort metadata only."""
+
+    adapter = RecordingAdapter(
+        payloads=[
+            [
+                {
+                    "rec_texts": ["First", "Second"],
+                    "rec_boxes": [[0, 0, 10, 10], [10, 10, 20, 20]],
+                    # rec_scores omitted entirely.
+                }
+            ]
+        ]
+    )
+
+    observations = adapter.extract_image("sample.png", page_number=1)
+
+    assert [observation.text for observation in observations] == ["First", "Second"]
+    assert all(observation.ocr_confidence is None for observation in observations)
+
+
+def test_paddle_adapter_short_scores_list_defaults_missing_entries_to_none() -> None:
+    adapter = RecordingAdapter(
+        payloads=[
+            [
+                {
+                    "rec_texts": ["First", "Second"],
+                    "rec_scores": [0.7],
+                    "rec_boxes": [[0, 0, 10, 10], [10, 10, 20, 20]],
+                }
+            ]
+        ]
+    )
+
+    observations = adapter.extract_image("sample.png", page_number=1)
+
+    assert observations[0].ocr_confidence == pytest.approx(0.7)
+    assert observations[1].ocr_confidence is None
 
 
 def test_paddle_adapter_defaults_avoid_mkldnn_and_preprocessing() -> None:

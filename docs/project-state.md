@@ -1213,24 +1213,81 @@ instruction (measurement-only phase). 7 new focused tests; full suite:
 `src/w2_pipeline/validation/` was touched, so validation's structural
 isolation from evaluation/extraction continues to hold.
 
-## Future Phases (after Phase 8C.3)
+### Phase 8C.4 - Propagate And Evaluate Native PaddleOCR Confidence
+
+Full record: `docs/experiments/phase8c4-paddle-native-confidence-analysis.md`.
+
+Instrumentation/evidence phase: does PaddleOCR's native per-observation
+recognition confidence (`rec_scores`, confirmed 0..1 against real
+installed `paddleocr==3.7.0` output, not assumed) predict the residual
+extraction errors Phase 8C.1-8C.3 found? `TextObservation` gained an
+optional `ocr_confidence: float | None` field (`None` or `[0,1]`,
+validated); PaddleOCR populates it natively, Tesseract's native 0..100
+TSV `conf` is linearly rescaled to the same 0..1 units. New evaluation-
+side module `field_confidence.py` re-derives, after the fact, which
+observation(s) plausibly produced each of 12 evaluated OCR-backed fields'
+values (exact match, then a token-membership fallback for values fused
+into a larger merged OCR line) -- deliberately evaluation-side rather
+than threaded through the frozen parser. A real collision was found and
+fixed during this work: a Box 12 code letter "D" was an exact match for
+`employee.middle_initial` (also often "D") on a real rotated document,
+row-far from the actual answer; fixed by anchoring the name-cluster
+search to `last_name`'s row band. No parser decision depends on the new
+field -- verified both structurally (no parser file touched) and
+empirically (a test parses the same fixture with/without confidence
+metadata and asserts byte-identical output).
+
+A fresh instrumented 600-document PaddleOCR run (new script,
+`run_pipeline_a_confidence.py`, not a replacement benchmark) reproduced
+Phase 8C.2's frozen accuracy exactly (14,336/14,400, bit-identical)
+before any confidence analysis proceeded.
+
+**Result: native OCR confidence shows no usable signal on this dataset.**
+11 of the 12 fields have zero incorrect examples at all (PaddleOCR's
+recognition made no mistakes on them at this scale) -- there is no
+incorrect population to even compare against. The one field with real
+errors, `employer.name` (4/600, the already-diagnosed row-merge
+residual), was inspected directly: **the OCR confidence for both the
+correct employer name text and the wrongly-merged address text is
+0.98-1.0000 in all 4 cases** -- Paddle is highly confident precisely
+*because* it correctly recognized the text; the defect is purely
+downstream parser row-merging, invisible to any recognition-confidence
+signal. A minimum-confidence document-level threshold sweep confirms
+this is not usable for routing: the best point found (`< 0.999`) catches
+only 1/4 errors at a 39.6% false-review rate (0.42% precision); every
+stricter threshold catches zero errors. This is the same conclusion
+Phase 8C.3 reached about the structural validator, for the same
+underlying reason -- both systems are blind to a well-formed, plausible,
+high-confidence wrong value.
+
+26 new tests; full suite: **405 tests passing, up from 379, zero
+regressions.** No parser, validation, or routing behavior changed; no
+combined confidence score invented; no rule or threshold promoted to
+production. `box_13.retirement_plan` was excluded throughout (separate
+pixel-based checkbox detector, not OCR text).
+
+## Future Phases (after Phase 8C.4)
 
 ```text
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),
-including how to present the validator's demonstrated 0% catch rate on
-the two known residual defect classes and the resulting 10.33%
-unsafe-acceptance rate on rotated documents.
+including how to present the validator's demonstrated 0% catch rate
+(Phase 8C.3) and native OCR confidence's demonstrated lack of signal
+(Phase 8C.4) on the same two known residual defect classes, and the
+resulting 10.33% unsafe-acceptance rate on rotated documents.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
 employer.address OCR fallback and extraction follow-up; a rotation-aware
-Box 13 checkbox recalibration; a fix for the employer.name row-merge
-residual (would require reworking `_group_observation_rows`'s shared
-tolerance logic); new validator plausibility rules to close the 0%
-catch-rate gap Phase 8C.3 found (e.g. a length/shape sanity check on
-`employer.name`); and/or a larger-scale Pipeline B evaluation.
+Box 13 checkbox recalibration (including its own, separate confidence
+signal: pixel-coverage margin, skew, geometry quality); a fix for the
+employer.name row-merge residual (would require reworking
+`_group_observation_rows`'s shared tolerance logic); new validator
+plausibility rules to close the 0% catch-rate gap Phase 8C.3 found (e.g.
+a length/shape sanity check on `employer.name`, since Phase 8C.4 showed
+OCR confidence cannot substitute for one); and/or a larger-scale
+Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

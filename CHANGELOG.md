@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-09-06
+
+### Phase 8C.4 - Propagate And Evaluate Native PaddleOCR Confidence
+
+- Instrumentation/evidence phase: `TextObservation` gained an optional
+  `ocr_confidence: float | None` field (`None` or `[0,1]`, validated).
+  PaddleOCR populates it from its native `rec_scores` (confirmed 0..1
+  against real installed `paddleocr==3.7.0` output, not assumed);
+  Tesseract's native 0..100 TSV `conf` is linearly rescaled to the same
+  0..1 units. No parser, validation, or routing behavior changed --
+  verified both structurally and with a test asserting byte-identical
+  parser output with and without confidence metadata present.
+- New evaluation-side module `field_confidence.py` re-derives, after the
+  fact, which observation(s) plausibly produced each of 12 evaluated
+  OCR-backed fields' values, without touching the frozen parser. Found
+  and fixed a real collision during this work: a Box 12 code letter "D"
+  exactly matched `employee.middle_initial` (also often "D") far from
+  the real answer on a real rotated document; fixed by anchoring the
+  employee-name-cluster search to `last_name`'s row band.
+- A fresh instrumented 600-document PaddleOCR run (new script, not a
+  replacement benchmark) reproduced Phase 8C.2's frozen accuracy exactly
+  (14,336/14,400, bit-identical) before any confidence analysis.
+- **Result: native OCR confidence shows no usable signal.** 11 of 12
+  fields have zero incorrect examples at this scale (nothing to compare
+  against). The one field with real errors, `employer.name` (4/600, the
+  already-diagnosed row-merge residual), shows 0.98-1.0000 confidence on
+  both the correct name and the wrongly-merged address text in all 4
+  cases -- Paddle is confident because it read the text correctly; the
+  defect is downstream parser row-merging, invisible to recognition
+  confidence. A threshold sweep confirms this is not usable for routing:
+  the best point found catches 1/4 errors at a 39.6% false-review rate
+  (0.42% precision); stricter thresholds catch zero. Same conclusion as
+  Phase 8C.3's validator-effectiveness finding, same underlying reason.
+- 26 new tests; full suite: 405 tests passing, up from 379, zero
+  regressions. No rule or threshold promoted to production. Full report:
+  `docs/experiments/phase8c4-paddle-native-confidence-analysis.md`.
+
 ## 2026-09-05
 
 ### Phase 8C.3 - Final Validator Effectiveness On Frozen Paddle Predictions

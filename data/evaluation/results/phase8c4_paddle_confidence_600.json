@@ -1,0 +1,23 @@
+{
+  "average_duration_seconds": 1.191173573251678,
+  "confidence_analysis_field_paths": [
+    "employee.first_name",
+    "employee.middle_initial",
+    "employee.last_name",
+    "employee.ssn",
+    "employer.ein",
+    "employer.name",
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+    "federal_wages_and_taxes.box_3_social_security_wages",
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld",
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips",
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld"
+  ],
+  "correct_fields": 14336,
+  "documents": 600,
+  "failed_documents": 0,
+  "field_accuracy": 0.9955555555555555,
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "total_fields": 14400
+}
