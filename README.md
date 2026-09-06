@@ -247,8 +247,9 @@ database/object-storage backend. Full list:
 
 Box 13's checkbox detector doesn't track rotation geometry; Tesseract has
 residual accent-recognition and blur weaknesses; `employer.address` has
-the same OCR-fallback gap `employer.name` had before it was fixed; the
-Symage benchmark's field coverage excludes `employer.name`/`employer.address`;
+the same OCR-fallback gap `employer.name` had before it was fixed, and
+the Symage benchmark's field coverage still excludes it (`employer.name`
+was added to scoring in Phase 8A, not yet re-benchmarked at scale);
 deterministic validation can't catch a plausible-but-wrong value (measured
 above); review persistence is filesystem-only with no reopen workflow; no
 auth/multi-tenancy; the VLM evaluation is a 5-document spike, not a
@@ -259,9 +260,10 @@ Full list with context: `docs/architecture-decision-record.md` Section 15.
 
 1. A real GPU-cost-vs-review-cost pricing study to close the outstanding
    Paddle-vs-Tesseract economics question (Section 9 of the ADR).
-2. Extend the employer-name OCR fallback to `employer.address`, and
-   extend the Symage benchmark adapter to score `employer.name` (both
-   scoped, low-risk follow-ups already identified in Phase 6B).
+2. Extend the employer-name OCR fallback to `employer.address`, and run
+   the final PaddleOCR/Tesseract benchmarks (prepared, not yet run --
+   Phase 8A) to measure `employer.name` accuracy at scale now that the
+   Symage adapter scores it.
 3. A rotation-aware recalibration of the Box 13 checkbox detector -- the
    single largest remaining Pipeline A accuracy gap.
 4. A larger, statistically meaningful Pipeline B benchmark (150+

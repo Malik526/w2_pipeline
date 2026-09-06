@@ -385,20 +385,28 @@ reported overall accuracy looks. Production validation is a second,
 independent safety net that does not share this blind spot, precisely
 because it does not use the benchmark's scoring scope at all.
 
-## 11. Known Evaluation Coverage Limitation (Not Silently Fixed)
+## 11. Known Evaluation Coverage Limitation -- Since Addressed (Phase 8A)
 
-`employer.name` **could** be added to the Symage adapter's
-`evaluated_field_paths` -- the FUNSD annotation's linked answer entity has
-the structure `"<name>\n<address>\n<city, state zip>"`, and the first line
-is a deterministic, authoritative mapping to `employer.name` that does
-not depend on any Pipeline A prediction (verified in Phase 6B against 5
-documents). **This change was deliberately not made**: it requires
-editing `src/w2_pipeline/evaluation/external_symage.py` and regenerating
-the external dataset, which would shift the field-coverage denominator
-for every future benchmark run relative to every historical one already
-recorded in this document. That is real, legitimate benchmark-harness
-work, tracked as a follow-up, not undertaken silently inside this
-synthesis phase.
+At the time this document was first written, `employer.name` was not in
+the Symage adapter's `evaluated_field_paths`, even though a deterministic,
+prediction-free mapping was known to exist (Phase 6B). **Phase 8A has
+since implemented that mapping** (`docs/experiments/phase8a-final-benchmark-coverage.md`):
+the Symage adapter now maps the first line of Box c's combined FUNSD
+answer to `employer.name`, verified against 5 real documents with an
+independently-parsed cross-check, with zero fabrication when the answer
+is missing. `employer.address` remains unmapped -- its own extraction gap
+is still unresolved and was explicitly kept out of this task's scope.
+
+This is a version change, not a silent rewrite of history: the adapter's
+`EXTERNAL_ADAPTER_VERSION` was bumped
+(`"symage-w2.phase3b.v1"` -> `"symage-w2.phase8a.v2"`), so datasets
+prepared before and after are structurally distinguishable, and **every
+historical benchmark figure cited in Section 3 of this document still
+correctly describes a run that excluded `employer.name`** -- none of
+those numbers were recomputed or altered. The final Phase 8B benchmark
+(not yet run -- see `docs/experiments/phase8a-final-benchmark-coverage.md`
+for the exact commands) will be the first to measure `employer.name`
+accuracy at scale, using the frozen 23-field final evaluated set.
 
 ## 12. Human Review Architecture (Summary)
 
@@ -467,9 +475,11 @@ added later without touching extraction, validation, or review code.
   weaknesses beyond what PaddleOCR shows on the same documents.
 - `employer.address` has the identical OCR-layout-fallback gap
   `employer.name` had before Phase 6B's fix -- not yet remediated.
-- The Symage benchmark's field coverage (`evaluated_field_paths`)
-  excludes `employer.name`/`employer.address`, so benchmark accuracy
-  numbers cannot currently reflect quality on those fields (Section 11).
+- The Symage benchmark's field coverage (`evaluated_field_paths`) still
+  excludes `employer.address` (`employer.name` was added in Phase 8A --
+  Section 11), so benchmark accuracy numbers cannot yet reflect quality
+  on `employer.address`, and no benchmark has yet been rerun to measure
+  `employer.name` at scale under the new coverage (Phase 8B, not yet run).
 - Deterministic validation cannot detect a plausible-but-wrong value
   (measured directly in Section 8: 9.2% recall on subtle value-swap
   errors, vs. 88.1% on severe/missing-field corruption).

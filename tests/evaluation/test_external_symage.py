@@ -13,6 +13,7 @@ from w2_pipeline.evaluation.external_symage import (
     SYMAGE_W2_FORM_ID,
     ExternalDatasetError,
     SymageW2Adapter,
+    _first_line_of_combined_answer,
     stable_external_sample_id,
 )
 from w2_pipeline.evaluation.inputs import ExtractionInput
@@ -64,6 +65,8 @@ def sample_record() -> dict:
         _entity(15, "X", "answer"),
         _entity(16, "Dataset-only unsupported field", "question", [[16, 17]]),
         _entity(17, "answer text", "answer"),
+        _entity(18, "Employer’s name, address, and ZIP code", "question", [[18, 19]]),
+        _entity(19, "Timberline Trading Co.\n105 Penland St\nMurphy, NC 28906", "answer"),
     ]
     return {
         "id": "900001-irs_w2_single_page_2026-p0",
@@ -96,9 +99,11 @@ def test_external_adapter_maps_funsd_annotations_to_canonical_ground_truth() -> 
         == Decimal("52001.42")
     )
     assert document.box_13.retirement_plan is True
+    assert document.employer.name == "Timberline Trading Co."
     assert "employee.ssn" in result.evaluated_field_paths
     assert "employee.first_name" in result.evaluated_field_paths
     assert "employee.middle_initial" in result.evaluated_field_paths
+    assert "employer.name" in result.evaluated_field_paths
     assert "dataset only unsupported field" in result.unmapped_questions
 
 
@@ -125,6 +130,77 @@ def test_external_adapter_splits_box_e_first_name_and_initial_variants(
 
     assert result.document.employee.first_name == expected_first
     assert result.document.employee.middle_initial == expected_initial
+
+
+def test_external_adapter_does_not_map_employer_address_lines() -> None:
+    """Phase 8A scope: only employer.name is mapped from the combined Box c
+    answer. The address/city-state-ZIP lines remain unmapped -- Phase 6B
+    established employer.address has its own, separate, unresolved
+    extraction gap, and expanding ground-truth coverage to it is
+    explicitly out of scope for this task."""
+
+    result = SymageW2Adapter().build_ground_truth(sample_record())
+
+    assert result.document.employer.address.address_line_1 is None
+    assert result.document.employer.address.city is None
+    assert "employer.address.address_line_1" not in result.evaluated_field_paths
+
+
+def test_external_adapter_maps_multiword_employer_name_with_punctuation() -> None:
+    record = sample_record()
+    form = json.loads(record["funsd_json"])
+    employer_answer = next(entity for entity in form if entity["id"] == 19)
+    employer_answer["text"] = "Smith, Jones & Associates, Inc.\n1 Main St\nAnytown, CA 90001"
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert result.document.employer.name == "Smith, Jones & Associates, Inc."
+
+
+def test_external_adapter_does_not_fabricate_employer_name_when_answer_blank() -> None:
+    record = sample_record()
+    form = json.loads(record["funsd_json"])
+    employer_answer = next(entity for entity in form if entity["id"] == 19)
+    employer_answer["text"] = "   \n   \n   "
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert result.document.employer.name is None
+    assert "employer.name" not in result.evaluated_field_paths
+
+
+def test_external_adapter_does_not_map_employer_name_when_question_unlinked() -> None:
+    """No linked answer at all (not even a blank one) -- must not fabricate
+    a value, and the question is simply absent from both `values` and
+    `unmapped_questions`, the same behavior every other already-mapped
+    field has when its answer is missing entirely."""
+
+    record = sample_record()
+    form = json.loads(record["funsd_json"])
+    form = [entity for entity in form if entity["id"] not in {18, 19}]
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert result.document.employer.name is None
+    assert "employer.name" not in result.evaluated_field_paths
+
+
+def test_first_line_of_combined_answer_is_a_pure_string_function() -> None:
+    """Direct unit test of the exact mapping mechanism: takes only the raw
+    FUNSD answer string, nothing else -- no extractor, OCR output, or
+    document object anywhere in its signature or body, so it structurally
+    cannot depend on a Pipeline A/B prediction."""
+
+    assert _first_line_of_combined_answer(
+        "Timberline Trading Co.\n105 Penland St\nMurphy, NC 28906"
+    ) == "Timberline Trading Co."
+    assert _first_line_of_combined_answer("Single Line Only") == "Single Line Only"
+    assert _first_line_of_combined_answer("\n\nSecond line first") == "Second line first"
+    assert _first_line_of_combined_answer("") is None
+    assert _first_line_of_combined_answer("   \n  ") is None
 
 
 def test_extraction_input_rejects_answer_bearing_annotations() -> None:
@@ -272,6 +348,26 @@ def test_external_annotation_shape_validation_is_field_specific() -> None:
     wrong_bbox["bboxes"] = [[0, 1, 2]]
     with pytest.raises(ExternalDatasetError, match="four coordinates"):
         adapter.build_annotation_bundle(wrong_bbox)
+
+
+def test_adapter_version_distinguishes_new_field_coverage_from_historical(
+    tmp_path: Path,
+) -> None:
+    """Phase 8A bumped EXTERNAL_ADAPTER_VERSION when employer.name was
+    added to evaluated field coverage, so datasets/manifests prepared
+    under the two eras are structurally distinguishable via
+    `generator_version` -- required to keep historical benchmark
+    comparability explicit rather than silent."""
+
+    from w2_pipeline.evaluation.external_symage import EXTERNAL_ADAPTER_VERSION
+
+    assert EXTERNAL_ADAPTER_VERSION != "symage-w2.phase3b.v1"
+
+    prepared = SymageW2Adapter().prepare_record(
+        sample_record(), tmp_path, split="train", include_variants=False
+    )
+
+    assert prepared.manifest_entries[0].generator_version == EXTERNAL_ADAPTER_VERSION
 
 
 def test_stable_external_sample_identity_prefers_record_id() -> None:

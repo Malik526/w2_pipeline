@@ -38,7 +38,17 @@ from w2_pipeline.evaluation.rendering import (
 
 HF_DATASET_NAME = "Symage/synthetic-us-forms-preview"
 SYMAGE_W2_FORM_ID = "irs_w2_single_page_2026"
-EXTERNAL_ADAPTER_VERSION = "symage-w2.phase3b.v1"
+# Phase 8A bumped this from "symage-w2.phase3b.v1": the evaluated field set
+# changed (employer.name added, see _first_line_of_combined_answer below),
+# so ground truth/manifests generated under this version are not
+# byte-comparable to anything generated under the prior version. Every
+# `DatasetManifestEntry.generator_version` records this string, making the
+# two eras of prepared datasets structurally distinguishable. Historical
+# committed benchmark result artifacts (data/evaluation/results/*.json)
+# from before this change are untouched and still valid for what they
+# measured -- they simply predate employer.name being in scope at all; see
+# docs/experiments/phase8a-final-benchmark-coverage.md.
+EXTERNAL_ADAPTER_VERSION = "symage-w2.phase8a.v2"
 
 _ANSWER_BEARING_COLUMNS = (
     "tokens",
@@ -142,6 +152,24 @@ class SymageW2Adapter:
                 employee.middle_initial = middle_initial
                 evaluated_field_paths.add("employee.first_name")
                 evaluated_field_paths.add("employee.middle_initial")
+                continue
+            if field_path == "employer.name":
+                # Box c's linked answer is combined: name, then street
+                # address, then city/state/ZIP, one per line. Only the
+                # first line is authoritative for employer.name -- the
+                # address lines are deliberately not mapped here (Phase 6B
+                # scope: employer.address has its own, separate,
+                # not-yet-resolved extraction gap; expanding ground-truth
+                # coverage to it is out of this task's scope). Never
+                # fabricated: a missing/blank first line leaves
+                # employer.name unset and out of evaluated_field_paths for
+                # this record, the same "excluded rather than treated as a
+                # failure" convention every other unmapped field already
+                # follows (see class docstring / evaluation-plan.md).
+                name = _first_line_of_combined_answer(answer)
+                if name is not None:
+                    employer.name = name
+                    evaluated_field_paths.add("employer.name")
                 continue
             converted = _convert_value(field_path, answer)
             _assign_field(employee, employer, federal, box_13, field_path, converted)
@@ -505,6 +533,8 @@ def _map_scalar_field(question: str) -> str | None:
         return "employee.ssn"
     if "employer identification number" in question or "ein" == question:
         return "employer.ein"
+    if "employer s name" in question:
+        return "employer.name"
     if "control number" in question:
         return "employer.control_number"
     if "employee s first name" in question:
@@ -569,6 +599,26 @@ def _parse_checkbox(value: str) -> bool:
     return value.strip().lower() in {"x", "checked", "true", "yes", "1"}
 
 
+def _first_line_of_combined_answer(answer: str) -> str | None:
+    """Return the first non-blank line of a combined multi-line FUNSD answer.
+
+    Box c's linked answer has the structure
+    "<employer name>\\n<street address>\\n<city, state ZIP>" -- the first
+    line is a deterministic, authoritative mapping to `employer.name`,
+    independent of any Pipeline A/B prediction or OCR output (confirmed
+    against 5 documents in
+    docs/experiments/phase6b-employer-name-investigation.md). Returns
+    `None` (never fabricates a value) if the answer is empty or
+    whitespace-only.
+    """
+
+    for line in answer.split("\n"):
+        stripped = line.strip()
+        if stripped:
+            return stripped
+    return None
+
+
 def _assign_field(
     employee: Employee,
     employer: Employer,
@@ -595,6 +645,7 @@ _KNOWN_CANONICAL_PATHS = {
     "employee.last_name",
     "employee.suffix",
     "employer.ein",
+    "employer.name",
     "employer.control_number",
     "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
     "federal_wages_and_taxes.box_2_federal_income_tax_withheld",

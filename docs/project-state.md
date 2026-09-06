@@ -325,6 +325,7 @@ docs/experiments/phase6-validation-feasibility.md
 docs/experiments/phase6b-employer-name-investigation.md
 docs/experiments/phase7-review-workflow.md
 docs/experiments/phase8-validator-effectiveness.md
+docs/experiments/phase8a-final-benchmark-coverage.md
 ```
 
 ## Current Pipeline A Configuration
@@ -954,15 +955,75 @@ OCR/VLM optimization or additional benchmark run; authentication; a
 production database; QuickBooks or any vendor integration; and no
 extraction, validation, or review rule was changed.
 
-## Future Phases (after Phase 8)
+## Phase 8A - Final Benchmark Coverage And Prediction Artifact Readiness
+
+Preparation-only: no 150/600-document OCR benchmark was run, and no
+Pipeline A/B extraction or Phase 6 validation behavior changed. Full
+record: `docs/experiments/phase8a-final-benchmark-coverage.md`.
+
+**`employer.name` now has an authoritative, deterministic, prediction-free
+ground-truth mapping** in the Symage adapter
+(`src/w2_pipeline/evaluation/external_symage.py`): the FUNSD question
+`Employer's name, address, and ZIP code` links to one combined multi-line
+answer (`"<name>\n<address>\n<city, state ZIP>"`); only the first line is
+mapped, to `employer.name`, from the annotation alone -- never from a
+Pipeline A/B prediction or OCR output. `employer.address` (the remaining
+lines) is deliberately **not** mapped -- it has its own, separate,
+unresolved extraction gap (Phase 6B), and expanding ground-truth coverage
+to it is out of this task's scope. A missing/blank answer leaves
+`employer.name` unset and out of scoring for that record, never
+fabricated (verified by a direct unit test and cross-checked against 5
+real documents' independently-parsed FUNSD data -- exact match on all 5,
+matching Phase 6B's real-extraction values).
+
+**Final evaluated field set frozen at 23 paths** (was 22): every
+previously-scored field plus `employer.name`. `EXTERNAL_ADAPTER_VERSION`
+bumped `"symage-w2.phase3b.v1"` -> `"symage-w2.phase8a.v2"`, recorded in
+every manifest entry's `generator_version`, so datasets/manifests from
+before and after this change are structurally distinguishable. **No
+historical result artifact or ground-truth file was modified** -- a new,
+separate 5-document sample was prepared at a distinctly-named local path
+(`data/evaluation/external/symage-synthetic-us-forms-preview-final/`) for
+verification; the existing default-location dataset (used by every prior
+phase) was left untouched, confirmed byte-identical on every other field.
+
+**Final result artifacts can now preserve complete predictions.** New
+`src/w2_pipeline/evaluation/predictions.py` (`PredictionRecord`, JSONL
+read/write) and a `--save-predictions <path>` flag on both
+`run_pipeline_a`/`run_pipeline_b`: one ground-truth-free record per
+document (complete predicted `W2Document` or an explicit failure, plus
+route/duration/status), populated from the same single extraction call
+`evaluate_manifest` already made for scoring -- no extra runtime cost, no
+ground truth anywhere in the artifact. Smoke-verified against 3
+internally generated documents.
+
+**Benchmark/production boundary reconfirmed, not just for
+validation/review/downstream (Phase 6/7) but now for extraction too**: a
+new structural test
+(`tests/extraction/test_evaluation_boundary.py`) confirms every
+`src/w2_pipeline/extraction/` file (Pipeline A and B) imports only the
+pre-existing, deliberately annotation-free
+`w2_pipeline.evaluation.inputs.ExtractionInput` contract -- nothing
+ground-truth-bearing.
+
+17 new/updated tests; full suite: **359 tests passing (346 baseline + 6
+employer-name + 5 predictions + 2 boundary), zero regressions.**
+
+## Future Phases (after Phase 8A)
 
 ```text
+Phase 8B (prescribed next step, not yet run) - the final PaddleOCR GPU
+and Tesseract CPU 150-document benchmarks against the frozen final field
+set (generator_version "symage-w2.phase8a.v2"), with --save-predictions,
+against a newly-prepared symage-synthetic-us-forms-preview-final/
+dataset. Exact commands: docs/experiments/phase8a-final-benchmark-coverage.md.
+
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
-employer.address OCR fallback and Symage evaluated_field_paths follow-ups;
-a rotation-aware Box 13 checkbox recalibration; and/or a larger-scale
-Pipeline B evaluation.
+employer.address OCR fallback and extraction follow-up; a rotation-aware
+Box 13 checkbox recalibration; and/or a larger-scale Pipeline B
+evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 
 from w2_pipeline.evaluation.manifest import DatasetManifestEntry, load_manifest_jsonl
+from w2_pipeline.evaluation.predictions import PredictionRecord, write_prediction_records_jsonl
 from w2_pipeline.evaluation.reporting import (
     summarize_document_evaluations,
     write_markdown_report_for_json,
@@ -32,11 +33,13 @@ def main(argv: list[str] | None = None) -> None:
     extractor = PipelineBExtractor(
         config=PipelineBConfig(model_id=args.model_id, device=args.device, dtype=args.dtype)
     )
+    predictions: list[PredictionRecord] | None = [] if args.save_predictions else None
     result = evaluate_manifest(
         entries=entries,
         manifest_base_dir=args.manifest.parent,
         extractor=extractor,
         pipeline_id="pipeline_b",
+        predictions_out=predictions,
     )
     summary = summarize_document_evaluations(
         result.document_evaluations,
@@ -50,6 +53,9 @@ def main(argv: list[str] | None = None) -> None:
         args.output_json.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
         if not args.no_markdown_report:
             write_markdown_report_for_json(args.output_json)
+    if predictions is not None:
+        write_prediction_records_jsonl(args.save_predictions, predictions)
+        print(f"Wrote {len(predictions)} full predictions to {args.save_predictions}")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -82,6 +88,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Transformers dtype value, e.g. auto, bfloat16, float32. Default auto.",
     )
     parser.add_argument("--output-json", type=Path, default=None, help="Optional summary JSON path.")
+    parser.add_argument(
+        "--save-predictions",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to write one complete, ground-truth-free "
+            "PredictionRecord per document as JSONL (Phase 8 final-run "
+            "artifact; omit for routine benchmarking)."
+        ),
+    )
     parser.add_argument(
         "--no-markdown-report",
         action="store_true",

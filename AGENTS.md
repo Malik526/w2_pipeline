@@ -67,7 +67,13 @@ result; see `docs/contracts/review-and-downstream-output.md`); and
 Phase 8 (a synthesis phase: no extraction/validation/review behavior
 changed -- one small evaluation-side validator-effectiveness analysis
 plus the final architecture decision record and README rewrite; see
-`docs/architecture-decision-record.md`). Current phase status lives in
+`docs/architecture-decision-record.md`); and Phase 8A (evaluation-side
+prep only: an authoritative `employer.name` ground-truth mapping in the
+Symage adapter, a frozen final evaluated field set, and a
+`--save-predictions` artifact mechanism for the not-yet-run final
+benchmark -- see `docs/experiments/phase8a-final-benchmark-coverage.md`;
+no 150/600-document benchmark was run and no extraction/validation
+behavior changed). Current phase status lives in
 `docs/project-state.md`. Do not run a large-scale Pipeline B benchmark,
 optimize its prompt, add constrained decoding, fine-tune it, or make a
 Pipeline A/B promotion decision; do not change Pipeline A or Pipeline B

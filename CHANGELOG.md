@@ -2,6 +2,47 @@
 
 ## 2026-09-05
 
+### Phase 8A - Final Benchmark Coverage And Prediction Artifact Readiness
+
+- Added an authoritative, deterministic `employer.name` ground-truth
+  mapping to the Symage adapter
+  (`src/w2_pipeline/evaluation/external_symage.py`): the FUNSD question
+  "Employer's name, address, and ZIP code" links to one combined
+  multi-line answer, and only the first line is mapped to `employer.name`
+  -- from the annotation alone, never from any extractor prediction.
+  `employer.address` remains unmapped (separate, unresolved extraction
+  gap, out of this task's scope). Missing/blank answers are excluded from
+  scoring, never fabricated. Verified against 5 real documents with an
+  independently-parsed cross-check (exact match on all 5, matching
+  Phase 6B's real-extraction values); confirmed no other ground-truth
+  field changed.
+- Bumped `EXTERNAL_ADAPTER_VERSION` (`"symage-w2.phase3b.v1"` ->
+  `"symage-w2.phase8a.v2"`) so datasets/manifests prepared before and
+  after this change are structurally distinguishable. No historical
+  result artifact or ground-truth file was modified; a new 5-document
+  verification sample was prepared at a separate, distinctly-named local
+  path, leaving the existing default-location dataset untouched. Final
+  evaluated field set frozen at 23 paths (was 22).
+- Added `src/w2_pipeline/evaluation/predictions.py` (`PredictionRecord`,
+  ground-truth-free, JSONL read/write) and a `--save-predictions <path>`
+  flag on both `run_pipeline_a`/`run_pipeline_b`, populated from the same
+  extraction call `evaluate_manifest` already made for scoring (no extra
+  runtime cost). Lets the not-yet-run final Phase 8B benchmark preserve
+  complete per-document predictions for a later validator-effectiveness
+  pass without needing to reconstruct them from field failures.
+  Backward compatible; smoke-verified against 3 internally generated
+  documents.
+- Added a structural test
+  (`tests/extraction/test_evaluation_boundary.py`) confirming Pipeline
+  A/B extraction code imports only the pre-existing, annotation-free
+  `ExtractionInput` contract from `w2_pipeline.evaluation` -- nothing
+  ground-truth-bearing.
+- 17 new/updated tests; full suite: 359 tests passing (346 + 17), zero
+  regressions. No 150/600-document benchmark was run; no extraction,
+  validation, or review behavior changed. See
+  `docs/experiments/phase8a-final-benchmark-coverage.md` for the exact
+  commands Phase 8B should run next.
+
 ### Phase 8 - Final Architecture Decision, Economics, And Take-Home Delivery
 
 - Added `docs/architecture-decision-record.md`: the final synthesized

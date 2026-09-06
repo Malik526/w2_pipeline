@@ -20,6 +20,7 @@ from w2_pipeline.evaluation.models import (
     EvaluationFailureKind,
     EvaluationIssue,
 )
+from w2_pipeline.evaluation.predictions import PredictionRecord
 
 
 class W2Extractor(Protocol):
@@ -35,8 +36,18 @@ def evaluate_manifest(
     manifest_base_dir: str | Path,
     extractor: W2Extractor,
     pipeline_id: str,
+    predictions_out: list[PredictionRecord] | None = None,
 ) -> BenchmarkEvaluation:
-    """Evaluate an extractor against manifest entries without aborting on failures."""
+    """Evaluate an extractor against manifest entries without aborting on failures.
+
+    `predictions_out`, when given a list, gets one ground-truth-free
+    `PredictionRecord` appended per entry (success or failure) as a side
+    effect -- the extraction call happens exactly once per entry either
+    way, so passing this never doubles a benchmark's runtime. Intended for
+    the final Phase 8 runs that need to preserve complete predictions, not
+    routine benchmarking (which does not need it and should leave this
+    `None`).
+    """
 
     base_dir = Path(manifest_base_dir)
     evaluations = [
@@ -45,6 +56,7 @@ def evaluate_manifest(
             base_dir=base_dir,
             extractor=extractor,
             pipeline_id=pipeline_id,
+            predictions_out=predictions_out,
         )
         for entry in entries
     ]
@@ -57,6 +69,7 @@ def _evaluate_entry(
     base_dir: Path,
     extractor: W2Extractor,
     pipeline_id: str,
+    predictions_out: list[PredictionRecord] | None = None,
 ) -> DocumentEvaluation:
     expected = _load_ground_truth(base_dir / entry.ground_truth_path)
     extraction_input = ExtractionInput(
@@ -73,6 +86,19 @@ def _evaluate_entry(
     except Exception as exc:  # noqa: BLE001 - runner isolates pipeline failures.
         duration = time.perf_counter() - start
         extraction_route = getattr(exc, "extraction_route", None)
+        if predictions_out is not None:
+            predictions_out.append(
+                PredictionRecord(
+                    document_id=entry.sample_id,
+                    variant_id=entry.variant_id,
+                    pipeline_id=pipeline_id,
+                    status=DocumentEvaluationStatus.EXTRACTION_FAILED.value,
+                    document=None,
+                    extraction_route=extraction_route,
+                    duration_seconds=duration,
+                    message=f"Extractor raised {exc.__class__.__name__}.",
+                )
+            )
         return _failed_evaluation(
             entry=entry,
             expected=expected,
@@ -89,6 +115,18 @@ def _evaluate_entry(
         predicted, extraction_route = _coerce_prediction(raw_prediction)
     except ValidationError as exc:
         duration = time.perf_counter() - start
+        if predictions_out is not None:
+            predictions_out.append(
+                PredictionRecord(
+                    document_id=entry.sample_id,
+                    variant_id=entry.variant_id,
+                    pipeline_id=pipeline_id,
+                    status=DocumentEvaluationStatus.INVALID_CANONICAL_RESULT.value,
+                    document=None,
+                    duration_seconds=duration,
+                    message=f"Prediction failed canonical validation: {exc.__class__.__name__}.",
+                )
+            )
         return _failed_evaluation(
             entry=entry,
             expected=expected,
@@ -101,6 +139,18 @@ def _evaluate_entry(
         )
 
     duration = time.perf_counter() - start
+    if predictions_out is not None:
+        predictions_out.append(
+            PredictionRecord(
+                document_id=entry.sample_id,
+                variant_id=entry.variant_id,
+                pipeline_id=pipeline_id,
+                status=DocumentEvaluationStatus.SUCCESS.value,
+                document=predicted,
+                extraction_route=extraction_route,
+                duration_seconds=duration,
+            )
+        )
     evaluation = compare_w2_documents(
         expected=expected,
         predicted=predicted,

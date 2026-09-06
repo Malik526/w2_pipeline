@@ -248,6 +248,40 @@ initial when present, and records a nullable `employee.middle_initial` field in
 `evaluated_field_paths` even for first-name-only examples. `Last name` and
 `Suff.` map to `employee.last_name` and `employee.suffix` respectively.
 
+**`employer.name` (added Phase 8A, `EXTERNAL_ADAPTER_VERSION =
+"symage-w2.phase8a.v2"`).** The FUNSD question `Employer's name, address,
+and ZIP code` links to one combined multi-line answer:
+`"<name>\n<street address>\n<city, state ZIP>"`. Only the first line is
+mapped, to `employer.name` -- deterministically, from the annotation
+alone, never from any extractor prediction. The address/city-state-ZIP
+lines are deliberately not mapped: `employer.address` extraction has its
+own, separate, unresolved gap
+(`docs/experiments/phase6b-employer-name-investigation.md`), and ground
+truth should not get ahead of what extraction can actually be scored
+against. A missing or blank first line leaves `employer.name` unset and
+out of `evaluated_field_paths` for that record, the same
+"excluded-rather-than-failed" convention every other unmapped field
+already follows. **Datasets/manifests prepared before this change (any
+`generator_version` of `"symage-w2.phase3b.v1"`) do not have
+`employer.name` in scope at all** -- every historical committed benchmark
+result (`data/evaluation/results/phase4*.json`) predates this and should
+not be read as having scored `employer.name`. See
+`docs/experiments/phase8a-final-benchmark-coverage.md`.
+
+## Phase 8 Final Prediction Artifacts
+
+For the final Phase 8 benchmark runs (not routine benchmarking), both
+`run_pipeline_a`/`run_pipeline_b` accept `--save-predictions <path>`,
+writing one `PredictionRecord` per document as JSONL:
+`document_id`, `variant_id`, `pipeline_id`, `status`, the complete
+predicted `W2Document` (or `null` on failure), `extraction_route`,
+`duration_seconds`, and an optional failure `message`. This is
+deliberately distinct from `field_failures` in the aggregate summary
+JSON (which mixes expected and predicted values together for scoring):
+a `PredictionRecord` never contains ground truth, so it can be handed to
+a production consumer (e.g. the Phase 6 validator) directly, without
+reconstruction. See `src/w2_pipeline/evaluation/predictions.py`.
+
 ## Phase 4 Pipeline A Benchmark Integration
 
 Phase 4 adds Pipeline A as the first evaluated extractor. Pipeline A plugs into
