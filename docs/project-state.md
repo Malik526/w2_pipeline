@@ -1309,16 +1309,70 @@ see (e.g. non-address merges).
 regressions.** No validation rule added, no OCR/parser/checkbox change,
 no document ID or company name hard-coded into any rule.
 
-## Future Phases (after Phase 8C.5)
+### Phase 8C.6 - Employer Name Layout-Span Signal Experiment
+
+Full record: `docs/experiments/phase8c6-employer-name-layout-span.md`.
+
+Offline validation experiment, independent of Phase 8C.5: can pure
+spatial/geometry evidence (zero semantic content -- no address-vocabulary
+inspection) detect the known `employer.name` row-merge residual? New
+evaluation-side code only. Provenance for the 4 known failures (which
+Phase 8C.4's reverse-value-matcher could not reconstruct, capped by
+design) is captured by reusing `_observations_in_zone` and
+`_group_observation_rows` from `parser_2026.py` read-only -- the exact
+same functions and zone the production `employer.name` fallback itself
+uses -- confirmed directly against a real failing document
+(`symage_900033`) to reconstruct the exact real merged row. A fresh
+instrumented 600-document PaddleOCR run (new script, not a replacement
+benchmark) achieved **0 unmatched cases across all 600 documents**.
+
+**Result: complete, non-overlapping separation on every measured
+signal.** All 596 correct `employer.name` predictions have exactly 1
+contributing observation, 0 inter-observation gap, and a vertical span
+of 31-56px; all 4 known failures have exactly 2 observations, a 32-34.5px
+gap, and an 85-87px span -- a 29px gap between the two populations'
+extremes on span alone, with zero overlap on any of six measured
+signals. Best candidate: **`observation_count > 1`** -- 100% recall,
+100% precision, 0% false-review rate, chosen over equally-perfect
+alternatives for having no threshold-calibration risk at all (a natural
+integer boundary, not a tunable pixel/ratio value). One deliberately
+aggressive absolute-pixel threshold (`vertical_span_px > 50`, chosen
+below the correct population's own natural maximum) produced 66 false
+positives -- inspected directly and found to be ordinary single-line
+names with normal rotation-induced height variance, not a real anomaly;
+a new, fifth false-positive category beyond Phase 8C.5's four
+(threshold miscalibration relative to natural single-line variance).
+
+Compared with Phase 8C.5 (only after both were independently complete,
+per the brief): identical perfect scores on this dataset, but layout is
+content/language-agnostic and requires no calibrated numeric threshold
+for its best candidate, while conceptually covering non-address merge
+shapes the address-leak heuristic cannot. Decision: **Strong standalone
+signal**. A combined Phase 8C.7 experiment is judged tentatively
+justified (not run in this phase) to test robustness against defect
+shapes neither signal alone was designed for.
+
+12 new tests; full suite: **443 tests passing, up from 431, zero
+regressions.** No validation rule added, no OCR/parser/checkbox change,
+no combination with Phase 8C.5's heuristic.
+
+## Future Phases (after Phase 8C.6)
 
 ```text
+Phase 8C.7 (tentatively justified, not yet run) - a combined
+address-leak (Phase 8C.5) + layout-span (Phase 8C.6) signal experiment,
+to test robustness against employer.name defect shapes neither signal
+alone was designed for (e.g. a non-address merge, which layout would
+catch and the address heuristic would not).
+
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),
 including how to present the validator's demonstrated 0% catch rate
 (Phase 8C.3), native OCR confidence's demonstrated lack of signal
-(Phase 8C.4), and the promising address-leak heuristic (Phase 8C.5) on
-the same known residual defect classes, and the resulting 10.33%
-unsafe-acceptance rate on rotated documents.
+(Phase 8C.4), and the two independently-perfect candidate signals
+(Phase 8C.5 address-leak, Phase 8C.6 layout-span) on the same known
+residual defect classes, and the resulting 10.33% unsafe-acceptance
+rate on rotated documents.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
@@ -1327,12 +1381,10 @@ employer.address OCR fallback and extraction follow-up; a rotation-aware
 Box 13 checkbox recalibration (including its own, separate confidence
 signal: pixel-coverage margin, skew, geometry quality); a fix for the
 employer.name row-merge residual (would require reworking
-`_group_observation_rows`'s shared tolerance logic); promoting the Phase
-8C.5 address-leak heuristic (combined street-number-and-road-suffix
-variant only) into production validation, ideally after validating
-against a larger/real-world employer-name corpus; an employer-name
-layout-span analysis for defect shapes the address-leak heuristic
-cannot see; and/or a larger-scale Pipeline B evaluation.
+`_group_observation_rows`'s shared tolerance logic); promoting one or
+both Phase 8C.5/8C.6 signals into production validation, ideally after
+validating against a larger/real-world employer-name corpus; and/or a
+larger-scale Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

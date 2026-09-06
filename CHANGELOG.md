@@ -2,6 +2,38 @@
 
 ## 2026-09-06
 
+### Phase 8C.6 - Employer Name Layout-Span Signal Experiment
+
+- Offline validation experiment, independent of Phase 8C.5: can pure
+  spatial/geometry evidence (zero semantic content) detect the known
+  `employer.name` row-merge residual? New evaluation-side code only.
+  Provenance for the 4 known failures (uncapturable by Phase 8C.4's
+  capped reverse-matcher) is captured by reusing
+  `_observations_in_zone`/`_group_observation_rows` from `parser_2026.py`
+  read-only -- the exact functions and zone the production fallback
+  itself uses -- confirmed directly against a real failing document.
+- A fresh instrumented 600-document PaddleOCR run achieved 0 unmatched
+  cases across all 600 documents.
+- **Result: complete, non-overlapping separation on every signal
+  measured.** All 596 correct predictions: exactly 1 observation, 0
+  gap, 31-56px span. All 4 known failures: exactly 2 observations,
+  32-34.5px gap, 85-87px span. Best candidate: `observation_count > 1`
+  -- 100% recall, 100% precision, 0% false-review rate, chosen for
+  having no threshold-calibration risk (a natural integer boundary, not
+  a tunable value). One deliberately aggressive pixel threshold produced
+  66 false positives, inspected and found to be ordinary single-line
+  names with normal height variance -- a new, fifth false-positive
+  category (threshold miscalibration), not a real anomaly.
+- Compared with Phase 8C.5 only after both were independently complete:
+  identical perfect scores, but layout needs no address vocabulary and
+  no calibrated threshold. Decision: Strong standalone signal. A
+  combined Phase 8C.7 experiment is judged tentatively justified but not
+  run here.
+- 12 new tests; full suite: 443 tests passing, up from 431, zero
+  regressions. No validation rule added, no combination with Phase
+  8C.5's heuristic. Full report:
+  `docs/experiments/phase8c6-employer-name-layout-span.md`.
+
 ### Phase 8C.5 - Employer Name Address-Leak Heuristic Experiment
 
 - Offline validation experiment, no production change: can a narrow,

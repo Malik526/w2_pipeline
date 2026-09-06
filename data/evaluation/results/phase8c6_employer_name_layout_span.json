@@ -1,0 +1,6 @@
+{
+  "correct_documents": 596,
+  "documents": 600,
+  "erroneous_documents": 4,
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl"
+}
