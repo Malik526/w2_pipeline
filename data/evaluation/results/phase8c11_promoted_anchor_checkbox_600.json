@@ -1,0 +1,39 @@
+{
+  "anchor_relative_used_count": 600,
+  "correct_fields": 14396,
+  "detection_method_counts": {
+    "anchor_relative": 600
+  },
+  "documents": 600,
+  "duration_seconds_max": 8.899682396999196,
+  "duration_seconds_mean": 1.27998416174332,
+  "duration_seconds_median": 1.199842839001576,
+  "duration_seconds_min": 1.052109243999439,
+  "employer_name_correct_count": 596,
+  "fallback_document_ids": [],
+  "fallback_used_count": 0,
+  "field_accuracy": 0.9997222222222222,
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "non_checkbox_field_mismatches_vs_frozen_phase8c2": [],
+  "paddle_device": "gpu",
+  "retirement_plan_correct_by_variant": {
+    "blurred_png": {
+      "correct": 150,
+      "total": 150
+    },
+    "compressed_jpeg": {
+      "correct": 150,
+      "total": 150
+    },
+    "external_clean_render": {
+      "correct": 150,
+      "total": 150
+    },
+    "rotated_png": {
+      "correct": 150,
+      "total": 150
+    }
+  },
+  "retirement_plan_correct_count": 600,
+  "total_fields": 14400
+}

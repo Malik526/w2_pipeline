@@ -1499,6 +1499,50 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8C.11 - Promote Anchor-Relative `box_13.retirement_plan` Checkbox Detector to Default
+
+Full record: `docs/experiments/phase8c11-anchor-checkbox-promotion.md`.
+
+Promotion + regression-verification only, per Phase 8C.10's open
+decision item. `ObservationAcquirer.enable_anchor_relative_checkbox`
+default flipped `False` -> `True`; no production caller code changed
+(`PipelineAExtractor()` and `run_pipeline_a.py` already construct
+`ObservationAcquirer()` with no flag). Fixed-zone detection is **no
+longer the production default** for the plain-image path -- it remains
+an explicit, measurable fallback (`checkbox_detection_method =
+"fixed_zone_fallback"`) and a diagnostic override
+(`enable_anchor_relative_checkbox=False`, `"fixed_zone_disabled"`), and
+is unchanged as the primary mechanism for image-only/mixed PDF routes
+(out of scope for both 8C.10 and 8C.11).
+
+New `ObservationSet.box_13_checkbox_evidence` (`Box13CheckboxEvidence`)
+preserves `detection_method`, `fallback_used`, `anchor_found`,
+`checkbox_found`, `anchor_distance_px`, `horizontal_alignment_offset_px`,
+`shape_score`, `interior_ink_ratio`, and `decision_margin` as discrete
+structured fields (never one collapsed score) for the Phase 8C.12
+checkbox validator, in addition to the existing human-readable
+`ObservationSet.warnings` text.
+
+**Production-path 600-document benchmark** (new script,
+`run_pipeline_a_promoted_checkbox_benchmark.py`, constructing
+`ObservationAcquirer` with no checkbox flag at all -- proving the
+*ordinary* default path, not just Phase 8C.10's special A/B runner):
+600/600 `retirement_plan` correct (150/150 every variant), total field
+accuracy **14396/14400 = 99.972%** (identical to Phase 8C.10), zero
+non-checkbox mismatches vs. the frozen Phase 8C.2 baseline, and the same
+4 pre-existing `employer.name` `rotated_png` failures by exact document
+ID (`symage_900033/900045/900082/900146`). **Fallback audit: 600/600
+anchor-relative used, 0/600 fallback**, zero unexpected warnings.
+End-to-end latency unchanged within run-to-run variance (~1.2-1.3s/doc
+steady-state, one first-document PaddleOCR warmup outlier per run);
+detector-only latency unchanged at 0.056s/doc mean (detector code
+untouched, not retuned).
+
+Deskew remains rejected/off (Phase 8C.9's decision, untouched).
+
+1 net new test; full suite: **515 tests passing, up from 514, zero
+regressions.**
+
 ### Phase 8C.10 - OCR-Anchor-Relative `box_13.retirement_plan` Checkbox Detector: PROMOTABLE (Opt-In, Not Auto-Promoted)
 
 Full record:
@@ -1554,9 +1598,18 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Future Phases (after Phase 8C.10)
+## Future Phases (after Phase 8C.11)
 
 ```text
+Phase 8C.12 (not yet scoped) - a dedicated confidence-based validator
+for box_13.retirement_plan, analogous to the employer-name validator
+signals from Phase 8C.5-8C.8, built on the structured
+`ObservationSet.box_13_checkbox_evidence` (`Box13CheckboxEvidence`)
+fields Phase 8C.11 preserved: detection_method, fallback_used,
+anchor_found, checkbox_found, anchor_distance_px,
+horizontal_alignment_offset_px, shape_score, interior_ink_ratio, and
+decision_margin.
+
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),
 including the full employer-name signal-development arc (Phase
@@ -1564,16 +1617,13 @@ including the full employer-name signal-development arc (Phase
 unsafe-acceptance rate on rotated documents), the negative result and
 root-cause lesson from the Phase 8C.9 deskew experiment (calibrated OCR
 zones are canvas-geometry-specific, not just rotation-specific), and the
-product decision on promoting Phase 8C.10's anchor-relative checkbox
-detector to default-on.
+now-completed Phase 8C.10/8C.11 arc promoting the anchor-relative
+checkbox detector to production default.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
-employer.address OCR fallback and extraction follow-up; a dedicated
-confidence-based validator for box_13.retirement_plan built on top of
-Phase 8C.10's preserved anchor/candidate/interior-ink evidence fields,
-analogous to the employer-name validator signals from Phase 8C.5-8C.8;
+employer.address OCR fallback and extraction follow-up;
 a fix for the employer.name row-merge residual itself, either via a
 genuine canvas-geometry-normalizing preprocessing redesign (Phase 8C.9
 showed a bare rotation correction is not sufficient and actively

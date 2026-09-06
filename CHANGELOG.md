@@ -2,6 +2,46 @@
 
 ## 2026-09-06
 
+### Phase 8C.11 - Promote Anchor-Relative `box_13.retirement_plan` Checkbox Detector to Default
+
+- Promotion + regression-verification only: no PaddleOCR configuration
+  change, no non-checkbox parser change, no employer-name change, no
+  deskew, no retuning of the Phase 8C.10 detector or its calibrated
+  threshold.
+- `ObservationAcquirer.enable_anchor_relative_checkbox` default flipped
+  from `False` to `True`. No caller code changed:
+  `PipelineAExtractor()`'s default and `run_pipeline_a.py`'s CLI already
+  construct `ObservationAcquirer()` with no flag, so both now use the
+  anchor-relative detector automatically -- verified with a 20-document
+  smoke run through the unmodified production CLI (20/20
+  `retirement_plan` correct).
+- New `ObservationSet.box_13_checkbox_evidence` (`Box13CheckboxEvidence`)
+  carries `detection_method` (`anchor_relative` /
+  `fixed_zone_fallback` / `fixed_zone_disabled`), `fallback_used`,
+  `anchor_found`, `checkbox_found`, `anchor_distance_px`,
+  `horizontal_alignment_offset_px`, `shape_score`, `interior_ink_ratio`,
+  and `decision_margin` as discrete fields (never collapsed into one
+  score), preserved for the Phase 8C.12 checkbox validator.
+  `ObservationSet.warnings` text provenance is unchanged.
+- Fallback to the old fixed-zone detector remains explicit and
+  measurable; `enable_anchor_relative_checkbox=False` is retained as a
+  diagnostic/backward-comparison override only.
+- New production-path benchmark
+  (`run_pipeline_a_promoted_checkbox_benchmark.py`, constructing
+  `ObservationAcquirer` with no checkbox-related flag at all, unlike
+  Phase 8C.10's special A/B runner) across all 600 documents: 600/600
+  `retirement_plan` correct (150/150 each variant), total field accuracy
+  14396/14400 = 99.972%, zero non-checkbox mismatches vs. the frozen
+  Phase 8C.2 baseline, and the same 4 pre-existing `employer.name`
+  `rotated_png` failures by exact document ID. Anchor-relative used
+  600/600, fallback used 0/600.
+- End-to-end latency unchanged within run-to-run variance (~1.2-1.3s/doc
+  steady-state); detector-only latency unchanged at 0.056s/doc mean
+  (unmodified code).
+- 1 new/updated test (net); full suite: **515 tests passing, up from
+  514, zero regressions.**
+- Full record: `docs/experiments/phase8c11-anchor-checkbox-promotion.md`.
+
 ### Phase 8C.10 - OCR-Anchor-Relative `box_13.retirement_plan` Checkbox Detector: PROMOTABLE (Opt-In, Not Auto-Promoted)
 
 - Replaced the fragile fixed-page-coordinate `RETIREMENT_PLAN_ZONE`

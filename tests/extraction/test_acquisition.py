@@ -116,9 +116,31 @@ def _checkbox_page_image(path: Path, *, checked: bool) -> None:
     image.save(path)
 
 
-def test_anchor_relative_checkbox_disabled_by_default_never_calls_new_detector(
+def test_anchor_relative_checkbox_used_by_default_no_flag_required(
+    tmp_path: Path,
+) -> None:
+    """Phase 8C.11: normal `ObservationAcquirer()` construction uses the
+    anchor-relative detector without any explicit opt-in flag."""
+
+    image_path = tmp_path / "checked.png"
+    _checkbox_page_image(image_path, checked=True)
+    ingested = ingest_document(image_path, document_id="doc")
+
+    observation_set = ObservationAcquirer(ocr_adapter=CountingAnchorOcrAdapter()).acquire(ingested)
+
+    assert observation_set.box_13_visual_marks == {"retirement_plan": True}
+    assert any("anchor-relative detection used" in warning for warning in observation_set.warnings)
+    assert observation_set.box_13_checkbox_evidence is not None
+    assert observation_set.box_13_checkbox_evidence.detection_method == "anchor_relative"
+    assert observation_set.box_13_checkbox_evidence.fallback_used is False
+
+
+def test_anchor_relative_checkbox_disabled_override_never_calls_new_detector(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """`enable_anchor_relative_checkbox=False` remains a diagnostic-only
+    override that reproduces the old fixed-zone-only behavior."""
+
     image_path = tmp_path / "checked.png"
     _checkbox_page_image(image_path, checked=True)
     ingested = ingest_document(image_path, document_id="doc")
@@ -128,24 +150,14 @@ def test_anchor_relative_checkbox_disabled_by_default_never_calls_new_detector(
         lambda *args, **kwargs: calls.append(1),
     )
 
-    ObservationAcquirer(ocr_adapter=CountingAnchorOcrAdapter()).acquire(ingested)
-
-    assert calls == []
-
-
-def test_anchor_relative_checkbox_enabled_uses_new_detector_and_records_which_method(
-    tmp_path: Path,
-) -> None:
-    image_path = tmp_path / "checked.png"
-    _checkbox_page_image(image_path, checked=True)
-    ingested = ingest_document(image_path, document_id="doc")
-
     observation_set = ObservationAcquirer(
-        ocr_adapter=CountingAnchorOcrAdapter(), enable_anchor_relative_checkbox=True
+        ocr_adapter=CountingAnchorOcrAdapter(), enable_anchor_relative_checkbox=False
     ).acquire(ingested)
 
-    assert observation_set.box_13_visual_marks == {"retirement_plan": True}
-    assert any("anchor-relative detection used" in warning for warning in observation_set.warnings)
+    assert calls == []
+    assert observation_set.box_13_checkbox_evidence is not None
+    assert observation_set.box_13_checkbox_evidence.detection_method == "fixed_zone_disabled"
+    assert observation_set.box_13_checkbox_evidence.fallback_used is False
 
 
 def test_anchor_relative_checkbox_unchecked_case(tmp_path: Path) -> None:
@@ -153,9 +165,7 @@ def test_anchor_relative_checkbox_unchecked_case(tmp_path: Path) -> None:
     _checkbox_page_image(image_path, checked=False)
     ingested = ingest_document(image_path, document_id="doc")
 
-    observation_set = ObservationAcquirer(
-        ocr_adapter=CountingAnchorOcrAdapter(), enable_anchor_relative_checkbox=True
-    ).acquire(ingested)
+    observation_set = ObservationAcquirer(ocr_adapter=CountingAnchorOcrAdapter()).acquire(ingested)
 
     assert observation_set.box_13_visual_marks == {"retirement_plan": False}
 
@@ -165,12 +175,32 @@ def test_anchor_relative_checkbox_falls_back_when_anchor_not_found(tmp_path: Pat
     _page_image(image_path, marked=False)  # fixed-zone-calibrated page, no "Retirement plan" text at all
     ingested = ingest_document(image_path, document_id="doc")
 
-    observation_set = ObservationAcquirer(
-        ocr_adapter=StubOcrAdapter(), enable_anchor_relative_checkbox=True
-    ).acquire(ingested)
+    observation_set = ObservationAcquirer(ocr_adapter=StubOcrAdapter()).acquire(ingested)
 
     assert observation_set.box_13_visual_marks == {"retirement_plan": False}
     assert any("fell back to fixed-zone detector" in warning for warning in observation_set.warnings)
+    assert observation_set.box_13_checkbox_evidence is not None
+    assert observation_set.box_13_checkbox_evidence.detection_method == "fixed_zone_fallback"
+    assert observation_set.box_13_checkbox_evidence.fallback_used is True
+    assert observation_set.box_13_checkbox_evidence.anchor_found is False
+
+
+def test_anchor_relative_checkbox_falls_back_when_checkbox_not_found(tmp_path: Path) -> None:
+    """Anchor found, but no checkbox border in the derived search region."""
+
+    image_path = tmp_path / "no_checkbox.png"
+    image = Image.new("L", (400, 300), color=255)
+    image.save(image_path)
+    ingested = ingest_document(image_path, document_id="doc")
+
+    observation_set = ObservationAcquirer(ocr_adapter=CountingAnchorOcrAdapter()).acquire(ingested)
+
+    assert observation_set.box_13_visual_marks == {"retirement_plan": False}
+    assert any("fell back to fixed-zone detector" in warning for warning in observation_set.warnings)
+    assert observation_set.box_13_checkbox_evidence is not None
+    assert observation_set.box_13_checkbox_evidence.detection_method == "fixed_zone_fallback"
+    assert observation_set.box_13_checkbox_evidence.anchor_found is True
+    assert observation_set.box_13_checkbox_evidence.checkbox_found is False
 
 
 def test_anchor_relative_checkbox_never_triggers_a_second_ocr_call(tmp_path: Path) -> None:
@@ -179,6 +209,6 @@ def test_anchor_relative_checkbox_never_triggers_a_second_ocr_call(tmp_path: Pat
     ingested = ingest_document(image_path, document_id="doc")
     adapter = CountingAnchorOcrAdapter()
 
-    ObservationAcquirer(ocr_adapter=adapter, enable_anchor_relative_checkbox=True).acquire(ingested)
+    ObservationAcquirer(ocr_adapter=adapter).acquire(ingested)
 
     assert adapter.call_count == 1

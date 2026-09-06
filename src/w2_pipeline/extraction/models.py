@@ -85,6 +85,38 @@ class TextObservation(ExtractionModel):
     )
 
 
+class Box13CheckboxEvidence(ExtractionModel):
+    """Detection-method provenance and raw evidence for `box_13.retirement_plan`.
+
+    Preserved as discrete fields (Phase 8C.11), never collapsed into one
+    generic confidence score, so a future checkbox-specific validator
+    (Phase 8C.12) can reason about each signal independently -- e.g. a
+    successful anchor match with a borderline `decision_margin` is not
+    the same evidentiary situation as a `fixed_zone_fallback` result.
+    """
+
+    detection_method: str = Field(
+        description=(
+            "One of 'anchor_relative' (Phase 8C.10 detector succeeded), "
+            "'fixed_zone_fallback' (anchor-relative was enabled but could "
+            "not localize the anchor/checkbox, or raised), or "
+            "'fixed_zone_disabled' (enable_anchor_relative_checkbox=False, "
+            "a diagnostic override -- the fixed-zone detector ran by "
+            "explicit request, not because anything failed)."
+        )
+    )
+    fallback_used: bool = Field(
+        description="True only for 'fixed_zone_fallback' -- never true for a diagnostic disable."
+    )
+    anchor_found: bool | None = None
+    checkbox_found: bool | None = None
+    anchor_distance_px: float | None = None
+    horizontal_alignment_offset_px: float | None = None
+    shape_score: float | None = None
+    interior_ink_ratio: float | None = None
+    decision_margin: float | None = None
+
+
 class ObservationSet(ExtractionModel):
     """Common text/layout representation consumed by the W-2 parser."""
 
@@ -97,6 +129,15 @@ class ObservationSet(ExtractionModel):
             "Backend-neutral pixel-based Box 13 checkbox detections, keyed "
             "by flag name (e.g. 'retirement_plan'), independent of OCR text "
             "output. See w2_pipeline.extraction.checkbox_vision."
+        ),
+    )
+    box_13_checkbox_evidence: Box13CheckboxEvidence | None = Field(
+        default=None,
+        description=(
+            "Structured detection-method provenance/evidence for "
+            "box_13.retirement_plan (Phase 8C.11), populated for the "
+            "OCR-routed plain-image acquisition path. None for routes "
+            "that never run the Box 13 checkbox detectors."
         ),
     )
 

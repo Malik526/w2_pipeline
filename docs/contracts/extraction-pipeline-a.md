@@ -412,6 +412,27 @@ not a full 150-document benchmark; re-running the full Phase 4C/4E
 authoritative numbers is a natural follow-up, not performed as part of this
 implementation task.
 
+**Superseded for the plain-image acquisition path (Phase 8C.11).** The
+fixed-zone `RETIREMENT_PLAN_ZONE` detector described above is no longer the
+first mechanism `ObservationAcquirer` runs for `box_13.retirement_plan` on
+plain-image documents. Phase 8C.10 (`docs/experiments/phase8c10-anchor-relative-checkbox-detector.md`)
+introduced an OCR-anchor-relative detector (`extraction/checkbox_anchor.py`)
+that locates the printed "Retirement plan" label in the OCR observations
+already produced and derives the checkbox's position relative to that
+label, rather than a fixed page-coordinate ratio; Phase 8C.11
+(`docs/experiments/phase8c11-anchor-checkbox-promotion.md`) promoted it to
+`ObservationAcquirer`'s default (`enable_anchor_relative_checkbox=True`).
+The fixed-zone detector documented in this section remains in the code and
+now serves two narrower roles: an explicit, measurable fallback when the
+anchor-relative detector cannot localize the label/checkbox on a
+plain-image document (recorded as `checkbox_detection_method =
+"fixed_zone_fallback"` in `ObservationSet.box_13_checkbox_evidence`, never
+silent), and the unchanged primary mechanism for image-only/mixed PDF
+routes, which Phase 8C.10/8C.11 did not touch. Passing
+`enable_anchor_relative_checkbox=False` reproduces the pre-8C.11 fixed-zone-only
+behavior for diagnostic/backward comparison; production callers no longer
+need to (and should not) pass it.
+
 ## Benchmark Isolation
 
 Pipeline A integrates with the Phase 3/3B evaluator through `ExtractionInput`.

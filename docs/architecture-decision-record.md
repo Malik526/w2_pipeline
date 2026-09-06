@@ -467,10 +467,19 @@ added later without touching extraction, validation, or review code.
 
 ## 15. Known Limitations (Full List)
 
-- Box 13's pixel-based checkbox detector does not track geometry shifts
+- ~~Box 13's pixel-based checkbox detector does not track geometry shifts
   under rotation (60% accuracy on `retirement_plan` under rotation,
   identical on both OCR backends) -- the single largest remaining
-  Pipeline A accuracy gap.
+  Pipeline A accuracy gap.~~ **Resolved (Phase 8C.10/8C.11).** The
+  fixed-page-zone detector this described is no longer the default: an
+  OCR-anchor-relative detector (`extraction/checkbox_anchor.py`) that
+  locates the checkbox relative to the printed "Retirement plan" label's
+  own OCR geometry replaced it as `ObservationAcquirer`'s default,
+  reaching 600/600 (100%) on `box_13.retirement_plan` across all four
+  600-document variants including `rotated_png`, with zero non-checkbox
+  regressions. See
+  `docs/experiments/phase8c10-anchor-relative-checkbox-detector.md` and
+  `docs/experiments/phase8c11-anchor-checkbox-promotion.md`.
 - Tesseract has residual accent-recognition and blur-robustness
   weaknesses beyond what PaddleOCR shows on the same documents.
 - `employer.address` has the identical OCR-layout-fallback gap
