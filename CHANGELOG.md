@@ -2,6 +2,40 @@
 
 ## 2026-09-05
 
+### Phase 8C.3 - Final Validator Effectiveness On Frozen Paddle Predictions
+
+- Measured how the current, unchanged Phase 6 validator behaves against
+  the real remaining errors in the frozen Phase 8C.2 600-document
+  PaddleOCR run. New module
+  `src/w2_pipeline/evaluation/validator_effectiveness_predictions.py`
+  consumes the complete real `PredictionRecord` entries directly (no
+  reconstruction from field-failure summaries) and does not apply the
+  old `employer.name` ground-truth-gap adjustment, which no longer
+  applies since Phase 8A closed that coverage gap.
+- Leakage boundary: validator called with only the real prediction and
+  signals derived from its own status/pipeline_id/route; ground truth
+  loaded and compared only after that call returns, verified with a
+  call-spy test.
+- **Result: the validator caught zero of the 62 erroneous documents in
+  this run (0.0% error-detection recall; 0/600 documents routed to
+  `needs_review` at all).** Both known residual defect classes have a
+  0.0% catch rate: `box_13.retirement_plan` (60 affected -- no rule
+  references `box_13` fields at all) and the `employer.name` row-merge
+  residual (4 affected -- the only rule checks blankness, and the
+  residual value is non-blank). 2 documents have both failures
+  simultaneously, so 62 unique erroneous documents, not 64 (the raw
+  field-failure count) -- computed directly, not assumed.
+- False-review rate is 0.0% (no correct document ever falsely flagged);
+  unsafe-acceptance rate is 10.33% overall (41.33% within `rotated_png`
+  specifically). This is a pre-existing structural-vs-plausibility gap
+  in the Phase 6 rule set, invisible until a complete, accurate,
+  ground-truth-free prediction set existed to test it against -- not a
+  regression from Phase 8C.1/8C.2.
+- No validation rule was added or changed, per the brief's
+  measurement-only scope. 7 new tests; full suite: 379 tests passing, up
+  from 372, zero regressions. Full report:
+  `docs/experiments/phase8c3-final-validator-effectiveness.md`.
+
 ### Phase 8C.2 - Final PaddleOCR 600-Document Production-Candidate Run: FROZEN
 
 - Re-ran the full 600-document, 24-field, all-four-variant benchmark on

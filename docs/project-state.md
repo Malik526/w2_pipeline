@@ -1165,17 +1165,62 @@ these numbers.
 Full suite unaffected (no source code changed, only new result artifacts
 and documentation): 372 tests passing, same as after Phase 8C.1.
 
-## Future Phases (after Phase 8C.2)
+### Phase 8C.3 - Final Validator Effectiveness On Frozen Paddle Predictions
+
+Full record: `docs/experiments/phase8c3-final-validator-effectiveness.md`.
+
+Measured how the current, unchanged Phase 6 production validator behaves
+against the real remaining errors in the frozen Phase 8C.2 600-document
+PaddleOCR run. New code:
+`src/w2_pipeline/evaluation/validator_effectiveness_predictions.py` --
+consumes the complete, real, ground-truth-free `PredictionRecord` entries
+directly (no reconstruction from field-failure summaries, unlike the
+historical `validator_effectiveness.py`), and does **not** apply the old
+`employer.name` ground-truth-gap adjustment (Phase 8A closed that
+coverage gap, so it no longer applies). Leakage boundary: the validator
+is called with only `record.document` and signals derived from the
+record's own status/pipeline_id/route; ground truth is loaded and
+compared only after that call returns, verified by a call-spy test.
+
+**Result: the current validator caught zero of the 62 erroneous
+documents in this run (0.0% error-detection recall, 0/600 documents
+routed to `needs_review` at all).** Both known residual defect classes
+have a 0.0% catch rate:
+
+- `box_13.retirement_plan` (60 affected): a plain boolean; `rules.py` has
+  no rule referencing `box_13` fields at all, so `True` is exactly as
+  structurally valid as `False`.
+- `employer.name` row-merge residual (4 affected): the only rule on this
+  field checks blankness; a name with trailing address text appended is
+  a well-formed, non-blank string, so it passes trivially.
+- 2 documents exhibit both failures simultaneously (same underlying
+  rotation-skew cause), so 60 + 4 - 2 = **62 unique erroneous documents**
+  (not 64, the raw field-failure count) -- computed directly, not
+  assumed.
+
+False-review rate is 0.0% (538/538 correct documents accepted, none
+falsely flagged) and clean/JPEG/blur variants are perfect with nothing to
+catch or falsely flag. Unsafe-acceptance rate is 10.33% overall (62/600),
+concentrated entirely in `rotated_png` (62/150 = 41.33% of that variant).
+This is a pre-existing gap in the Phase 6 structural rule set (it detects
+*structural validity*, not *plausibility*), invisible until now because
+no complete, ground-truth-free, accurate prediction set existed to test
+it against at this fidelity -- not a regression from Phase 8C.1/8C.2.
+
+No rule was added to catch either class, per the brief's explicit
+instruction (measurement-only phase). 7 new focused tests; full suite:
+**379 tests passing, up from 372, zero regressions.** No file under
+`src/w2_pipeline/validation/` was touched, so validation's structural
+isolation from evaluation/extraction continues to hold.
+
+## Future Phases (after Phase 8C.3)
 
 ```text
-Phase 8C.3 (not yet scoped) - run the validator-effectiveness
-analysis (src/w2_pipeline/evaluation/validator_effectiveness.py) against
-the frozen Phase 8C.2 prediction artifacts, now that extraction itself is
-frozen and this is the final production-candidate prediction set to
-validate against.
-
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
-evidence feeds into (docs/architecture-decision-record.md update).
+evidence feeds into (docs/architecture-decision-record.md update),
+including how to present the validator's demonstrated 0% catch rate on
+the two known residual defect classes and the resulting 10.33%
+unsafe-acceptance rate on rotated documents.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
@@ -1183,7 +1228,9 @@ pricing study to close the Paddle-vs-Tesseract economics question; the
 employer.address OCR fallback and extraction follow-up; a rotation-aware
 Box 13 checkbox recalibration; a fix for the employer.name row-merge
 residual (would require reworking `_group_observation_rows`'s shared
-tolerance logic); and/or a larger-scale Pipeline B evaluation.
+tolerance logic); new validator plausibility rules to close the 0%
+catch-rate gap Phase 8C.3 found (e.g. a length/shape sanity check on
+`employer.name`); and/or a larger-scale Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever
