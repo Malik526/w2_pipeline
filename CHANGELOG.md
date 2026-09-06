@@ -22,7 +22,9 @@
   result artifact or ground-truth file was modified; a new 5-document
   verification sample was prepared at a separate, distinctly-named local
   path, leaving the existing default-location dataset untouched. Final
-  evaluated field set frozen at 23 paths (was 22).
+  evaluated field set frozen at 24 paths (was 23, verified by direct
+  count against the actual prepared manifest, not just the enumerated
+  field list).
 - Added `src/w2_pipeline/evaluation/predictions.py` (`PredictionRecord`,
   ground-truth-free, JSONL read/write) and a `--save-predictions <path>`
   flag on both `run_pipeline_a`/`run_pipeline_b`, populated from the same

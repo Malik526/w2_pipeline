@@ -976,7 +976,8 @@ fabricated (verified by a direct unit test and cross-checked against 5
 real documents' independently-parsed FUNSD data -- exact match on all 5,
 matching Phase 6B's real-extraction values).
 
-**Final evaluated field set frozen at 23 paths** (was 22): every
+**Final evaluated field set frozen at 24 paths** (was 23, verified by
+direct count against the actual prepared manifest): every
 previously-scored field plus `employer.name`. `EXTERNAL_ADAPTER_VERSION`
 bumped `"symage-w2.phase3b.v1"` -> `"symage-w2.phase8a.v2"`, recorded in
 every manifest entry's `generator_version`, so datasets/manifests from

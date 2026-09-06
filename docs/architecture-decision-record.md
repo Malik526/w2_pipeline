@@ -406,7 +406,7 @@ correctly describes a run that excluded `employer.name`** -- none of
 those numbers were recomputed or altered. The final Phase 8B benchmark
 (not yet run -- see `docs/experiments/phase8a-final-benchmark-coverage.md`
 for the exact commands) will be the first to measure `employer.name`
-accuracy at scale, using the frozen 23-field final evaluated set.
+accuracy at scale, using the frozen 24-field final evaluated set.
 
 ## 12. Human Review Architecture (Summary)
 

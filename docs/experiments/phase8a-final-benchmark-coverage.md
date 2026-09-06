@@ -80,8 +80,11 @@ Phase 6B investigation):
 
 ## 3. Final Evaluated Field Set (Frozen)
 
-23 canonical field paths (was 22): every field the Symage adapter already
-scored, plus `employer.name`.
+24 canonical field paths (was 23): every field the Symage adapter already
+scored, plus `employer.name`. (Verified by direct count against the
+actual prepared manifest, not just the enumerated list below --
+`len(entry.evaluated_field_paths)` is 24 on the new dataset and 23 on
+the untouched old one, for the same document.)
 
 ```text
 metadata.document_type, metadata.tax_year, metadata.schema_version
