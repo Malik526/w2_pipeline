@@ -326,6 +326,7 @@ docs/experiments/phase6b-employer-name-investigation.md
 docs/experiments/phase7-review-workflow.md
 docs/experiments/phase8-validator-effectiveness.md
 docs/experiments/phase8a-final-benchmark-coverage.md
+docs/experiments/phase8b-final-extraction-benchmark.md
 ```
 
 ## Current Pipeline A Configuration
@@ -1010,21 +1011,80 @@ ground-truth-bearing.
 17 new/updated tests; full suite: **359 tests passing (346 baseline + 6
 employer-name + 5 predictions + 2 boundary), zero regressions.**
 
-## Future Phases (after Phase 8A)
+## Phase 8B - Final Head-To-Head 600-Document Benchmark
+
+**Broad extraction benchmarking is now frozen.** Full record:
+`docs/experiments/phase8b-final-extraction-benchmark.md`. Evidence only --
+no parser, OCR configuration, checkbox threshold, or evaluated-field
+coverage change was made after seeing these results; no architecture
+decision was made here (Phase 8C/8D, not yet run).
+
+Ran the final PaddleOCR GPU and Tesseract CPU (PSM 3 + incumbent
+supplemental PSM 6, no PSM 11) benchmarks against the full final dataset
+(`data/evaluation/external/symage-synthetic-us-forms-preview-final/`,
+150 records x 4 variants = 600 documents, `generator_version =
+"symage-w2.phase8a.v2"`, 24 evaluated fields), sequentially (Tesseract
+launched only after PaddleOCR's process had fully exited, never
+concurrent), with `--save-predictions` capturing complete per-document
+predictions for both. Environment recorded before either run:
+`paddleocr==3.7.0`, `paddlepaddle-gpu==3.3.1`, `tesseract 4.1.1`, RTX
+3060 -- all already installed and verified rather than blindly
+reinstalled.
+
+**Result: PaddleOCR GPU leads on every measured dimension** -- full-pipeline
+field accuracy 98.54% vs. 89.55%, text/parser-subsystem accuracy (24
+fields minus the visual-only `box_13.retirement_plan`) 98.91% vs. 90.02%,
+every single variant (clean 100%/99.31%, compressed 100%/99.0%, blurred
+**100%/66.42%**, rotated 94.17%/93.47%), and latency (1.30s/doc vs.
+2.13s/doc). No field or variant exists where Tesseract outperforms
+PaddleOCR in this run.
+
+**Unplanned finding, reported not fixed (final-test integrity rule):**
+`employer.name` -- now scored for the first time at 600-document scale --
+has a **newly discovered, backend-neutral rotation bug**: under rotation,
+the Phase 6B fallback zone captures the printed question label
+(`"c Employer's name, address, and ZIP code"`) instead of the actual
+answer, on 100% of rotated documents (150/150) for *both* backends (zero
+overlapping failing documents between backends, confirming it is the
+same shared parser bug, not two coincidences) -- the same root-cause
+class as the previously-fixed "Rotated Employee-Name Label-Bleed" bug.
+Confirmed as a parser/layout error, not an OCR recognition failure, by
+inspecting the actual predicted values (the label text, correctly read).
+Not patched as part of this benchmark.
+
+**A second finding was investigated rather than assumed**: Tesseract's
+`box_13.retirement_plan` blur-variant accuracy (68/150 fail, 54.67%,
+while PaddleOCR remains 100% under blur) is not a new mystery -- checked
+for overlap with PaddleOCR's blur failures (zero) and confirmed as an
+**exact reconfirmation** of the historical Phase 4E figure already
+recorded in this document ("Tesseract 40.0% -> 54.67%... PaddleOCR is
+unaffected by blur at 100%"), not a new bug.
+
+Prediction artifacts verified: exactly 600 `PredictionRecord` entries per
+backend, identical `(document_id, variant_id)` key sets between backends,
+100% success status, complete predicted documents, no ground truth in
+either file. No code changed in this phase; full suite unaffected (359
+tests passing, same as Phase 8A).
+
+## Future Phases (after Phase 8B)
 
 ```text
-Phase 8B (prescribed next step, not yet run) - the final PaddleOCR GPU
-and Tesseract CPU 150-document benchmarks against the frozen final field
-set (generator_version "symage-w2.phase8a.v2"), with --save-predictions,
-against a newly-prepared symage-synthetic-us-forms-preview-final/
-dataset. Exact commands: docs/experiments/phase8a-final-benchmark-coverage.md.
+Phase 8C (prescribed next step) - run the validator-effectiveness
+analysis (src/w2_pipeline/evaluation/validator_effectiveness.py) against
+these exact saved Phase 8B prediction artifacts, now that they exist as
+complete per-document predictions rather than needing reconstruction.
+
+Phase 8D (not yet scoped) - the architecture-decision synthesis this
+evidence feeds into (docs/architecture-decision-record.md update),
+including whether/how to address the newly discovered employer.name
+rotation bug.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
 employer.address OCR fallback and extraction follow-up; a rotation-aware
-Box 13 checkbox recalibration; and/or a larger-scale Pipeline B
-evaluation.
+Box 13 checkbox recalibration; the newly discovered employer.name
+rotation-bleed fix; and/or a larger-scale Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

@@ -2,6 +2,37 @@
 
 ## 2026-09-05
 
+### Phase 8B - Final Head-To-Head 600-Document Benchmark
+
+- Ran the final, frozen PaddleOCR GPU and Tesseract CPU (PSM 3 +
+  incumbent supplemental PSM 6, no PSM 11) benchmarks against the full
+  Phase 8A dataset (600 documents: 150 records x 4 variants,
+  `generator_version = "symage-w2.phase8a.v2"`, 24 evaluated fields),
+  sequentially, with `--save-predictions` capturing complete per-document
+  predictions for both. No extraction, parser, or validation code
+  changed.
+- Result: PaddleOCR GPU leads on every measured dimension -- full-pipeline
+  field accuracy 98.54% vs. 89.55%, text/parser-subsystem accuracy 98.91%
+  vs. 90.02%, every variant, and latency (1.30s vs. 2.13s/doc).
+- Discovered and reported (not fixed, per the final-test integrity rule):
+  a backend-neutral rotation bug in the Phase 6B `employer.name`
+  fallback -- under rotation, it captures the printed question label
+  instead of the answer, on 100% of rotated documents for both backends.
+  Confirmed as a parser/layout error (not OCR recognition) by inspecting
+  the actual predicted values.
+- Investigated (not assumed): Tesseract's blur-variant
+  `box_13.retirement_plan` accuracy (54.67%) is an exact reconfirmation
+  of the historical Phase 4E figure, not a new bug -- confirmed via zero
+  failure overlap with PaddleOCR's blur results.
+  Result/prediction artifacts:
+  `data/evaluation/results/phase8b_final_paddleocr_gpu_all_variants_600.json`,
+  `..._predictions.jsonl`,
+  `data/evaluation/results/phase8b_final_tesseract_psm3_psm6_all_variants_600.json`,
+  `..._predictions.jsonl`. Full report:
+  `docs/experiments/phase8b-final-extraction-benchmark.md`.
+- No code changed; full suite unaffected (359 tests passing, same as
+  Phase 8A).
+
 ### Phase 8A - Final Benchmark Coverage And Prediction Artifact Readiness
 
 - Added an authoritative, deterministic `employer.name` ground-truth

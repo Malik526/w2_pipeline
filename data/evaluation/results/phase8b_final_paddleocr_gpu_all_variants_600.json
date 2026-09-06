@@ -1,0 +1,2327 @@
+{
+  "accuracy_by_route": {
+    "ocr": {
+      "correct_fields": 14190,
+      "documents": 600,
+      "field_accuracy": 0.9854166666666667,
+      "total_fields": 14400
+    }
+  },
+  "accuracy_by_variant": {
+    "blurred_png": {
+      "correct_fields": 3600,
+      "documents": 150,
+      "field_accuracy": 1.0,
+      "total_fields": 3600
+    },
+    "compressed_jpeg": {
+      "correct_fields": 3600,
+      "documents": 150,
+      "field_accuracy": 1.0,
+      "total_fields": 3600
+    },
+    "external_clean_render": {
+      "correct_fields": 3600,
+      "documents": 150,
+      "field_accuracy": 1.0,
+      "total_fields": 3600
+    },
+    "rotated_png": {
+      "correct_fields": 3390,
+      "documents": 150,
+      "field_accuracy": 0.9416666666666667,
+      "total_fields": 3600
+    }
+  },
+  "average_duration_seconds": 1.3013514188450548,
+  "benchmark_metadata": {
+    "git_commit": "0e5a3af01c4abba2bb775daff96e1d7e8f472a2a",
+    "ocr_backend": "paddleocr",
+    "ocr_configuration": {
+      "device": "gpu",
+      "lang": "en",
+      "use_doc_orientation_classify": false,
+      "use_doc_unwarping": false,
+      "use_textline_orientation": false
+    },
+    "pipeline_id": "pipeline_a",
+    "run_timestamp": "2026-09-06T00:31:40.588829+00:00",
+    "schema_version": 2026,
+    "source_datasets": [
+      "Symage/synthetic-us-forms-preview"
+    ],
+    "variant_filter": null,
+    "variant_scope": [
+      "blurred_png",
+      "compressed_jpeg",
+      "external_clean_render",
+      "rotated_png"
+    ]
+  },
+  "correct_fields": 14190,
+  "document_conditions": [
+    "blurred_png",
+    "compressed_jpeg",
+    "external_clean_render",
+    "rotated_png"
+  ],
+  "documents": 600,
+  "failed_documents": 0,
+  "failure_rate": 0.0,
+  "field_accuracy": 0.9854166666666667,
+  "field_failure_count": 210,
+  "field_failures": [
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "Advantage Recruiting LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900001-irs_w2_single_page_2026-p0",
+      "expected": "Timberline Trading Co.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900002-irs_w2_single_page_2026-p0",
+      "expected": "BlueWave Enterprises",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900003-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900003-irs_w2_single_page_2026-p0",
+      "expected": "Infinity Enterprises Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900004-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900004-irs_w2_single_page_2026-p0",
+      "expected": "Bright Horizons Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900005-irs_w2_single_page_2026-p0",
+      "expected": "Catalyst Energy Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900006-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900006-irs_w2_single_page_2026-p0",
+      "expected": "Evergreen Solutions LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900007-irs_w2_single_page_2026-p0",
+      "expected": "Tidal Wave Enterprises",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900008-irs_w2_single_page_2026-p0",
+      "expected": "Streamline Operations Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900009-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900009-irs_w2_single_page_2026-p0",
+      "expected": "ClearWater Financial Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900010-irs_w2_single_page_2026-p0",
+      "expected": "WorldWise Strategies Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900011-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900011-irs_w2_single_page_2026-p0",
+      "expected": "Ascend Financial Group Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900012-irs_w2_single_page_2026-p0",
+      "expected": "Crescent Moon Designs LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900013-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900013-irs_w2_single_page_2026-p0",
+      "expected": "Verde Energy Solutions LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900014-irs_w2_single_page_2026-p0",
+      "expected": "Evergreen Technologies Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900015-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900015-irs_w2_single_page_2026-p0",
+      "expected": "Beacon Point Technologies",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900016-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900016-irs_w2_single_page_2026-p0",
+      "expected": "Digital Frontier Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900017-irs_w2_single_page_2026-p0",
+      "expected": "Vanguard Systems",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900018-irs_w2_single_page_2026-p0",
+      "expected": "Synergy Business Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900019-irs_w2_single_page_2026-p0",
+      "expected": "Pioneer Technologies Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900020-irs_w2_single_page_2026-p0",
+      "expected": "Fortress Security LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "Maple Leaf Industries",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900022-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900022-irs_w2_single_page_2026-p0",
+      "expected": "Elemental Designs Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900023-irs_w2_single_page_2026-p0",
+      "expected": "Whirlwind Logistics LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900024-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900024-irs_w2_single_page_2026-p0",
+      "expected": "Neon Path Consulting",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900025-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900025-irs_w2_single_page_2026-p0",
+      "expected": "FutureTech Developments",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "Harmony Home Services",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": "Vertex Media Group",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900028-irs_w2_single_page_2026-p0",
+      "expected": "Infinity Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900029-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900029-irs_w2_single_page_2026-p0",
+      "expected": "Clarity Communications Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900030-irs_w2_single_page_2026-p0",
+      "expected": "Affinity Development Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900031-irs_w2_single_page_2026-p0",
+      "expected": "Stellar Systems Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900032-irs_w2_single_page_2026-p0",
+      "expected": "Advocate Solutions LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "Elan Consulting Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900034-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900034-irs_w2_single_page_2026-p0",
+      "expected": "Onyx Properties LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900035-irs_w2_single_page_2026-p0",
+      "expected": "Arcadia Group LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900036-irs_w2_single_page_2026-p0",
+      "expected": "Visionary Works LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900037-irs_w2_single_page_2026-p0",
+      "expected": "BrightFuture LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900038-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900038-irs_w2_single_page_2026-p0",
+      "expected": "Amber Technologies Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "Global Connect Technologies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900040-irs_w2_single_page_2026-p0",
+      "expected": "Nexus Financial Services Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900041-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900041-irs_w2_single_page_2026-p0",
+      "expected": "Pinnacle Growth Strategies",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900042-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900042-irs_w2_single_page_2026-p0",
+      "expected": "Mastermind Consulting LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900043-irs_w2_single_page_2026-p0",
+      "expected": "NextStep Fitness LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900044-irs_w2_single_page_2026-p0",
+      "expected": "NextGen Dynamics",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "Bespoke Designs LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900046-irs_w2_single_page_2026-p0",
+      "expected": "Zenith Education Group",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900047-irs_w2_single_page_2026-p0",
+      "expected": "BlueWave Technologies",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900048-irs_w2_single_page_2026-p0",
+      "expected": "Pure Water Systems",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "OptiTech Solutions Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900050-irs_w2_single_page_2026-p0",
+      "expected": "Urban Development Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900051-irs_w2_single_page_2026-p0",
+      "expected": "Urban Landscape LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "expected": "Blue Horizon Technologies Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900053-irs_w2_single_page_2026-p0",
+      "expected": "Harvest Moon Design LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900054-irs_w2_single_page_2026-p0",
+      "expected": "Coastal Insights LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900055-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900055-irs_w2_single_page_2026-p0",
+      "expected": "Elemental Wellness Center LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900056-irs_w2_single_page_2026-p0",
+      "expected": "Vibrant Health Solutions Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900057-irs_w2_single_page_2026-p0",
+      "expected": "Summit Group Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "Harmony Travel Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900059-irs_w2_single_page_2026-p0",
+      "expected": "GreenWave Technologies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900060-irs_w2_single_page_2026-p0",
+      "expected": "Lighthouse Strategies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "expected": "Synergize Consulting",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900062-irs_w2_single_page_2026-p0",
+      "expected": "Vertex Real Estate Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900063-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900063-irs_w2_single_page_2026-p0",
+      "expected": "Authentic Voice Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900064-irs_w2_single_page_2026-p0",
+      "expected": "Niche Digital Agency LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900065-irs_w2_single_page_2026-p0",
+      "expected": "Infinite Loop Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900066-irs_w2_single_page_2026-p0",
+      "expected": "Peak Health Solutions LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900067-irs_w2_single_page_2026-p0",
+      "expected": "Peak Performance Group LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900068-irs_w2_single_page_2026-p0",
+      "expected": "Edgewater Resources LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900069-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900069-irs_w2_single_page_2026-p0",
+      "expected": "Prestige Home Improvements Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900070-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900070-irs_w2_single_page_2026-p0",
+      "expected": "Quantum Dynamics",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900071-irs_w2_single_page_2026-p0",
+      "expected": "Radiant Energy Solutions Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900072-irs_w2_single_page_2026-p0",
+      "expected": "Solaris Design Co.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900073-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900073-irs_w2_single_page_2026-p0",
+      "expected": "Precision Analytics LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900074-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900074-irs_w2_single_page_2026-p0",
+      "expected": "Evergreen Strategies Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900075-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900075-irs_w2_single_page_2026-p0",
+      "expected": "Fusion Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900076-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900076-irs_w2_single_page_2026-p0",
+      "expected": "CityScape Development Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "Redwood Ventures",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900078-irs_w2_single_page_2026-p0",
+      "expected": "Vertex Enterprises",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900079-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900079-irs_w2_single_page_2026-p0",
+      "expected": "Horizon Tutoring Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900080-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900080-irs_w2_single_page_2026-p0",
+      "expected": "Skyline Media Group LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "True North Technologies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "FutureReady Services",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900083-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900083-irs_w2_single_page_2026-p0",
+      "expected": "Riverstone Financial Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900084-irs_w2_single_page_2026-p0",
+      "expected": "Oasis Investments Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900085-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900085-irs_w2_single_page_2026-p0",
+      "expected": "Quantum Impact LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900086-irs_w2_single_page_2026-p0",
+      "expected": "Paramount Designs Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "Quantum Leap Dynamics LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900088-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900088-irs_w2_single_page_2026-p0",
+      "expected": "BrightPath Technologies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900089-irs_w2_single_page_2026-p0",
+      "expected": "Crystal Clear Distributors",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900090-irs_w2_single_page_2026-p0",
+      "expected": "Spark Innovations",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900091-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900091-irs_w2_single_page_2026-p0",
+      "expected": "BrightSky Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900092-irs_w2_single_page_2026-p0",
+      "expected": "Global Strategies Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900093-irs_w2_single_page_2026-p0",
+      "expected": "Innovatech Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900094-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900094-irs_w2_single_page_2026-p0",
+      "expected": "Streamline Technologies Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900095-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900095-irs_w2_single_page_2026-p0",
+      "expected": "Evergreen Strategies",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900096-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900096-irs_w2_single_page_2026-p0",
+      "expected": "Momentum Strategies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900097-irs_w2_single_page_2026-p0",
+      "expected": "Urban Edge Marketing",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900098-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900098-irs_w2_single_page_2026-p0",
+      "expected": "FreshStart Consulting LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900099-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900099-irs_w2_single_page_2026-p0",
+      "expected": "Fusion Tech Systems LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900100-irs_w2_single_page_2026-p0",
+      "expected": "Elevate Design Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900101-irs_w2_single_page_2026-p0",
+      "expected": "Fusion Tech Group LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900102-irs_w2_single_page_2026-p0",
+      "expected": "BlueWave Energy Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "expected": "Spectrum Services Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900104-irs_w2_single_page_2026-p0",
+      "expected": "Skyline Tech Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900105-irs_w2_single_page_2026-p0",
+      "expected": "Momentum Event Planning LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900106-irs_w2_single_page_2026-p0",
+      "expected": "RedRock Resources LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900107-irs_w2_single_page_2026-p0",
+      "expected": "Beacon Consulting Group",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900108-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900108-irs_w2_single_page_2026-p0",
+      "expected": "Coastal Living Furniture",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900109-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900109-irs_w2_single_page_2026-p0",
+      "expected": "SilverLine Technologies Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900110-irs_w2_single_page_2026-p0",
+      "expected": "Echo Communications LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900111-irs_w2_single_page_2026-p0",
+      "expected": "Wavelength Media LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900112-irs_w2_single_page_2026-p0",
+      "expected": "Legacy Brand Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900113-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900113-irs_w2_single_page_2026-p0",
+      "expected": "Equinox Technologies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900114-irs_w2_single_page_2026-p0",
+      "expected": "Blue Horizon Technologies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900115-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900115-irs_w2_single_page_2026-p0",
+      "expected": "Gemini Builders LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900116-irs_w2_single_page_2026-p0",
+      "expected": "Gateway Operations Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900117-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900117-irs_w2_single_page_2026-p0",
+      "expected": "Summit Media Group Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900118-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900118-irs_w2_single_page_2026-p0",
+      "expected": "Urban Dynamics Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900119-irs_w2_single_page_2026-p0",
+      "expected": "Valiant Craftsmen LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900120-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900120-irs_w2_single_page_2026-p0",
+      "expected": "Vibrant Health Solutions Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900121-irs_w2_single_page_2026-p0",
+      "expected": "Radiant Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900122-irs_w2_single_page_2026-p0",
+      "expected": "Threshold Media LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900123-irs_w2_single_page_2026-p0",
+      "expected": "Insightful Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900124-irs_w2_single_page_2026-p0",
+      "expected": "Mosaic Design Group LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "Radiant Healthcare Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900126-irs_w2_single_page_2026-p0",
+      "expected": "Crescent Moon Creations",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900127-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900127-irs_w2_single_page_2026-p0",
+      "expected": "Global Reach LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900128-irs_w2_single_page_2026-p0",
+      "expected": "Wise Owl Consulting",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900129-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900129-irs_w2_single_page_2026-p0",
+      "expected": "Vanguard Finance Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900130-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900130-irs_w2_single_page_2026-p0",
+      "expected": "Pinnacle Enterprises",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900131-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900131-irs_w2_single_page_2026-p0",
+      "expected": "Harvest Growth Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900132-irs_w2_single_page_2026-p0",
+      "expected": "Vertex Construction Group",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900133-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900133-irs_w2_single_page_2026-p0",
+      "expected": "Atlas Engineering Corp.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900134-irs_w2_single_page_2026-p0",
+      "expected": "Elevate Consulting Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900135-irs_w2_single_page_2026-p0",
+      "expected": "Crescent Creative LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900136-irs_w2_single_page_2026-p0",
+      "expected": "Urban Pulse Dynamics",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "Peak Performance Consulting LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900138-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900138-irs_w2_single_page_2026-p0",
+      "expected": "Summit Peak Technologies",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900139-irs_w2_single_page_2026-p0",
+      "expected": "CrystalClear Communications",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900140-irs_w2_single_page_2026-p0",
+      "expected": "EcoWave Industries LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900141-irs_w2_single_page_2026-p0",
+      "expected": "Harborview Insurance Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900142-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900142-irs_w2_single_page_2026-p0",
+      "expected": "Unity Global Solutions",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900143-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900143-irs_w2_single_page_2026-p0",
+      "expected": "Skyline Real Estate Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900144-irs_w2_single_page_2026-p0",
+      "expected": "UrbanNest Realty Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900145-irs_w2_single_page_2026-p0",
+      "expected": false,
+      "failure_kind": "mismatch",
+      "field_path": "box_13.retirement_plan",
+      "predicted": true,
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900145-irs_w2_single_page_2026-p0",
+      "expected": "Terra Firma Landscaping",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "Global Insights Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900147-irs_w2_single_page_2026-p0",
+      "expected": "Synergetic Solutions Inc.",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900148-irs_w2_single_page_2026-p0",
+      "expected": "Infinite Loop Technologies",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900149-irs_w2_single_page_2026-p0",
+      "expected": "Pristine Green Technologies LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "c Employer's name, address, and ZIP code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    }
+  ],
+  "per_field_accuracy": {
+    "box_13.retirement_plan": {
+      "correct": 540,
+      "field_accuracy": 0.9,
+      "incorrect": 60,
+      "total": 600
+    },
+    "box_13.statutory_employee": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "box_13.third_party_sick_pay": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.first_name": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.last_name": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.middle_initial": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.ssn": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.suffix": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.control_number": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.ein": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.name": {
+      "correct": 450,
+      "field_accuracy": 0.75,
+      "incorrect": 150,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.document_type": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.schema_version": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.tax_year": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    }
+  },
+  "pipeline_id": "pipeline_a",
+  "source_datasets": [
+    "Symage/synthetic-us-forms-preview"
+  ],
+  "successful_documents": 600,
+  "total_fields": 14400
+}
