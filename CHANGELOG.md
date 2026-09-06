@@ -2,6 +2,39 @@
 
 ## 2026-09-06
 
+### Phase 8C.8 - Promote Employer-Name Signals Into The Production Validator
+
+- Promoted Phase 8C.5's address-leak heuristic and Phase 8C.6's
+  layout-span signal into `w2_pipeline.validation.rules` as two new,
+  always-preserved `error`-severity issues
+  (`employer_name_address_leak`, `employer_name_layout_anomaly`;
+  `ALL_RULE_NAMES` 10 -> 12), routed via the existing default policy
+  (Phase 8C.7's tiered-OR recommendation, achieved for free). Layout
+  provenance reaches the validator via the existing `ExtractionSignals`
+  metadata channel, populated by a new small production function,
+  `parser_2026.compute_employer_name_observation_count`, reusing the
+  employer.name fallback's own zone/row-grouping logic (now a named,
+  shared constant, `EMPLOYER_NAME_ZONE`) -- never reconstructed inside
+  validation, dependency direction preserved.
+- A fresh 600-document PaddleOCR run (real, unmodified
+  `PipelineAExtractor`) verified bit-identical (full object equality)
+  to the frozen Phase 8C.2 prediction for all 600 documents before
+  scoring the promoted validator against it.
+- Result: 4/4 known `employer.name` row-merge failures now routed to
+  needs_review (100% catch rate), 0 false positives among 596 correct
+  names, 0.0% false-review rate, 100% review-queue precision. Unsafe-
+  acceptance rate improves from 10.33% to 9.67%. Clean/JPEG/blur remain
+  completely quiet. Issue agreement in the real validator exactly
+  reproduces Phase 8C.7's simulation. `box_13.retirement_plan`'s 60
+  checkbox failures remain intentionally untouched (2 incidentally
+  routed to review only via a shared document with an employer-name
+  failure, reported transparently). Measured validator overhead: ~2.8
+  microseconds/document for the two new rules, negligible.
+- 17 new/updated tests; full suite: 477 tests passing, up from 460,
+  zero regressions. Development-baseline update, not a final project
+  freeze; checkbox remediation not started. Full report:
+  `docs/experiments/phase8c8-promote-employer-name-validator-signals.md`.
+
 ### Phase 8C.7 - Combined Employer-Name Validation Signal Experiment
 
 - Combined Phase 8C.5's address-leak heuristic and Phase 8C.6's

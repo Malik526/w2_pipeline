@@ -247,6 +247,53 @@ wages vs. federal wages) is implemented -- per the brief, only rules
 "strongly justified and not likely to create false positives" belong here,
 and no such relationship is already documented in this project's contracts.
 
+## Employer-Name Signal Rules (Phase 8C.8)
+
+Two rules promoted from evaluation-only measurement
+(`docs/experiments/phase8c5-employer-name-address-leak-heuristic.md`,
+`phase8c6-employer-name-layout-span.md`, `phase8c7-combined-employer-name-validation-signals.md`)
+after each independently achieved 100% recall / 100% precision / 0%
+false-review rate against the frozen 600-document Phase 8C.2 benchmark,
+and their promotion was itself verified end-to-end
+(`docs/experiments/phase8c8-promote-employer-name-validator-signals.md`).
+Both are `error` severity (either alone routes to `needs_review` under
+the default policy); both issues are always preserved independently
+(never collapsed into one boolean), so a document where both fire is
+visibly distinguishable from one where only one did.
+
+- **`employer_name_address_leak`**: `employer.name` contains both a bare
+  street-number-shaped digit run (1-5 digits) and a whole-word road-suffix
+  abbreviation (an expanded, generic USPS-style list -- `Rd`, `Ave`,
+  `Brg`, `Corridor`, ...). Requiring both together (never either alone)
+  is what keeps this safe against real company names containing a number
+  (`3M Corporation`) or an ordinary word that also happens to be a
+  road-suffix abbreviation (`Infinite Loop Technologies`). Pure text
+  inspection -- no extraction/OCR dependency.
+- **`employer_name_layout_anomaly`**: `employer.name`'s value was
+  assembled from more than one OCR observation
+  (`ExtractionSignals.employer_name_observation_count > 1`). Purely
+  geometric -- never inspects the text itself. The count is real
+  layout provenance from the extraction/parser path
+  (`w2_pipeline.extraction.parser_2026.compute_employer_name_observation_count`,
+  reusing the exact same zone/row-grouping logic the `employer.name`
+  OCR fallback itself uses), carried to the validator via
+  `ExtractionSignals` -- never reconstructed inside validation, and never
+  available for Pipeline B or any caller that doesn't supply it (`None`
+  is not treated as suspicious).
+
+On the frozen Phase 8C.2 600-document set (rerun through the real,
+promoted validator, extraction output verified bit-identical to Phase
+8C.2 first): both rules fire together on exactly the 4 known
+`employer.name` row-merge failures and nowhere else -- 4/4 caught, 0
+false positives, 0% false-review rate, 100% review-queue precision.
+`box_13.retirement_plan`'s 60 rotation-checkbox failures remain
+untouched by these two rules (a separate, still-open gap; 2 of the 60
+happen to be routed to review anyway only because they coincide with an
+employer-name failure on the same document, not because of any
+checkbox-specific detection). See the Phase 8C.8 doc for full results,
+issue-agreement counts, and measured validator overhead (a few
+microseconds per document).
+
 ## Routing Policy
 
 ```python
@@ -279,10 +326,11 @@ is nothing to check) and returns `needs_review` with exactly one
 `extraction_output_invalid` issue and `checks_run = 1`. A document that
 *did* construct successfully but whose originating pipeline reported
 `ExtractionOutcome.EXTRACTION_FAILED`/`INVALID_CANONICAL_RESULT` via
-`ExtractionSignals.outcome` still runs every field rule (`checks_run = 10`)
-in addition to the resulting `extraction_failure` issue -- both cases are
-covered, but they are structurally different situations (no document to
-check, vs. a document plus a signal saying something else went wrong).
+`ExtractionSignals.outcome` still runs every field rule (`checks_run = 12`,
+since Phase 8C.8 added two more) in addition to the resulting
+`extraction_failure` issue -- both cases are covered, but they are
+structurally different situations (no document to check, vs. a document
+plus a signal saying something else went wrong).
 
 ## PII Redaction
 

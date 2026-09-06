@@ -73,10 +73,21 @@ def _signals_for_record(record: PredictionRecord) -> ExtractionSignals:
         outcome = ExtractionOutcome.EXTRACTION_FAILED
     else:
         outcome = ExtractionOutcome.INVALID_CANONICAL_RESULT
+
+    # Phase 8C.8: `employer_name_observation_count`, when the record's own
+    # `pipeline_metadata` carries it (a real instrumented run populates
+    # this from `ExtractionResult.employer_name_observation_count` --
+    # never fabricated for records that predate it), is threaded through
+    # to the validator the same way a real caller would.
+    employer_name_observation_count = None
+    if record.pipeline_metadata is not None:
+        employer_name_observation_count = record.pipeline_metadata.get("employer_name_observation_count")
+
     return ExtractionSignals(
         pipeline_id=record.pipeline_id,
         route=record.extraction_route,
         outcome=outcome,
+        employer_name_observation_count=employer_name_observation_count,
     )
 
 

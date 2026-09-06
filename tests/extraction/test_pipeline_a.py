@@ -32,6 +32,12 @@ def test_pipeline_a_extracts_internal_clean_pdf_with_native_route(tmp_path: Path
     assert result.route == AcquisitionRoute.NATIVE_PDF
     assert result.observation_count > 0
     assert evaluation.field_accuracy == 1.0
+    # Phase 8C.8: the layout-provenance signal is additive metadata only --
+    # it must never affect the extracted document itself (field_accuracy
+    # above is unaffected either way), and the internal generator's
+    # native-PDF layout doesn't fall in the OCR-calibrated employer.name
+    # zone, so this is expected to be None here, not fabricated.
+    assert result.employer_name_observation_count is None
 
 
 def test_pipeline_a_plugs_into_evaluation_runner_and_records_route(tmp_path: Path) -> None:

@@ -116,3 +116,15 @@ class ExtractionResult(ExtractionModel):
     route: AcquisitionRoute
     observation_count: int = Field(ge=0)
     warnings: list[ExtractionWarning] = Field(default_factory=list)
+    employer_name_observation_count: int | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "How many OCR observations contributed to employer.name's "
+            "value (Phase 8C.8 layout-provenance signal), None when "
+            "employer.name is None or no matching observation row was "
+            "found. Carried to the validator via "
+            "ExtractionSignals.employer_name_observation_count -- never "
+            "a parser/extraction decision input."
+        ),
+    )

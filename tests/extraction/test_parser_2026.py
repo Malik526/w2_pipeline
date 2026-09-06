@@ -13,6 +13,7 @@ from w2_pipeline.extraction.parser_2026 import (
     _clean_layout_token,
     _first_row_text_in_zone,
     _looks_like_employer_name_label_row,
+    compute_employer_name_observation_count,
     parse_money,
     parse_w2_2026_observations,
 )
@@ -1189,3 +1190,55 @@ def test_parser_output_unchanged_when_observations_carry_ocr_confidence() -> Non
 
     assert confident_document == plain_document
     assert confident_warnings == plain_warnings
+
+
+def test_compute_employer_name_observation_count_is_one_for_a_normal_single_line_name() -> None:
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        *_employer_box_c_observations(),
+    ]
+    document, warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="layout-count-normal",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Timberline Trading Co."
+    assert compute_employer_name_observation_count(document, observations) == 1
+
+
+def test_compute_employer_name_observation_count_is_two_for_a_merged_row() -> None:
+    # Tall enough observations (tolerance = max(6, height * 0.65) = 39)
+    # with a 33px center-to-center gap fall within `_group_observation_rows`'s
+    # tolerance, matching the real diagnosed rotation-skew geometry (Phase
+    # 8C.1/8C.6) that causes this over-merge in production.
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        ocr_obs("Elan Consulting Corp", 162, 414, 250, 60),
+        ocr_obs("2861 Geneva Ponce De Leon Rd", 162, 447, 350, 60),
+    ]
+    document, warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="layout-count-merged",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.employer.name == "Elan Consulting Corp 2861 Geneva Ponce De Leon Rd"
+    assert compute_employer_name_observation_count(document, observations) == 2
+
+
+def test_compute_employer_name_observation_count_is_none_when_employer_name_is_none() -> None:
+    observations = [ocr_obs("Steven", 168, 810, 100)]
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="layout-count-blank",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert document.employer.name is None
+    assert compute_employer_name_observation_count(document, observations) is None

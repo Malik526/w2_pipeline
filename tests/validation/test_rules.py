@@ -234,4 +234,167 @@ def test_multiple_issues_are_all_returned_not_short_circuited(happy_path_documen
 
 
 def test_all_rule_names_documents_the_checks_run_count() -> None:
-    assert len(ALL_RULE_NAMES) == 10
+    assert len(ALL_RULE_NAMES) == 12
+
+
+# --- Phase 8C.8: employer.name address-leak rule -----------------------
+
+
+def test_employer_name_address_leak_shape_is_flagged(happy_path_document: W2Document) -> None:
+    document = happy_path_document.model_copy(
+        update={
+            "employer": happy_path_document.employer.model_copy(
+                update={"name": "Elan Consulting Corp 2861 Geneva Ponce De Leon Rd"}
+            )
+        }
+    )
+
+    issues = run_all_rules(document, ExtractionSignals())
+
+    matching = [issue for issue in issues if issue.code == "employer_name_address_leak"]
+    assert len(matching) == 1
+    assert matching[0].severity == ValidationSeverity.ERROR
+    assert matching[0].field_path == "employer.name"
+
+
+def test_normal_employer_name_not_flagged_by_address_leak_rule(happy_path_document: W2Document) -> None:
+    document = happy_path_document.model_copy(
+        update={"employer": happy_path_document.employer.model_copy(update={"name": "Timberline Trading Co."})}
+    )
+
+    codes = _issue_codes(document)
+
+    assert "employer_name_address_leak" not in codes
+
+
+def test_legitimate_numeric_company_name_not_flagged(happy_path_document: W2Document) -> None:
+    """`3M Corporation` contains a bare number but no road-suffix word --
+    the rule requires both together, exactly as measured in Phase 8C.5."""
+
+    document = happy_path_document.model_copy(
+        update={"employer": happy_path_document.employer.model_copy(update={"name": "3M Corporation"})}
+    )
+
+    codes = _issue_codes(document)
+
+    assert "employer_name_address_leak" not in codes
+
+
+def test_ambiguous_suffix_only_company_name_not_flagged(happy_path_document: W2Document) -> None:
+    """`Infinite Loop Technologies` contains a road-suffix word ("Loop")
+    but no street number -- a real false-positive case Phase 8C.5 found
+    for the suffix-alone signal; the combined rule must not flag it."""
+
+    document = happy_path_document.model_copy(
+        update={"employer": happy_path_document.employer.model_copy(update={"name": "Infinite Loop Technologies"})}
+    )
+
+    codes = _issue_codes(document)
+
+    assert "employer_name_address_leak" not in codes
+
+
+def test_road_suffix_matching_uses_whole_word_boundaries_in_production() -> None:
+    from w2_pipeline.validation.rules import _check_employer_name_address_leak
+
+    document = generate_synthetic_w2_documents_for_name("123 Wayfair Inc")
+    issues = _check_employer_name_address_leak(document)
+
+    assert issues == []
+
+
+def generate_synthetic_w2_documents_for_name(name: str) -> W2Document:
+    from w2_pipeline.evaluation.synthetic import SyntheticGenerationConfig, generate_synthetic_w2_documents
+
+    base = generate_synthetic_w2_documents(SyntheticGenerationConfig(sample_count=1))[0]
+    return base.model_copy(update={"employer": base.employer.model_copy(update={"name": name})})
+
+
+# --- Phase 8C.8: employer.name layout-anomaly rule ----------------------
+
+
+def test_employer_name_from_single_observation_not_flagged(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(employer_name_observation_count=1)
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    assert "employer_name_layout_anomaly" not in [issue.code for issue in issues]
+
+
+def test_employer_name_from_multiple_observations_flagged(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(employer_name_observation_count=2)
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    matching = [issue for issue in issues if issue.code == "employer_name_layout_anomaly"]
+    assert len(matching) == 1
+    assert matching[0].severity == ValidationSeverity.ERROR
+    assert matching[0].field_path == "employer.name"
+    assert matching[0].metadata == {"observation_count": 2}
+
+
+def test_missing_layout_provenance_handled_safely(happy_path_document: W2Document) -> None:
+    """No signal available (e.g. Pipeline B, or the count could not be
+    derived) must never be treated as suspicious on its own."""
+
+    signals = ExtractionSignals(employer_name_observation_count=None)
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    assert "employer_name_layout_anomaly" not in [issue.code for issue in issues]
+
+
+# --- Phase 8C.8: combined routing ----------------------------------------
+
+
+def test_neither_signal_fires_existing_behavior_preserved(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(employer_name_observation_count=1)
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    codes = {issue.code for issue in issues}
+    assert "employer_name_address_leak" not in codes
+    assert "employer_name_layout_anomaly" not in codes
+
+
+def test_address_only_routes_needs_review() -> None:
+    from w2_pipeline.validation.routing import decide_status
+
+    document = generate_synthetic_w2_documents_for_name("Elan Consulting Corp 2861 Geneva Ponce De Leon Rd")
+    signals = ExtractionSignals(employer_name_observation_count=1)
+
+    issues = run_all_rules(document, signals)
+    status = decide_status(issues)
+
+    assert "employer_name_address_leak" in {issue.code for issue in issues}
+    assert "employer_name_layout_anomaly" not in {issue.code for issue in issues}
+    assert status.value == "needs_review"
+
+
+def test_layout_only_routes_needs_review(happy_path_document: W2Document) -> None:
+    from w2_pipeline.validation.routing import decide_status
+
+    signals = ExtractionSignals(employer_name_observation_count=2)
+
+    issues = run_all_rules(happy_path_document, signals)
+    status = decide_status(issues)
+
+    codes = {issue.code for issue in issues}
+    assert "employer_name_layout_anomaly" in codes
+    assert "employer_name_address_leak" not in codes
+    assert status.value == "needs_review"
+
+
+def test_both_signals_fire_and_both_issues_are_preserved() -> None:
+    from w2_pipeline.validation.routing import decide_status
+
+    document = generate_synthetic_w2_documents_for_name("Elan Consulting Corp 2861 Geneva Ponce De Leon Rd")
+    signals = ExtractionSignals(employer_name_observation_count=2)
+
+    issues = run_all_rules(document, signals)
+    status = decide_status(issues)
+
+    codes = {issue.code for issue in issues}
+    assert "employer_name_address_leak" in codes
+    assert "employer_name_layout_anomaly" in codes
+    assert status.value == "needs_review"

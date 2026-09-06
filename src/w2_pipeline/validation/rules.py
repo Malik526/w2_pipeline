@@ -48,6 +48,28 @@ _SSN_RE = re.compile(r"^\d{3}-\d{2}-\d{4}$")
 _EIN_RE = re.compile(r"^\d{2}-\d{7}$")
 _BOX_12_CODE_RE = re.compile(r"^[A-Z]{1,2}$")
 
+# Phase 8C.8: promotes the Phase 8C.5 address-leak heuristic's winning
+# candidate (`contains_street_number AND contains_road_suffix`, expanded
+# suffix list) into production, unchanged from its evaluation-side form
+# in `w2_pipeline.evaluation.employer_name_heuristics` -- same regex,
+# same suffix set, same whole-word matching, no tuning, no company-name
+# dictionary, no document-specific logic. See
+# docs/experiments/phase8c8-promote-employer-name-validator-signals.md.
+_EMPLOYER_NAME_STREET_NUMBER_RE = re.compile(r"(?<!\d)\d{1,5}(?!\d)")
+_EMPLOYER_NAME_ROAD_SUFFIXES: frozenset[str] = frozenset(
+    {
+        "st", "street", "ave", "avenue", "rd", "road", "blvd", "lane", "ln",
+        "drive", "dr", "highway", "hwy", "court", "ct", "parkway", "pkwy",
+        "terrace", "way", "brg", "bridge", "cor", "corridor", "cir", "circle",
+        "trl", "trail", "pl", "place", "sq", "square", "loop", "xing",
+        "crossing", "aly", "alley", "byp", "bypass", "cswy", "causeway",
+        "expy", "expressway", "frwy", "freeway", "tpke", "turnpike", "walk",
+        "path", "run", "pass", "trce", "trace", "vw", "view", "holw",
+        "hollow", "grn", "green", "mnr", "manor", "spur", "rte", "route",
+    }
+)
+_EMPLOYER_NAME_WORD_RE = re.compile(r"[A-Za-z]+")
+
 # Ordered so `checks_run` (== len(ALL_RULES)) reads top-to-bottom the same
 # way the module docstring and docs/contracts/validation-and-routing.md
 # describe the categories: signals, then required fields, then format,
@@ -59,6 +81,8 @@ ALL_RULE_NAMES = (
     "ssn_format",
     "employer_identity_required_fields",
     "ein_format",
+    "employer_name_address_leak",
+    "employer_name_layout_anomaly",
     "core_wage_tax_fields_required",
     "monetary_fields_valid",
     "box_12_code_format",
@@ -82,6 +106,8 @@ def run_all_rules(document: W2Document, signals: ExtractionSignals) -> list[Vali
     issues.extend(_check_ssn_format(document))
     issues.extend(_check_employer_identity_required_fields(document))
     issues.extend(_check_ein_format(document))
+    issues.extend(_check_employer_name_address_leak(document))
+    issues.extend(_check_employer_name_layout_anomaly(document, signals))
     issues.extend(_check_core_wage_tax_fields_required(document))
     issues.extend(_check_monetary_fields_valid(document))
     issues.extend(_check_box_12_code_format(document))
@@ -209,6 +235,68 @@ def _check_ein_format(document: W2Document) -> list[ValidationIssue]:
             severity=ValidationSeverity.ERROR,
             message="Employer EIN does not match the expected XX-XXXXXXX format.",
             observed_value=redact_value("employer.ein", ein),
+        )
+    ]
+
+
+def _check_employer_name_address_leak(document: W2Document) -> list[ValidationIssue]:
+    """Flag `employer.name` values that look like a name with a street
+    address appended (Phase 8C.5/8C.8): both a bare street-number-shaped
+    digit run AND a whole-word road-suffix abbreviation must be present.
+    Requiring both together (never either alone) is what keeps this safe
+    against real company names containing a number (`3M Corporation`) or
+    an ordinary word that also happens to be a road-suffix abbreviation
+    (`Infinite Loop Technologies`) -- see the phase doc for the measured
+    false-positive analysis behind this design.
+    """
+
+    name = document.employer.name
+    if _is_blank(name):
+        return []
+    has_street_number = bool(_EMPLOYER_NAME_STREET_NUMBER_RE.search(name))
+    tokens = {token.lower() for token in _EMPLOYER_NAME_WORD_RE.findall(name)}
+    has_road_suffix = not tokens.isdisjoint(_EMPLOYER_NAME_ROAD_SUFFIXES)
+    if has_street_number and has_road_suffix:
+        return [
+            ValidationIssue(
+                code="employer_name_address_leak",
+                field_path="employer.name",
+                severity=ValidationSeverity.ERROR,
+                message=(
+                    "Employer name contains both a street-number-shaped digit "
+                    "and a road-suffix word, consistent with a merged address "
+                    "line rather than a company name."
+                ),
+                observed_value=name,
+            )
+        ]
+    return []
+
+
+def _check_employer_name_layout_anomaly(
+    document: W2Document, signals: ExtractionSignals
+) -> list[ValidationIssue]:
+    """Flag an `employer.name` whose value was produced from more than one
+    OCR observation (Phase 8C.6/8C.8) -- a normal single-line employer
+    name always comes from exactly one. Purely geometric: this never
+    inspects `employer.name`'s text content, only the layout-provenance
+    count the extraction path already computed
+    (`ExtractionSignals.employer_name_observation_count`)."""
+
+    count = signals.employer_name_observation_count
+    if count is None or count <= 1:
+        return []
+    return [
+        ValidationIssue(
+            code="employer_name_layout_anomaly",
+            field_path="employer.name",
+            severity=ValidationSeverity.ERROR,
+            message=(
+                f"Employer name was assembled from {count} OCR observations "
+                "instead of the normal single line, consistent with a "
+                "merged/split extraction artifact."
+            ),
+            metadata={"observation_count": count},
         )
     ]
 

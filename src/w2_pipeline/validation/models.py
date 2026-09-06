@@ -61,6 +61,18 @@ class ExtractionSignals(ValidationModel):
     route: str | None = None
     document_condition: str | None = None
     warnings: list[str] = Field(default_factory=list)
+    employer_name_observation_count: int | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "How many OCR observations contributed to employer.name's "
+            "value (Phase 8C.8), as computed by "
+            "w2_pipeline.extraction.parser_2026.compute_employer_name_observation_count "
+            "-- real layout provenance from the extraction/parser path, "
+            "never reconstructed inside validation. None when "
+            "unavailable (e.g. Pipeline B, or employer.name is None)."
+        ),
+    )
 
 
 class ValidationIssue(ValidationModel):

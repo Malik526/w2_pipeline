@@ -7,7 +7,10 @@ from pathlib import Path
 from w2_pipeline.evaluation.inputs import ExtractionInput
 from w2_pipeline.extraction.acquisition import ObservationAcquirer
 from w2_pipeline.extraction.models import ExtractionResult, ExtractionWarning
-from w2_pipeline.extraction.parser_2026 import parse_w2_2026_observations
+from w2_pipeline.extraction.parser_2026 import (
+    compute_employer_name_observation_count,
+    parse_w2_2026_observations,
+)
 from w2_pipeline.ingestion import IngestionService
 from w2_pipeline.ingestion.models import IngestedDocument
 
@@ -47,6 +50,9 @@ class PipelineAExtractor:
                     for message in observations.warnings
                 ],
             ],
+            employer_name_observation_count=compute_employer_name_observation_count(
+                document, observations.observations
+            ),
         )
 
     def extract(self, extraction_input: ExtractionInput) -> ExtractionResult:

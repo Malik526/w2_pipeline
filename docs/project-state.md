@@ -1399,32 +1399,75 @@ adds architectural confidence, not additional positive examples.
 regressions.** No validation rule added, no field other than
 `employer.name` touched.
 
-## Future Phases (after Phase 8C.7)
+### Phase 8C.8 - Promote Employer-Name Signals Into The Production Validator
+
+Full record: `docs/experiments/phase8c8-promote-employer-name-validator-signals.md`.
+
+Promoted Phase 8C.5's address-leak heuristic and Phase 8C.6's layout-span
+signal into `w2_pipeline.validation.rules` as two new, always-preserved
+`error`-severity issues (`employer_name_address_leak`,
+`employer_name_layout_anomaly`; `ALL_RULE_NAMES` 10 -> 12), routed via
+the existing default policy (either alone -> `needs_review`, Phase
+8C.7's tiered-OR recommendation achieved for free). Layout provenance
+reaches the validator via the existing `ExtractionSignals`
+field-quality-metadata channel (`employer_name_observation_count`),
+populated by a new small production function,
+`parser_2026.compute_employer_name_observation_count`, that reuses the
+employer.name OCR fallback's own zone/row-grouping logic (now a named
+constant, `EMPLOYER_NAME_ZONE`, shared by both) -- never reconstructed
+inside validation, dependency direction preserved
+(extraction -> signal -> validator), `tests/validation/test_isolation.py`
+unaffected.
+
+A fresh 600-document PaddleOCR run (new script, real unmodified
+`PipelineAExtractor`) verified **bit-identical** to the frozen Phase
+8C.2 prediction for all 600 documents (full object equality, not just
+re-derived accuracy) before scoring the promoted validator against it.
+
+**Result: 4/4 known `employer.name` row-merge failures now routed to
+needs_review (100% catch rate), 0 false positives among the 596 correct
+names, 0.0% false-review rate (unchanged), 100% review-queue precision.**
+Unsafe-acceptance rate improves from 10.33% to 9.67% (62 -> 58
+documents); automatic-acceptance drops from 100% to 99.33% (4 documents
+now correctly held for review instead of silently accepted).
+Clean/JPEG/blur remain completely quiet, identical to Phase 8C.3. Issue
+agreement in the real validator exactly reproduces Phase 8C.7's
+evaluation-side simulation: both issues fire on the same 4 documents and
+nowhere else. `box_13.retirement_plan`'s 60 checkbox failures remain
+intentionally untouched (2 are incidentally routed to review only
+because they share a document with an employer-name failure -- reported
+transparently, not claimed as checkbox progress). Measured validator
+overhead: ~2.8 microseconds/document for the two new rules (~10% of
+total validator time), ~29 microseconds/document total -- negligible,
+quantified rather than assumed.
+
+17 new/updated tests; full suite: **477 tests passing, up from 460,
+zero regressions.** This is a development-baseline update, not a final
+project freeze; checkbox remediation was not started.
+
+## Future Phases (after Phase 8C.8)
 
 ```text
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),
-including how to present the validator's demonstrated 0% catch rate
-(Phase 8C.3), native OCR confidence's demonstrated lack of signal
-(Phase 8C.4), and the two independently-perfect, architecturally
-complementary candidate signals (Phase 8C.5 address-leak, Phase 8C.6
-layout-span, Phase 8C.7 combination) on the same known residual defect
-classes, and the resulting 10.33% unsafe-acceptance rate on rotated
-documents.
+including the full employer-name signal-development arc (Phase
+8C.5-8C.8: measurement, promotion, and the resulting 9.67%
+unsafe-acceptance rate on rotated documents) and the still-open
+box_13.retirement_plan checkbox gap.
 
 Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
 consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
 pricing study to close the Paddle-vs-Tesseract economics question; the
 employer.address OCR fallback and extraction follow-up; a rotation-aware
-Box 13 checkbox recalibration (including its own, separate confidence
-signal: pixel-coverage margin, skew, geometry quality); a fix for the
-employer.name row-merge residual (would require reworking
-`_group_observation_rows`'s shared tolerance logic); broader real-world/
-adversarial employer-name testing (including at least one genuine
-address-vs-layout disagreement case) as the prerequisite both Phase
-8C.5/8C.6/8C.7 identified before promoting a tiered employer-name
-validation rule into production; and/or a larger-scale Pipeline B
-evaluation.
+Box 13 checkbox recalibration and its own validation signal (pixel-
+coverage margin, skew, geometry quality) to close the remaining 58/60
+uncaught checkbox failures; a fix for the employer.name row-merge
+residual itself (would require reworking `_group_observation_rows`'s
+shared tolerance logic, rather than just detecting it at validation
+time); broader real-world/adversarial employer-name testing to
+stress-test the now-production address-leak/layout rules beyond this
+one synthetic dataset's 4 positive examples; and/or a larger-scale
+Pipeline B evaluation.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

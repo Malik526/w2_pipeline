@@ -46,6 +46,13 @@ _STATE_LOCAL_RE = re.compile(
     r"^(?P<number>1[5-9]|20)\.(?P<row>\d+)\s+(?P<label>[^:]+):\s*(?P<value>.*)$"
 )
 
+# Named (not inline-literal) so `compute_employer_name_observation_count`
+# (used by `PipelineAExtractor` to produce a validator-facing layout
+# signal, Phase 8C.8) can reuse the exact same zone the employer.name
+# fallback below uses, rather than risk drifting out of sync with a
+# duplicated literal.
+EMPLOYER_NAME_ZONE: tuple[float, float, float, float] = (0.04, 0.35, 0.25, 0.33)
+
 _FEDERAL_MONEY_FIELDS = {
     1: "box_1_wages_tips_other_compensation",
     2: "box_2_federal_income_tax_withheld",
@@ -388,10 +395,46 @@ def _apply_ocr_employer_layout_fallbacks(
     if employer.name is None:
         updates["name"] = _first_row_text_in_zone(
             observations,
-            (0.04, 0.35, 0.25, 0.33),
+            EMPLOYER_NAME_ZONE,
             skip_row=_looks_like_employer_name_label_row,
         )
     return employer.model_copy(update=updates) if updates else employer
+
+
+def compute_employer_name_observation_count(
+    document: W2Document, observations: list[TextObservation]
+) -> int | None:
+    """How many OCR observations contributed to `employer.name`'s value.
+
+    Production layout-provenance signal (Phase 8C.8), read-only: it never
+    influences `employer.name`'s value (computed above, already decided
+    by the time this runs) -- it only reports, for the validator's
+    benefit via `ExtractionSignals.employer_name_observation_count`, the
+    size of the zone-restricted row-group whose joined text matches the
+    already-decided value. Reuses `_observations_in_zone` and
+    `_group_observation_rows` with `EMPLOYER_NAME_ZONE` -- the exact same
+    zone and grouping the fallback above uses -- so this measures the
+    real decision path, not an independent reconstruction. Originated as
+    an evaluation-only measurement
+    (`w2_pipeline.evaluation.employer_name_layout_signals`, Phase 8C.6);
+    promoted here as the smallest production surface `validation/rules.py`
+    needs, per `docs/experiments/phase8c8-promote-employer-name-validator-signals.md`.
+    Returns `None` when `employer.name` itself is `None` or no matching
+    row-group is found (never fabricated).
+    """
+
+    name = document.employer.name
+    if name is None:
+        return None
+    zone_observations = _observations_in_zone(observations, EMPLOYER_NAME_ZONE)
+    if not zone_observations:
+        return None
+    target = name.strip()
+    for row in _group_observation_rows(zone_observations):
+        joined = " ".join(observation.text.strip() for observation in row)
+        if joined == target:
+            return len(row)
+    return None
 
 
 def _apply_ocr_box_13_layout_fallbacks(

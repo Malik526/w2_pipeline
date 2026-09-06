@@ -140,13 +140,18 @@ def test_validator_receives_only_the_real_prediction_never_ground_truth(tmp_path
     assert called_with != ground_truth
 
 
-def test_row_merge_style_wrong_but_nonblank_employer_name_is_not_caught(tmp_path: Path) -> None:
+def test_row_merge_style_wrong_but_nonblank_employer_name_is_now_caught(tmp_path: Path) -> None:
     """Reproduces the real Phase 8C.2 residual shape: employer.name holds a
     non-blank, structurally valid string that happens to be wrong (the
-    correct name plus trailing address text). No validation rule inspects
-    employer.name's content beyond blankness, so this must be accepted,
-    not routed to review -- exactly the real finding this analysis exists
-    to surface, not something to special-case away."""
+    correct name plus trailing address text). At the time this analysis
+    module was written (Phase 8C.3), no validation rule inspected
+    employer.name's content beyond blankness, so this was accepted, not
+    routed to review -- the real finding that motivated Phase 8C.5's
+    address-leak heuristic and its Phase 8C.8 promotion into
+    `w2_pipeline.validation.rules._check_employer_name_address_leak`.
+    This exact shape (a street-number-like digit plus a road-suffix word)
+    is now caught -- this test asserts the post-promotion behavior, not
+    the original gap."""
 
     dataset_dir = tmp_path / "dataset"
     entries = _clean_entries(dataset_dir, sample_count=1)
@@ -177,9 +182,9 @@ def test_row_merge_style_wrong_but_nonblank_employer_name_is_not_caught(tmp_path
 
     employer_name_class = report["error_classes"]["employer.name"]
     assert employer_name_class["affected_documents"] == 1
-    assert employer_name_class["routed_needs_review"] == 0
-    assert employer_name_class["accepted"] == 1
-    assert employer_name_class["catch_rate"] == 0.0
+    assert employer_name_class["routed_needs_review"] == 1
+    assert employer_name_class["accepted"] == 0
+    assert employer_name_class["catch_rate"] == 1.0
 
 
 def test_document_with_two_wrong_fields_counts_as_one_erroneous_document(tmp_path: Path) -> None:
@@ -306,3 +311,32 @@ def test_extraction_failure_status_treated_as_document_none() -> None:
     )
     signals = _signals_for_record(failed_record)
     assert signals.outcome == ExtractionOutcome.EXTRACTION_FAILED
+
+
+def test_employer_name_observation_count_threaded_from_pipeline_metadata() -> None:
+    from w2_pipeline.evaluation.validator_effectiveness_predictions import _signals_for_record
+
+    record = PredictionRecord(
+        document_id="x",
+        variant_id="clean_pdf",
+        pipeline_id="pipeline_a",
+        status="success",
+        document=None,
+        pipeline_metadata={"employer_name_observation_count": 2},
+    )
+
+    signals = _signals_for_record(record)
+
+    assert signals.employer_name_observation_count == 2
+
+
+def test_employer_name_observation_count_absent_for_records_that_predate_it() -> None:
+    from w2_pipeline.evaluation.validator_effectiveness_predictions import _signals_for_record
+
+    record = PredictionRecord(
+        document_id="x", variant_id="clean_pdf", pipeline_id="pipeline_a", status="success", document=None
+    )
+
+    signals = _signals_for_record(record)
+
+    assert signals.employer_name_observation_count is None
