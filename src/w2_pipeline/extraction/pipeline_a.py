@@ -32,6 +32,17 @@ class PipelineAExtractor:
         self.ingestion_service = ingestion_service or IngestionService()
         self.observation_acquirer = observation_acquirer or ObservationAcquirer()
 
+    def warm_up(self) -> None:
+        """Force the OCR backend's one-time model/client initialization now.
+
+        Lets a caller that reuses one extractor across many documents
+        (Phase 8D.5's batch runner) measure and pay backend startup cost
+        exactly once, before the per-document processing loop, instead of
+        attributing it to whichever document happens to run first.
+        """
+
+        self.observation_acquirer.warm_up()
+
     def extract_ingested(self, ingested_document: IngestedDocument) -> ExtractionResult:
         """Extract one already-ingested document into canonical W-2 output."""
 

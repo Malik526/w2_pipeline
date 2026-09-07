@@ -6,10 +6,12 @@ Last updated: 2026-09-07
 
 **Phase 8D.3 (final architecture/documentation freeze) is complete.**
 No further core feature work is planned within this take-home's scope.
-Phase 8D.4 (below) is a demo/operability addition on top of the freeze
--- a single-document production runner CLI/service -- not a reopening
-of extraction, validation, or export behavior. For the current system
-(not the phase-by-phase history below), start with:
+Phase 8D.4 and 8D.5 (below) are demo/operability additions on top of
+the freeze -- a single-document production runner CLI/service, then a
+batch runner over the same service plus per-document latency
+instrumentation -- not a reopening of extraction, validation, or export
+behavior. For the current system (not the phase-by-phase history
+below), start with:
 
 - [`docs/final-architecture.md`](final-architecture.md) -- production
   architecture: PaddleOCR (GPU) + deterministic extraction, evidence-
@@ -21,9 +23,8 @@ of extraction, validation, or export behavior. For the current system
   validator acceptance, 0% false-review rate, 620 tests passing.
 - [`docs/known-limitations.md`](known-limitations.md) -- the canonical,
   current limitations list (synthetic benchmark, 2 residual OCR-misread
-  unsafe cases, no calibrated OCR confidence, no batch execution/export,
-  no frontend/GUI -- none correctness-blocking for this take-home's
-  scope).
+  unsafe cases, no calibrated OCR confidence, no frontend/GUI -- none
+  correctness-blocking for this take-home's scope).
 - [`docs/operator-walkthrough.md`](operator-walkthrough.md) -- the
   operational proof: two real documents run end to end through the
   actual CLI commands, including finalization gating and export
@@ -32,13 +33,19 @@ of extraction, validation, or export behavior. For the current system
   Phase 8D.4's single-document production runner: one CLI command
   (`python -m w2_pipeline.cli.run_document <file>`) from a raw W-2 file
   to accepted export or a persisted review record.
+- [`docs/batch-runner.md`](batch-runner.md) -- Phase 8D.5's batch
+  runner: `python -m w2_pipeline.cli.run_batch <files...>` processes
+  many W-2 files through one warmed-once Pipeline A/PaddleOCR extractor,
+  with model-startup vs. per-document processing latency reported
+  separately.
 
 Possible future production work (GPU-cost-vs-review-cost pricing study,
-a review front-end, real-cloud-cost benchmarking, batch execution over
-many files, native-PDF evidence parity, real-taxpayer-corpus
-validation) is listed in `docs/known-limitations.md` and
-`docs/architecture-decision-record.md` Section 16 as explicitly **not**
-part of this take-home's scope, not as unfinished project tasks.
+a review front-end, real-cloud-cost benchmarking, native-PDF evidence
+parity, real-taxpayer-corpus validation, a demo/evaluation skill and
+lightweight frontend over the batch runner) is listed in
+`docs/known-limitations.md` and `docs/architecture-decision-record.md`
+Section 16 as explicitly **not** part of this take-home's scope, not as
+unfinished project tasks.
 
 The rest of this document (below) is the phase-by-phase historical log,
 preserved as written at the time each phase completed -- including the
@@ -1544,6 +1551,78 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.5 - Batch W-2 Runner + Per-Document Latency Instrumentation
+
+Full record: `docs/batch-runner.md`.
+
+Adds the batch execution path `docs/known-limitations.md` #7 had
+flagged (and Phase 8D.4's own "Scope" section had deferred): running
+many W-2 files in one invocation while reusing one initialized Pipeline
+A/PaddleOCR extractor, instead of paying OCR-backend startup per file.
+No extraction, validation, or export behavior changed -- this is
+orchestration and timing instrumentation on top of the existing
+production components.
+
+**New**: `w2_pipeline.application.run_batch.run_batch()` -- builds one
+extractor (or reuses a caller-supplied one), calls its new
+`warm_up()` once, then calls the unmodified `run_document()` once per
+input file with that same extractor. `w2_pipeline.cli.run_batch` is a
+thin argparse wrapper (positional files and/or `--input-dir`; exit `0`
+unless at least one document hit a runtime failure -- `needs_review` is
+never a batch failure, same reasoning as the single-document CLI's exit
+codes). A `warm_up()` method was added to the `OcrAdapter` protocol,
+both adapters (`PaddleOcrAdapter`: forces the lazy `PaddleOCR(...)`
+client/model construction now; `TesseractOcrAdapter`: verifies the
+binary is present -- Tesseract has no persistent client to preload), and
+`ObservationAcquirer`/`PipelineAExtractor` (both delegate). A repeat
+`warm_up()` call is cheap -- `PaddleOcrAdapter` caches its client -- so
+per-document reuse inside `run_document()` never rebuilds anything.
+
+**Latency semantics** (`DocumentRunResult`'s old single `duration_seconds`
+field is replaced, not aliased -- no external consumer depended on it):
+`model_startup_seconds` (OCR backend readiness for this call; near-zero
+once an extractor is warm), `processing_latency_seconds` (ingestion
+through validation and finalize/export or review persistence -- the
+number that matters for steady-state throughput), and
+`total_duration_seconds` (this call's full wall time, always >= the
+other two combined). The single-document CLI now prints all three
+(`Model startup` / `Document latency` / `Total wall time`) instead of
+one ambiguous `Duration`.
+
+**Aggregate CSV**: `w2_pipeline.downstream.csv_output.export_csv` is now
+a one-row call to a new `export_csv_rows()`, so the batch aggregate CSV
+(accepted-only, one row per finalized document, built by reading each
+document's own already-written `final.json` back rather than
+re-deriving it) shares the exact same column ordering and scalar
+encoding as every individual `final.csv` -- proven byte-identical in
+both the unit suite and the real smoke run below.
+
+**Real batch smoke run** (PaddleOCR, GPU), six documents (four known
+accepted, two known needs_review, all pre-existing benchmark cases --
+no new threshold tuning): `symage_900001/900002/900003/900004`
+`external_clean_render` all accepted; `symage_900000/900021` `rotated`
+both `needs_review` (address-evidence issues, `ReviewRecord` persisted,
+matching the pre-existing single-document walkthrough numbers for
+`900021`). PaddleOCR's "Creating model" construction log appeared
+exactly twice total (det + rec model) across the entire batch, not once
+per document -- direct evidence the shared extractor loaded once. Model
+startup ~5.5-6.3s; steady-state per-document processing latency
+~1.3-2.5s, consistent with the pre-existing documented steady-state
+range; aggregate CSV rows verified byte-identical to each document's own
+`final.csv`.
+
+**19 new tests** (batch application service, 10: shared-extractor reuse
+x2, mixed accepted/needs_review aggregation, aggregate-CSV accepted-
+only/determinism/row-equality-with-individual-CSV, failure isolation,
+shared warm-up failure propagation, batch-summary/return-value
+equality, progress-hook ordering, mean/median latency; batch CLI, 7:
+real native-PDF accepted-path integration test, exit-code mapping x3,
+input-dir/positional resolution, defaults; single-document runner, 2:
+latency-semantics/cold-start-vs-processing tests) plus an updated
+existing single-document CLI test asserting the new three-line timing
+output; full suite: **639 tests passing, up from 620, zero
+regressions.**
+
 ### Phase 8D.4 - Single-Document Production Runner
 
 Full record: `docs/single-document-runner.md`.
@@ -1982,15 +2061,16 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Take-Home Scope: Complete (Phase 8D.3 Freeze; Phase 8D.4 Demo/Operability Addendum)
+## Take-Home Scope: Complete (Phase 8D.3 Freeze; Phase 8D.4/8D.5 Demo/Operability Addenda)
 
 Phase 8D.3 closed the take-home's planned phase sequence (Phase 0
-through 8D.3). Phase 8D.4 (see above) was subsequently added as a
-scoped demo/operability follow-up -- a single-document runner
-CLI/service -- explicitly requested after the freeze; it changed no
+through 8D.3). Phase 8D.4 and Phase 8D.5 (see above) were subsequently
+added as scoped demo/operability follow-ups -- a single-document runner
+CLI/service, then a batch runner over it with latency instrumentation
+-- explicitly requested after the freeze; neither changed
 extraction/validation/routing/export behavior, so the "backend
 complete" declaration above still stands. **No further phase beyond
-8D.4 is currently planned.** The items below are possible future
+8D.5 is currently planned.** The items below are possible future
 *production* work, listed for completeness -- they are not unfinished
 take-home tasks.
 
@@ -2029,6 +2109,15 @@ Possible future production work (not in take-home scope):
   auth/RBAC, multi-tenant isolation, audit logging, secrets
   management, managed database/object storage) before handling real
   taxpayer data -- see README's Security section.
+
+- A deterministic demo/evaluation skill that selects known benchmark
+  cases and invokes the Phase 8D.5 batch runner (`run_batch()`/
+  `batch_summary.json`/per-document `run_summary.json` only -- no
+  private parser imports).
+
+- A lightweight frontend calling `run_document()`/`run_batch()`
+  directly, surfacing filename/status/processing latency/validation
+  issues/review ID and a finalized-batch CSV download.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

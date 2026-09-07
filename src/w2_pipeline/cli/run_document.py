@@ -99,7 +99,7 @@ def _print_result(result: DocumentRunResult) -> None:
     if result.status is DocumentRunStatus.FAILED:
         print("Validation: FAILED (runtime error)")
         print(f"Error: {result.error_message}")
-        print(f"Duration: {result.duration_seconds:.2f}s")
+        _print_timings(result)
         return
 
     validation_label = (result.validation_status or "").replace("_", " ").upper()
@@ -120,7 +120,14 @@ def _print_result(result: DocumentRunResult) -> None:
         print(f"Review ID: {result.review_id}")
         print("Finalization: BLOCKED")
 
-    print(f"Duration: {result.duration_seconds:.2f}s")
+    _print_timings(result)
+
+
+def _print_timings(result: DocumentRunResult) -> None:
+    print()
+    print(f"Model startup:   {result.model_startup_seconds:.2f}s")
+    print(f"Document latency: {result.processing_latency_seconds:.2f}s")
+    print(f"Total wall time: {result.total_duration_seconds:.2f}s")
 
 
 def _exit_code_for(result: DocumentRunResult) -> int:

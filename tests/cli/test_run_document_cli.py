@@ -58,7 +58,9 @@ def _fake_result(status: DocumentRunStatus, **overrides: object) -> DocumentRunR
         review_id=None,
         finalized=False,
         outputs={},
-        duration_seconds=1.23,
+        model_startup_seconds=0.01,
+        processing_latency_seconds=1.22,
+        total_duration_seconds=1.23,
         error_message=None,
     )
     defaults.update(overrides)
@@ -80,6 +82,9 @@ def test_cli_maps_accepted_to_exit_zero(monkeypatch: pytest.MonkeyPatch, capsys:
     assert "ACCEPTED" in out
     assert "final.json" in out
     assert "final.csv" in out
+    assert "Model startup:" in out
+    assert "Document latency:" in out
+    assert "Total wall time:" in out
 
 
 def test_cli_maps_needs_review_to_exit_two(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture) -> None:

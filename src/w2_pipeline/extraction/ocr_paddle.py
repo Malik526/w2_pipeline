@@ -96,6 +96,20 @@ class PaddleOcrAdapter:
                 observations.extend(self.extract_image(image_path, page_number=page_index))
         return observations
 
+    def warm_up(self) -> None:
+        """Construct the underlying `PaddleOCR` client now (loads its models).
+
+        `_get_client()` is otherwise lazy -- the first real `extract_image`/
+        `extract_pdf_pages` call pays this cost. Calling it here up front
+        lets a caller (Phase 8D.5's batch runner) measure and amortize
+        model loading once across many documents instead of attributing it
+        to whichever document happens to run first. A second call is cheap
+        -- `_get_client()` returns the already-constructed client.
+        """
+
+        self.ensure_available()
+        self._get_client()
+
     def _run_predict(self, image_path: Path) -> list[dict]:
         """Run the PaddleOCR pipeline and return each result's payload dict."""
 

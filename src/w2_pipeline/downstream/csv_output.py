@@ -18,7 +18,7 @@ import csv
 import io
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from w2_pipeline.downstream.models import FinalizedW2
 
@@ -34,9 +34,43 @@ _EXCLUDED_FIELDS = ("field_observations",)
 def export_csv(finalized: FinalizedW2, path: str | Path | None = None) -> str:
     """Return the finalized document as a single-row CSV string.
 
-    Writes the same text to `path` (UTF-8) when given.
+    Writes the same text to `path` (UTF-8) when given. A thin wrapper
+    around `export_csv_rows` so the single-document and batch (Phase
+    8D.5) CSV outputs always share one column-ordering/scalar-encoding
+    implementation.
     """
 
+    return export_csv_rows([finalized], path=path)
+
+
+def export_csv_rows(finalized_documents: Iterable[FinalizedW2], path: str | Path | None = None) -> str:
+    """Return one CSV with one row per finalized W-2, in the given order.
+
+    Every document shares the exact same flattening (`_row_for_finalized`)
+    `export_csv` uses for its single row, so a batch aggregate CSV's
+    columns and per-cell encoding are always identical to each finalized
+    document's own individually exported CSV. Writes the same text to
+    `path` (UTF-8) when given. Raises `ValueError` for an empty input --
+    there is no schema-independent way to produce a header with zero
+    documents to derive columns from.
+    """
+
+    rows = [_row_for_finalized(finalized) for finalized in finalized_documents]
+    if not rows:
+        raise ValueError("export_csv_rows requires at least one finalized document.")
+
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=sorted(rows[0]))
+    writer.writeheader()
+    writer.writerows(rows)
+    text = buffer.getvalue()
+
+    if path is not None:
+        Path(path).write_text(text, encoding="utf-8")
+    return text
+
+
+def _row_for_finalized(finalized: FinalizedW2) -> dict[str, str]:
     payload = finalized.document.model_dump(mode="json")
     row: dict[str, str] = {}
     scalar_payload = {
@@ -47,16 +81,7 @@ def export_csv(finalized: FinalizedW2, path: str | Path | None = None) -> str:
     _flatten_scalars(scalar_payload, prefix="", row=row)
     for field_name in _REPEATED_FIELDS:
         row[field_name] = json.dumps(payload.get(field_name) or [], ensure_ascii=False)
-
-    buffer = io.StringIO()
-    writer = csv.DictWriter(buffer, fieldnames=sorted(row))
-    writer.writeheader()
-    writer.writerow(row)
-    text = buffer.getvalue()
-
-    if path is not None:
-        Path(path).write_text(text, encoding="utf-8")
-    return text
+    return row
 
 
 def _flatten_scalars(value: Any, *, prefix: str, row: dict[str, str]) -> None:

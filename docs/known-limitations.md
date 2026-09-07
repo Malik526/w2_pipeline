@@ -2,7 +2,8 @@
 
 The single canonical list of what this system does **not** currently do,
 as of Phase 8D.3 (final freeze), updated in Phase 8D.4 to mark item 6
-resolved rather than silently dropped. Every item below is either
+resolved and in Phase 8D.5 to mark item 7 resolved, rather than silently
+dropped. Every item below is either
 restated from an earlier phase, newly identified during the Phase 8D.2
 operator walkthrough, or marked resolved inline once a later phase
 closed it. This document does not propose fixes -- see each item's
@@ -105,16 +106,22 @@ exports or persists a review record, all in one command. See
 **Correctness-critical**: no -- was always purely an
 operator-ergonomics gap; the underlying extraction is unchanged.
 
-### 7. No batch export command
+### 7. ~~No batch export command~~ RESOLVED (Phase 8D.5)
 
-**What it is**: `review/cli.py`'s `export-document`/`export-review`
-operate on one document/review at a time; there is no "export every
-accepted document in a directory" command.
-**Impact**: exporting many documents requires an external loop (shell,
-script) around the existing single-document commands.
-**Correctness-critical**: no.
-**Production follow-up**: a thin batch wrapper over the existing
-single-document export functions -- no new export logic needed.
+**What it was**: `review/cli.py`'s `export-document`/`export-review`
+operate on one document/review at a time; there was no "run/export
+every document in a directory" command, and every CLI invocation paid
+OCR backend startup (PaddleOCR model loading) per file.
+**Resolved by**: `python -m w2_pipeline.cli.run_batch <files...>`
+(`w2_pipeline.application.run_batch.run_batch()` is the reusable
+service function behind it) -- builds one Pipeline A extractor, warms
+it up once, then runs every input file through the same production
+workflow `run_document()` runs one file through, and writes an
+accepted-only aggregate CSV plus a machine-readable
+`batch_summary.json`. See [`docs/batch-runner.md`](batch-runner.md).
+**Correctness-critical**: no -- was always purely an
+operator-ergonomics/throughput gap; the underlying extraction,
+validation, finalize, and export logic is unchanged and unduplicated.
 
 ### 8. No frontend / operator GUI
 

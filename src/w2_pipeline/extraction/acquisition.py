@@ -106,6 +106,11 @@ class ObservationAcquirer:
         self.enable_anchor_relative_checkbox = enable_anchor_relative_checkbox
         self.checkbox_interior_ink_threshold = checkbox_interior_ink_threshold
 
+    def warm_up(self) -> None:
+        """Force the OCR backend's one-time readiness cost now, if it has one."""
+
+        self.ocr_adapter.warm_up()
+
     @property
     def deskew_output_dir(self) -> Path:
         if self._deskew_output_dir is None:

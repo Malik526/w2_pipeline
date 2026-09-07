@@ -2,6 +2,58 @@
 
 ## 2026-09-07
 
+### Phase 8D.5 - Batch W-2 Runner + Per-Document Latency Instrumentation
+
+- Added the canonical multi-document production entry point: `python -m
+  w2_pipeline.cli.run_batch <files...>` (a thin CLI, also accepting
+  `--input-dir`) over `w2_pipeline.application.run_batch.run_batch()`
+  (the reusable service function). Builds one Pipeline A extractor,
+  warms it up once, then calls the unmodified `run_document()` once per
+  input file with that same extractor -- reusing one warmed OCR backend
+  (e.g. one loaded PaddleOCR model) across the whole batch instead of
+  paying startup cost per file.
+- Added `warm_up()` to the `OcrAdapter` contract, `PaddleOcrAdapter`
+  (forces the previously-lazy `PaddleOCR(...)` client/model
+  construction now), `TesseractOcrAdapter` (verifies the binary is
+  present), and `ObservationAcquirer`/`PipelineAExtractor` (both
+  delegate). A repeat call is cheap, so per-document reuse inside
+  `run_document()` never rebuilds anything.
+- Replaced `DocumentRunResult`'s single ambiguous `duration_seconds`
+  with three explicit fields: `model_startup_seconds` (OCR backend
+  readiness for this call, near-zero once warm),
+  `processing_latency_seconds` (ingestion through validation and
+  finalize/export or review persistence -- the steady-state throughput
+  number), and `total_duration_seconds` (this call's full wall time).
+  `w2_pipeline.cli.run_document`'s terminal output now prints all three
+  instead of one `Duration` line.
+- Added `BatchRunResult` (`accepted`/`needs_review`/`failed` counts,
+  `model_startup_seconds`, `batch_processing_seconds`,
+  `total_duration_seconds`, mean/median per-document processing
+  latency, `aggregate_csv` path, and every document's own
+  `DocumentRunResult`), always written to `output/batch_summary.json`.
+  Deterministic batch exit-code contract: `0` unless at least one
+  document hit a runtime failure (`needs_review` is never a batch
+  failure, matching the single-document CLI's own exit-code reasoning);
+  a shared-extractor `warm_up()` failure (backend unusable for the
+  whole batch) is caught by the CLI and reported distinctly.
+- Refactored `w2_pipeline.downstream.csv_output.export_csv` into a
+  one-row call to a new `export_csv_rows()`, so the new accepted-only
+  aggregate CSV (`batch_finalized.csv`, one row per finalized document,
+  built by reading each document's own already-written `final.json`
+  back) shares the exact same column ordering/scalar encoding as every
+  individual `final.csv` -- no second flattening implementation.
+- Real batch smoke run (PaddleOCR, GPU) against four known-accepted and
+  two known-needs_review pre-existing benchmark documents: PaddleOCR's
+  model-construction log appeared exactly twice total across the whole
+  batch (not once per document), confirming the shared extractor loaded
+  once; aggregate CSV rows verified byte-identical to each document's
+  own `final.csv`.
+- Added `docs/batch-runner.md`; updated `README.md` ("Run multiple
+  W-2s" section), `docs/single-document-runner.md` (new timing-field
+  semantics), `docs/known-limitations.md` (#7 marked resolved), and
+  `docs/project-state.md`.
+- 19 new tests; full suite: 639 passing, up from 620, zero regressions.
+
 ### Phase 8D.4 - Single-Document Production Runner
 
 - Added the canonical single-document production entry point: `python -m

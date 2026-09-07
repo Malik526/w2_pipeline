@@ -142,6 +142,16 @@ class TesseractOcrAdapter:
                 "Install the `tesseract` system package to enable Pipeline A OCR."
             )
 
+    def warm_up(self) -> None:
+        """Verify the Tesseract binary is available.
+
+        Tesseract has no persistent client/model to preload -- each call
+        shells out fresh -- so this only surfaces a missing-binary error
+        early rather than paying any real one-time startup cost.
+        """
+
+        self.ensure_available()
+
     def extract_image(self, image_path: str | Path, *, page_number: int = 1) -> list[TextObservation]:
         """OCR one image file into text observations."""
 

@@ -75,7 +75,9 @@ class DocumentRunResult(BaseModel):
     review_id: str | None = None
     finalized: bool = False
     outputs: dict[str, str] = Field(default_factory=dict)
-    duration_seconds: float = Field(ge=0.0)
+    model_startup_seconds: float = Field(ge=0.0)
+    processing_latency_seconds: float = Field(ge=0.0)
+    total_duration_seconds: float = Field(ge=0.0)
     error_message: str | None = None
 
 
@@ -101,6 +103,16 @@ def run_document(
     is reported as a `DocumentRunStatus.FAILED` result instead, so a
     caller can distinguish "this document needs a human" from "this run
     itself broke" without a try/except of its own.
+
+    Timing (Phase 8D.5): `model_startup_seconds` covers building/warming
+    the OCR backend (a `PipelineAExtractor` is built lazily and its
+    backend has no persistent model/client until `warm_up()` forces it)
+    -- near-zero when `extractor` is already warm, as a batch caller's
+    shared extractor is after its own one-time warm-up.
+    `processing_latency_seconds` covers everything after that: ingestion,
+    extraction/OCR, signal construction, validation, and review creation
+    or finalization/export. `total_duration_seconds` is this call's full
+    wall time and is always >= the other two combined.
     """
 
     if output_format not in SUPPORTED_OUTPUT_FORMATS:
@@ -113,17 +125,16 @@ def run_document(
     doc_output_dir = Path(output_dir) / resolved_document_id
     doc_output_dir.mkdir(parents=True, exist_ok=True)
 
-    started = time.perf_counter()
+    total_started = time.perf_counter()
     try:
         if extractor is None:
             extractor = build_pipeline_a_extractor(
                 ocr_backend=ocr_backend,
                 paddle_device=device or DEFAULT_DEVICE,
             )
-        ingested = extractor.ingestion_service.ingest(input_path, document_id=resolved_document_id)
-        result = extractor.extract_ingested(ingested)
+        extractor.warm_up()
     except Exception as exc:  # noqa: BLE001 - isolate and report, never crash the caller.
-        duration = time.perf_counter() - started
+        total_duration = time.perf_counter() - total_started
         run_result = DocumentRunResult(
             status=DocumentRunStatus.FAILED,
             document_id=resolved_document_id,
@@ -131,7 +142,32 @@ def run_document(
             output_dir=str(doc_output_dir),
             pipeline_id=PipelineAExtractor.pipeline_id,
             ocr_backend=ocr_backend,
-            duration_seconds=duration,
+            model_startup_seconds=total_duration,
+            processing_latency_seconds=0.0,
+            total_duration_seconds=total_duration,
+            error_message=f"{exc.__class__.__name__}: {exc}",
+        )
+        _write_run_summary(doc_output_dir, run_result)
+        return run_result
+    model_startup_seconds = time.perf_counter() - total_started
+
+    processing_started = time.perf_counter()
+    try:
+        ingested = extractor.ingestion_service.ingest(input_path, document_id=resolved_document_id)
+        result = extractor.extract_ingested(ingested)
+    except Exception as exc:  # noqa: BLE001 - isolate and report, never crash the caller.
+        processing_latency = time.perf_counter() - processing_started
+        total_duration = time.perf_counter() - total_started
+        run_result = DocumentRunResult(
+            status=DocumentRunStatus.FAILED,
+            document_id=resolved_document_id,
+            input_file=str(input_path),
+            output_dir=str(doc_output_dir),
+            pipeline_id=PipelineAExtractor.pipeline_id,
+            ocr_backend=ocr_backend,
+            model_startup_seconds=model_startup_seconds,
+            processing_latency_seconds=processing_latency,
+            total_duration_seconds=total_duration,
             error_message=f"{exc.__class__.__name__}: {exc}",
         )
         _write_run_summary(doc_output_dir, run_result)
@@ -144,7 +180,6 @@ def run_document(
     validation_result = validate_w2_document(result.document, signals=signals)
     (doc_output_dir / "validation.json").write_text(validation_result.model_dump_json(indent=2), encoding="utf-8")
 
-    duration = time.perf_counter() - started
     issue_codes = [issue.code for issue in validation_result.issues]
 
     if validation_result.status == ValidationStatus.ACCEPTED:
@@ -159,6 +194,7 @@ def run_document(
             export_csv(finalized, csv_path)
             outputs["csv"] = str(csv_path)
 
+        processing_latency_seconds = time.perf_counter() - processing_started
         run_result = DocumentRunResult(
             status=DocumentRunStatus.ACCEPTED,
             document_id=resolved_document_id,
@@ -172,7 +208,9 @@ def run_document(
             review_id=None,
             finalized=True,
             outputs=outputs,
-            duration_seconds=duration,
+            model_startup_seconds=model_startup_seconds,
+            processing_latency_seconds=processing_latency_seconds,
+            total_duration_seconds=time.perf_counter() - total_started,
         )
         _write_run_summary(doc_output_dir, run_result)
         return run_result
@@ -185,6 +223,7 @@ def run_document(
     )
     FileReviewRepository(review_repo_dir).save(review_record)
 
+    processing_latency_seconds = time.perf_counter() - processing_started
     run_result = DocumentRunResult(
         status=DocumentRunStatus.NEEDS_REVIEW,
         document_id=resolved_document_id,
@@ -198,7 +237,9 @@ def run_document(
         review_id=review_record.review_id,
         finalized=False,
         outputs={},
-        duration_seconds=duration,
+        model_startup_seconds=model_startup_seconds,
+        processing_latency_seconds=processing_latency_seconds,
+        total_duration_seconds=time.perf_counter() - total_started,
     )
     _write_run_summary(doc_output_dir, run_result)
     return run_result

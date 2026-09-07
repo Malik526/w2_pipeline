@@ -171,8 +171,31 @@ a failure -- a `ReviewRecord` is persisted, nothing is finalized), `1`
 processing failure. Full contract, output layout, and flags:
 [`docs/single-document-runner.md`](docs/single-document-runner.md).
 `run_document()` (`w2_pipeline.application.run_document`) is the
-reusable service function behind it -- the CLI is a thin wrapper, so a
-future batch runner or API can call it directly.
+reusable service function behind it -- the CLI is a thin wrapper, so the
+batch runner below (or a future API) can call it directly.
+
+## Run multiple W-2s
+
+The batch entry point (Phase 8D.5): builds one Pipeline A/PaddleOCR
+extractor, warms it up once, then runs every file through the exact
+same workflow as above -- reusing that one warmed extractor instead of
+paying OCR-backend startup per file:
+
+```bash
+PYTHONPATH=src python3 -m w2_pipeline.cli.run_batch w2_1.png w2_2.png w2_3.png
+PYTHONPATH=src python3 -m w2_pipeline.cli.run_batch --input-dir path/to/w2s/
+```
+
+Each document gets its own output subdirectory and `run_summary.json`,
+exactly as above; accepted documents additionally land as one row each
+in an aggregate `batch_finalized.csv`. Exit code `0` unless at least one
+document hit a runtime failure -- `needs_review` is never a batch
+failure, same reasoning as the exit codes above. A machine-readable
+`batch_summary.json` (counts, model-startup vs. per-document processing
+latency, aggregate CSV path) is always written. Full contract:
+[`docs/batch-runner.md`](docs/batch-runner.md).
+`run_batch()` (`w2_pipeline.application.run_batch`) is the reusable
+service function behind it, callable directly by a future skill or UI.
 
 ## Operator flow
 
@@ -237,8 +260,8 @@ Synthetic benchmark (not real taxpayer data); 2 of 600 documents still
 unsafely accept an OCR character-misread address; several optional
 canonical fields (Box 14, local tax rows, address line 2) are
 schema-complete but have no populated benchmark example; no global
-calibrated OCR confidence (a deliberate decision, not a gap); no batch
-execution or batch export command yet; no frontend/GUI.
+calibrated OCR confidence (a deliberate decision, not a gap); no
+frontend/GUI.
 
 Full list, with impact and correctness-criticality for each item:
 [`docs/known-limitations.md`](docs/known-limitations.md).

@@ -95,6 +95,10 @@ class _FakeExtractor:
     def __init__(self, result_factory) -> None:  # noqa: ANN001 - test double
         self.ingestion_service = _FakeIngestionService()
         self._result_factory = result_factory
+        self.warm_up_calls = 0
+
+    def warm_up(self) -> None:
+        self.warm_up_calls += 1
 
     def extract_ingested(self, ingested):  # noqa: ANN001 - test double
         return self._result_factory()
@@ -293,3 +297,57 @@ def test_output_determinism_across_two_runs_without_rerunning_extraction(tmp_pat
 def test_unsupported_output_format_rejected() -> None:
     with pytest.raises(ValueError):
         run_document("whatever.png", output_format="xml")
+
+
+def test_latency_fields_are_populated_and_consistent(tmp_path: Path) -> None:
+    """Phase 8D.5: `total_duration_seconds` must never be smaller than the
+    two components it is made of, and a pre-warmed extractor (the shared
+    extractor a batch caller passes in) must report near-zero
+    `model_startup_seconds` since `warm_up()` on an already-warm double is
+    a cheap no-op, not a real cold start."""
+
+    extractor = _FakeExtractor(_accepted_ocr_result)
+
+    result = run_document(
+        tmp_path / "input.png",
+        output_dir=tmp_path / "output",
+        extractor=extractor,
+        review_repo_dir=tmp_path / "review",
+    )
+
+    assert extractor.warm_up_calls == 1
+    assert result.model_startup_seconds >= 0.0
+    assert result.processing_latency_seconds >= 0.0
+    assert result.total_duration_seconds >= (
+        result.model_startup_seconds + result.processing_latency_seconds
+    )
+
+
+def test_model_startup_failure_reports_failed_with_zero_processing_latency(tmp_path: Path) -> None:
+    """A backend that cannot become ready (e.g. a missing OCR dependency)
+    must fail before any per-document processing is attempted -- this is
+    a runtime-unusable condition, not a per-document outcome, and must be
+    distinguishable from a mid-processing failure via
+    `processing_latency_seconds == 0.0`."""
+
+    class _FailsToWarmUpExtractor:
+        pipeline_id = "pipeline_a"
+        ingestion_service = _FakeIngestionService()
+
+        def warm_up(self) -> None:
+            raise RuntimeError("simulated missing OCR dependency")
+
+        def extract_ingested(self, ingested):  # noqa: ANN001 - test double
+            raise AssertionError("must not be reached when warm_up() fails")
+
+    result = run_document(
+        tmp_path / "input.png",
+        output_dir=tmp_path / "output",
+        extractor=_FailsToWarmUpExtractor(),
+        review_repo_dir=tmp_path / "review",
+    )
+
+    assert result.status is DocumentRunStatus.FAILED
+    assert "simulated missing OCR dependency" in result.error_message
+    assert result.processing_latency_seconds == 0.0
+    assert result.total_duration_seconds >= result.model_startup_seconds

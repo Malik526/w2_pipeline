@@ -30,3 +30,13 @@ class OcrAdapter(Protocol):
         page_numbers: set[int] | None = None,
     ) -> list[TextObservation]:
         """Render and OCR selected PDF pages into text observations."""
+
+    def warm_up(self) -> None:
+        """Force any one-time backend readiness cost (e.g. model loading) now.
+
+        Idempotent: a backend that is already warm (or has no persistent
+        client to warm) returns immediately. This exists so a caller that
+        reuses one adapter across many documents (Phase 8D.5's batch
+        runner) can pay backend startup cost exactly once, separate from
+        any single document's own processing latency.
+        """

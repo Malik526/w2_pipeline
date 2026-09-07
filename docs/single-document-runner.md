@@ -47,7 +47,7 @@ run_document() (w2_pipeline.application.run_document)
        |
        +---- w2_pipeline.cli.run_document (this CLI; thin argparse wrapper)
        |
-       +---- future batch runner
+       +---- w2_pipeline.application.run_batch (Phase 8D.5 batch runner)
        |
        +---- future web API/UI
 ```
@@ -85,7 +85,10 @@ Validation: ACCEPTED
 Issues: 0
 JSON: output/symage_900001-.../final.json
 CSV: output/symage_900001-.../final.csv
-Duration: 10.25s
+
+Model startup:   6.28s
+Document latency: 1.79s
+Total wall time: 8.07s
 ```
 
 Exit code `0`. `final.json`/`final.csv` are written; `run_summary.json`
@@ -111,7 +114,10 @@ Issues:
 
 Review ID: <uuid>
 Finalization: BLOCKED
-Duration: 6.91s
+
+Model startup:   5.52s
+Document latency: 1.38s
+Total wall time: 6.90s
 ```
 
 Exit code `2`. No `final.json`/`final.csv` is written -- `finalize_document`
@@ -167,7 +173,9 @@ subdirectory, so unrelated runs never collide.
     "json": "output/symage_900001-.../final.json",
     "csv": "output/symage_900001-.../final.csv"
   },
-  "duration_seconds": 10.25,
+  "model_startup_seconds": 6.28,
+  "processing_latency_seconds": 1.79,
+  "total_duration_seconds": 8.07,
   "error_message": null
 }
 ```
@@ -176,6 +184,24 @@ For a needs-review run: `"status": "needs_review"`, `"finalized": false`,
 `"outputs": {}`, `"review_id"` set, `"issue_codes"` populated. For a
 runtime failure: `"status": "failed"`, `"validation_status": null`,
 `"route": null`, `"error_message"` set, `"outputs": {}`.
+
+### Timing fields (Phase 8D.5)
+
+`model_startup_seconds` covers building/warming the OCR backend --
+calling the extractor's `warm_up()`, which forces PaddleOCR's otherwise-
+lazy client/model construction now instead of on the first real
+prediction. It is near-zero when a caller passes in an already-warm
+`extractor=` (as the batch runner's shared extractor is, after its own
+one-time warm-up), since a repeat `warm_up()` call is cheap.
+`processing_latency_seconds` covers everything after that: ingestion,
+extraction/OCR, signal construction, validation, and review creation or
+finalization/export -- the number that matters for steady-state
+per-document throughput. `total_duration_seconds` is this call's full
+wall time and is always >= the other two combined. This replaces the
+single ambiguous `duration_seconds` this document previously described,
+which conflated cold-start model loading with actual per-document work
+(see [`docs/batch-runner.md`](batch-runner.md) for why that distinction
+matters once documents are processed in a batch).
 
 No confidence/accuracy value is ever fabricated into this file --
 consistent with this project's existing "no global calibrated OCR
@@ -244,20 +270,25 @@ the full worked example.
 
 Each CLI invocation is a fresh process, so PaddleOCR's model
 initialization (~5-9s, one-time per process on this machine) is paid on
-every run and included in `duration_seconds` -- there is no long-running
-server here to amortize it across documents. Once a process/extractor
-is warm (e.g. inside the existing batch benchmark scripts, which reuse
-one `PipelineAExtractor` across many documents), steady-state PaddleOCR
-GPU throughput remains ~1.2-1.35s/document, unchanged by this phase --
-this runner does not introduce any additional per-document overhead
-beyond writing five small JSON/CSV files.
+every run, reported explicitly as `model_startup_seconds` -- there is no
+long-running server here to amortize it across documents by itself.
+Once an extractor is warm -- inside this same process, via the batch
+runner ([`docs/batch-runner.md`](batch-runner.md)), which builds one
+extractor and warms it up once before reusing it for every document --
+`model_startup_seconds` drops to near-zero for every document after the
+first, and steady-state PaddleOCR GPU `processing_latency_seconds`
+remains ~1.2-2.5s/document, unchanged by this phase -- this runner does
+not introduce any additional per-document overhead beyond writing five
+small JSON/CSV files.
 
 ## Scope
 
 Not built in this phase (tracked as explicit follow-ups, same as
-`docs/known-limitations.md`): batch execution over many files, a
-combined multi-document CSV, a Codex/Claude skill wrapper, and a
-frontend/UI. This CLI and `run_document()` are designed so each of
-those can call `run_document()` directly (or, for the CLI, drive it by
-exit code + `run_summary.json` -- never by scraping terminal text) once
-built.
+`docs/known-limitations.md`): a Codex/Claude skill wrapper and a
+frontend/UI over the batch runner. Batch execution over many files and
+a combined multi-document CSV were Phase 8D.5's addition --
+[`docs/batch-runner.md`](batch-runner.md). This CLI, `run_document()`,
+and the batch runner are designed so a future skill or UI can call
+`run_document()`/`run_batch()` directly (or, for a CLI, drive them by
+exit code + `run_summary.json`/`batch_summary.json` -- never by
+scraping terminal text) once built.
