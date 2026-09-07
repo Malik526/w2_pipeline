@@ -1499,6 +1499,56 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.2 - Operator / End-to-End Workflow Walkthrough
+
+Full record: `docs/operator-walkthrough.md`.
+
+Proved the backend is operable end-to-end, using the actual currently-
+supported commands rather than new tooling. Ran two real (synthetic)
+documents through the whole pipeline -- ingestion -> extraction ->
+validation -> accept/review -> correction -> revalidation ->
+finalization -> JSON/CSV export. Happy path
+(`symage_900001`/`external_clean_render`): accepted, zero issues,
+straight to export. Review path (`symage_900021`/`rotated_png`):
+`needs_review` on both addresses
+(`employer_address_extraction_incomplete`/
+`employee_address_extraction_incomplete`, Phase 8D.1B's rule),
+finalization proven blocked (`NotAcceptedError`) before correction,
+corrected via the real review workflow (`review-correct` x10, one call
+per field, generic dotted-path -- no allowlist), revalidated to
+`accepted`, finalized, and exported.
+
+**Bug found and fixed** (small, additive, in scope): `review/cli.py`'s
+`--pipeline-id`/`--route` flags could not carry the checkbox/address
+evidence a real `pipeline_a` OCR-route extraction actually produces, so
+validating a genuinely well-extracted document with the real `--route
+ocr` value through the CLI incorrectly returned `needs_review`
+(`retirement_plan_checkbox_evidence_missing`) -- a CLI plumbing gap
+between an already-produced signal and an already-existing validator
+rule, not an extraction or validation defect. Fixed with a
+backward-compatible `--signals-json <path>` flag on `validate`,
+`review-create`, and `export-document` that loads a full
+`ExtractionSignals` JSON document (explicit `--pipeline-id`/`--route`
+still override individual fields when also passed); no existing CLI
+behavior changed when the flag is omitted.
+
+Also verified: finalization gating (blocked before correction, succeeds
+after), review correction persistence (one on-disk `ReviewRecord` at all
+times, no split-brain with what the CLI printed), and export determinism
+(JSON/CSV re-exported and byte-compared for both paths -- all four
+identical).
+
+No OCR, parser, or validator logic changed; no new validator heuristics;
+no frontend/GUI. Restated (not reopened) known limitations: synthetic
+benchmark, the two remaining OCR-misread unsafe cases from Phase 8D.1B,
+no calibrated OCR confidence (Phase 8C.4), no batch export, and no
+single-document extraction CLI (only batch/manifest benchmark scripts
+exist today -- the walkthrough documents the direct `PipelineAExtractor`
+API call as the current equivalent for that one step).
+
+3 new tests; full suite: **600 tests passing, up from 597, zero
+regressions.** Decision: operator workflow ready.
+
 ### Phase 8D.1B - Address Safety Closure + Box 12 Blank-Slot Semantics Audit
 
 Full record: `docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`.
@@ -1792,7 +1842,7 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Future Phases (after Phase 8D.1B)
+## Future Phases (after Phase 8D.2)
 
 ```text
 Phase 8D.1C (optional, not yet scoped) - the 2 residual unsafe address
@@ -1803,8 +1853,16 @@ boundary this project has deliberately not crossed since Phase 8C.4) or
 a content-plausibility check (e.g. non-ASCII characters in a printed
 US street address), not attempted here.
 
-Phase 8D.2 (not yet scoped, per the Phase 8D.1 brief) - end-user/
-operator walkthrough of the complete backend.
+Phase 8D.2 (done) - operator walkthrough of the complete backend
+(`docs/operator-walkthrough.md`), including a small `review/cli.py`
+signal-threading bug fix (`--signals-json`) found and fixed along the
+way. Surfaced one real, currently-open gap as a documented limitation:
+no single-document pipeline-execution CLI exists yet (only batch/
+manifest benchmark scripts do) -- a reasonable, separately-scoped
+follow-up.
+
+Phase 8D.3 (not yet scoped, per the Phase 8D.2 brief) - final
+architecture/docs freeze, if Phase 8D.2 is judged to have passed.
 
 Phase 8D (not yet scoped) - the architecture-decision synthesis this
 evidence feeds into (docs/architecture-decision-record.md update),

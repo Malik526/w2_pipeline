@@ -1,0 +1,71 @@
+{
+  "happy_path": {
+    "document_id": "symage_900001-irs_w2_single_page_2026-p0:external_clean_render",
+    "pipeline_metadata": {
+      "pipeline_id": "pipeline_a",
+      "route": "ocr"
+    },
+    "accepted": true,
+    "issues": [],
+    "final_export_success": true,
+    "json_export_deterministic": true,
+    "csv_export_deterministic": true
+  },
+  "review_path": {
+    "document_id": "symage_900021-irs_w2_single_page_2026-p0:rotated_png",
+    "initial_status": "needs_review",
+    "initial_issue_codes": [
+      "employer_address_extraction_incomplete",
+      "employee_address_extraction_incomplete"
+    ],
+    "finalization_blocked_before_correction": true,
+    "finalization_blocked_stderr": "w2_pipeline.downstream.errors.NotAcceptedError: Cannot finalize a document with validation status 'needs_review'; only 'accepted' documents may become downstream output.",
+    "corrections_applied": 10,
+    "post_review_status": "resolved",
+    "post_review_validation_status": "accepted",
+    "final_employer_address": {
+      "address_line_1": "288 E-470",
+      "address_line_2": null,
+      "city": "Grand Junction",
+      "state": "CO",
+      "postal_code": "81501",
+      "country": "US"
+    },
+    "final_employee_address": {
+      "address_line_1": "9099 Zerex St",
+      "address_line_2": null,
+      "city": "Colorado Springs",
+      "state": "CO",
+      "postal_code": "80949",
+      "country": "US"
+    },
+    "final_export_success": true,
+    "json_export_deterministic": true,
+    "csv_export_deterministic": true
+  },
+  "command_sequence": [
+    "python -m w2_pipeline.review.cli validate /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_document.json --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_signals.json",
+    "python -m w2_pipeline.review.cli export-document /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_document.json --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_signals.json --format json --output /home/malik/w2_pipeline/data/evaluation/results/phase8d2_happy_path.json",
+    "python -m w2_pipeline.review.cli export-document /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_document.json --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_signals.json --format csv --output /home/malik/w2_pipeline/data/evaluation/results/phase8d2_happy_path.csv",
+    "python -m w2_pipeline.review.cli export-document /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_document.json --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_signals.json --format json --output /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/happy_path_repeat.json",
+    "python -m w2_pipeline.review.cli export-document /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_document.json --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/happy_path_signals.json --format csv --output /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/happy_path_repeat.csv",
+    "python -m w2_pipeline.review.cli validate /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/review_path_document.json --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/review_path_signals.json",
+    "python -m w2_pipeline.review.cli export-document /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/review_path_document.json --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/review_path_signals.json --format json",
+    "python -m w2_pipeline.review.cli review-create /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/review_path_document.json --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --pipeline-id pipeline_a --route ocr --signals-json /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/review_path_signals.json",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employer.address.address_line_1 --new-value \"288 E-470\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employer.address.city --new-value \"Grand Junction\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employer.address.state --new-value \"CO\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employer.address.postal_code --new-value \"81501\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employer.address.country --new-value \"US\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employee.address.address_line_1 --new-value \"9099 Zerex St\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employee.address.city --new-value \"Colorado Springs\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employee.address.state --new-value \"CO\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employee.address.postal_code --new-value \"80949\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-correct 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --field-path employee.address.country --new-value \"US\" --reason verified against source document during operator walkthrough",
+    "python -m w2_pipeline.review.cli review-revalidate 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo",
+    "python -m w2_pipeline.review.cli export-review 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --format json --output /home/malik/w2_pipeline/data/evaluation/results/phase8d2_review_after.json",
+    "python -m w2_pipeline.review.cli export-review 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --format csv --output /home/malik/w2_pipeline/data/evaluation/results/phase8d2_review_after.csv",
+    "python -m w2_pipeline.review.cli export-review 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --format json --output /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_after_repeat.json",
+    "python -m w2_pipeline.review.cli export-review 89ccce6c-204d-4629-9c24-47cf2e827313 --repo-dir /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_repo --format csv --output /tmp/claude-1000/-home-malik/9057783c-ac51-4ce4-b496-8f07a3b2ddf1/scratchpad/walkthrough/review_after_repeat.csv"
+  ]
+}

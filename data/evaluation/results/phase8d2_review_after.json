@@ -1,0 +1,82 @@
+{
+  "document_id": "symage_900021-irs_w2_single_page_2026-p0:rotated_png",
+  "status": "accepted",
+  "schema_version": 2026,
+  "tax_year": 2026,
+  "document": {
+    "metadata": {
+      "document_type": "W-2",
+      "tax_year": 2026,
+      "schema_version": 2026,
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0:rotated_png",
+      "source_filename": "symage_900021-irs_w2_single_page_2026-p0_rotated.png",
+      "source_file_type": "png"
+    },
+    "employee": {
+      "ssn": "524-71-2045",
+      "first_name": "Lauren",
+      "middle_initial": "M",
+      "last_name": "Stokes",
+      "suffix": null,
+      "address": {
+        "address_line_1": "9099 Zerex St",
+        "address_line_2": null,
+        "city": "Colorado Springs",
+        "state": "CO",
+        "postal_code": "80949",
+        "country": "US"
+      }
+    },
+    "employer": {
+      "ein": "78-9941160",
+      "name": "Maple Leaf Industries",
+      "address": {
+        "address_line_1": "288 E-470",
+        "address_line_2": null,
+        "city": "Grand Junction",
+        "state": "CO",
+        "postal_code": "81501",
+        "country": "US"
+      },
+      "control_number": null
+    },
+    "federal_wages_and_taxes": {
+      "box_1_wages_tips_other_compensation": "28885.00",
+      "box_2_federal_income_tax_withheld": "2531.81",
+      "box_3_social_security_wages": "31400.00",
+      "box_4_social_security_tax_withheld": "1946.80",
+      "box_5_medicare_wages_and_tips": "31400.00",
+      "box_6_medicare_tax_withheld": "455.30",
+      "box_7_social_security_tips": null,
+      "box_8_allocated_tips": null,
+      "box_9_verification_code": null,
+      "box_10_dependent_care_benefits": null,
+      "box_11_nonqualified_plans": null
+    },
+    "box_12_entries": [
+      {
+        "code": "D",
+        "amount": "2515.00"
+      }
+    ],
+    "box_13": {
+      "statutory_employee": false,
+      "retirement_plan": true,
+      "third_party_sick_pay": false
+    },
+    "box_14_entries": [],
+    "tipped_occupation_codes": [],
+    "state_local_entries": [
+      {
+        "box_15_state": "CO",
+        "box_15_employer_state_id_number": "45-6107931",
+        "box_16_state_wages_tips_etc": "28885.00",
+        "box_17_state_income_tax": "628.54",
+        "box_18_local_wages_tips_etc": null,
+        "box_19_local_income_tax": null,
+        "box_20_locality_name": null
+      }
+    ],
+    "field_observations": []
+  }
+}

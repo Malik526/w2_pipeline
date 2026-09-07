@@ -1,0 +1,30 @@
+{
+  "status": "needs_review",
+  "issues": [
+    {
+      "code": "employer_address_extraction_incomplete",
+      "field_path": "employer.address.address_line_1",
+      "severity": "error",
+      "message": "OCR found 4 observation(s) in the employer.address region, but extraction could not assemble a complete address from them (too few usable printed lines) -- consistent with an incomplete extraction, not a document that genuinely has no address.",
+      "observed_value": null,
+      "metadata": {
+        "region_observation_count": 4
+      }
+    },
+    {
+      "code": "employee_address_extraction_incomplete",
+      "field_path": "employee.address.address_line_1",
+      "severity": "error",
+      "message": "OCR found 3 observation(s) in the employee.address region, but extraction could not assemble a complete address from them (too few usable printed lines) -- consistent with an incomplete extraction, not a document that genuinely has no address.",
+      "observed_value": null,
+      "metadata": {
+        "region_observation_count": 3
+      }
+    }
+  ],
+  "checks_run": 16,
+  "pipeline_metadata": {
+    "pipeline_id": "pipeline_a",
+    "route": "ocr"
+  }
+}

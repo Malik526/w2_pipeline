@@ -17,6 +17,15 @@ project's existing single-purpose CLI convention
 raw string otherwise. Pass an explicitly quoted JSON string
 (e.g. `--new-value '"1234.56"'`) to force an exact-precision money string
 rather than a JSON number.
+
+`--signals-json <path>` loads a full `ExtractionSignals` JSON document (as
+produced by dumping `ExtractionSignals` for a real extraction) instead of
+only the bare `--pipeline-id`/`--route` pair. This is required to
+faithfully validate a real `pipeline_a` OCR-route extraction from this CLI,
+since route-scoped validator rules (checkbox/address evidence) need
+evidence fields that `--pipeline-id`/`--route` alone cannot carry.
+`--pipeline-id`/`--route`, if also passed, override the corresponding
+fields from `--signals-json`.
 """
 
 from __future__ import annotations
@@ -103,16 +112,22 @@ def _build_parser() -> argparse.ArgumentParser:
 def _add_signal_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--pipeline-id", default=None)
     parser.add_argument("--route", default=None)
+    parser.add_argument(
+        "--signals-json",
+        default=None,
+        type=Path,
+        help="Path to a full ExtractionSignals JSON document (see module docstring).",
+    )
 
 
 def _handle_validate(args: argparse.Namespace) -> None:
-    document, signals = _load_document(args.w2_document_path, args.pipeline_id, args.route)
+    document, signals = _load_document(args.w2_document_path, args.pipeline_id, args.route, args.signals_json)
     result = validate_w2_document(document, signals=signals)
     print(result.model_dump_json(indent=2))
 
 
 def _handle_review_create(args: argparse.Namespace) -> None:
-    document, signals = _load_document(args.w2_document_path, args.pipeline_id, args.route)
+    document, signals = _load_document(args.w2_document_path, args.pipeline_id, args.route, args.signals_json)
     result = validate_w2_document(document, signals=signals)
     if result.status == ValidationStatus.ACCEPTED:
         print(json.dumps({"status": "accepted", "message": "No review needed."}, indent=2))
@@ -161,7 +176,7 @@ def _handle_review_revalidate(args: argparse.Namespace) -> None:
 
 
 def _handle_export_document(args: argparse.Namespace) -> None:
-    document, signals = _load_document(args.w2_document_path, args.pipeline_id, args.route)
+    document, signals = _load_document(args.w2_document_path, args.pipeline_id, args.route, args.signals_json)
     result = validate_w2_document(document, signals=signals)
     finalized = finalize_document(document, result)
     _export(finalized, args.format, args.output)
@@ -191,10 +206,12 @@ def _load_document(
     path: Path,
     pipeline_id: str | None,
     route: str | None,
+    signals_json_path: Path | None = None,
 ) -> tuple[W2Document | None, ExtractionSignals]:
     try:
         document = W2Document.model_validate_json(path.read_text(encoding="utf-8"))
-        return document, ExtractionSignals(pipeline_id=pipeline_id, route=route)
+        signals = _build_signals(pipeline_id, route, signals_json_path)
+        return document, signals
     except (OSError, ValidationError, ValueError) as exc:
         signals = ExtractionSignals(
             pipeline_id=pipeline_id,
@@ -203,6 +220,22 @@ def _load_document(
             warnings=[f"Could not load {path.name} as a canonical W2Document: {exc}"],
         )
         return None, signals
+
+
+def _build_signals(
+    pipeline_id: str | None,
+    route: str | None,
+    signals_json_path: Path | None,
+) -> ExtractionSignals:
+    if signals_json_path is None:
+        return ExtractionSignals(pipeline_id=pipeline_id, route=route)
+    base = ExtractionSignals.model_validate_json(signals_json_path.read_text(encoding="utf-8"))
+    overrides = {}
+    if pipeline_id is not None:
+        overrides["pipeline_id"] = pipeline_id
+    if route is not None:
+        overrides["route"] = route
+    return base.model_copy(update=overrides) if overrides else base
 
 
 if __name__ == "__main__":

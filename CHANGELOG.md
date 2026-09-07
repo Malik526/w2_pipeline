@@ -2,6 +2,45 @@
 
 ## 2026-09-06
 
+### Phase 8D.2 - Operator / End-to-End Workflow Walkthrough
+
+- Ran the complete pipeline exactly as an operator would, on two real
+  (synthetic) documents: ingestion -> extraction -> validation ->
+  accept/review -> correction -> revalidation -> finalization ->
+  JSON/CSV export. Happy path (`symage_900001`/`external_clean_render`):
+  accepted, zero issues, straight to export. Review path
+  (`symage_900021`/`rotated_png`): `needs_review` on both addresses
+  (`employer_address_extraction_incomplete`/
+  `employee_address_extraction_incomplete`), finalization proven blocked
+  (`NotAcceptedError`) before correction, corrected via the real review
+  workflow (10 `review-correct` calls), revalidated to `accepted`,
+  finalized and exported.
+- **Bug found and fixed**: `review/cli.py`'s `--pipeline-id`/`--route`
+  flags had no way to carry the checkbox/address evidence a real
+  `pipeline_a` OCR-route extraction actually produces, so validating a
+  real, well-extracted document with `--route ocr` through the CLI
+  incorrectly returned `needs_review`
+  (`retirement_plan_checkbox_evidence_missing`) -- a CLI plumbing gap,
+  not an extraction or validation defect. Fixed with an additive,
+  backward-compatible `--signals-json <path>` flag on `validate`,
+  `review-create`, and `export-document` that loads a full
+  `ExtractionSignals` JSON document; `--pipeline-id`/`--route` still
+  override individual fields when also passed. No existing CLI behavior
+  changed when the new flag is omitted.
+- Verified: finalization gating (blocked before correction, succeeds
+  after), review correction persistence (single on-disk record, no
+  split-brain), and export determinism (JSON/CSV re-exported and
+  byte-compared for both paths -- all four identical).
+- No OCR, parser, or validator logic changed; no new validator
+  heuristics added; no frontend/GUI added. Known limitations (synthetic
+  benchmark, the two remaining OCR-misread unsafe cases, no calibrated
+  OCR confidence, no batch export, no single-document extraction CLI)
+  restated, not reopened.
+- 3 new CLI tests; full suite: **600 tests passing, up from 597, zero
+  regressions.**
+- Decision: operator workflow ready.
+- Full record: `docs/operator-walkthrough.md`.
+
 ### Phase 8D.1B - Address Safety Closure + Box 12 Blank-Slot Semantics Audit
 
 - **Address safety**: traced all 13 unsafe-accepted address failures
