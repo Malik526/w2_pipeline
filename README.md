@@ -197,6 +197,17 @@ latency, aggregate CSV path) is always written. Full contract:
 `run_batch()` (`w2_pipeline.application.run_batch`) is the reusable
 service function behind it, callable directly by a future skill or UI.
 
+## Agentic execution
+
+An agent (Claude Code/Codex) can run this pipeline directly using
+[`skills/run-w2-pipeline/SKILL.md`](skills/run-w2-pipeline/SKILL.md) --
+a thin orchestration skill over the single-document and batch CLIs
+above (single document, explicit batch, or a deterministic
+benchmark-demo selection), reading `run_summary.json`/
+`batch_summary.json` as the sole source of truth rather than
+terminal-text scraping. It contains no extraction/validation logic of
+its own.
+
 ## Operator flow
 
 The full copy/paste runbook, run for real against two documents (one

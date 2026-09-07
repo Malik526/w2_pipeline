@@ -272,11 +272,12 @@ this is an operator interface, not an experiment CLI, same convention
 
 Not built in this phase (tracked as explicit follow-ups, same as
 `docs/known-limitations.md` and `docs/project-state.md`'s "Possible
-future production work"): a Codex/Claude demo/evaluation skill wrapping
-this CLI, and a lightweight frontend calling `run_batch()`/
-`run_document()` directly. Both are designed to be buildable against
+future production work"): a lightweight frontend calling `run_batch()`/
+`run_document()` directly. It is designed to be buildable against
 `run_batch()`, `batch_summary.json`, and each document's own
 `run_summary.json` alone -- no private parser/pipeline imports needed.
+(A Codex/Claude demo/evaluation skill wrapping this CLI was added in
+Phase 8D.6: [`skills/run-w2-pipeline/SKILL.md`](../skills/run-w2-pipeline/SKILL.md).)
 Documents within one batch are processed sequentially through the one
 warm extractor; concurrency/multiprocessing, parallelized Paddle
 inference, queues/workers, database persistence, authentication, and a

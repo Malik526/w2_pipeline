@@ -6,11 +6,12 @@ Last updated: 2026-09-07
 
 **Phase 8D.3 (final architecture/documentation freeze) is complete.**
 No further core feature work is planned within this take-home's scope.
-Phase 8D.4 and 8D.5 (below) are demo/operability additions on top of
-the freeze -- a single-document production runner CLI/service, then a
-batch runner over the same service plus per-document latency
-instrumentation -- not a reopening of extraction, validation, or export
-behavior. For the current system (not the phase-by-phase history
+Phase 8D.4, 8D.5, and 8D.6 (below) are demo/operability additions on
+top of the freeze -- a single-document production runner CLI/service,
+a batch runner over the same service plus per-document latency
+instrumentation, then a thin agent skill over both -- not a reopening
+of extraction, validation, or export behavior. For the current system
+(not the phase-by-phase history
 below), start with:
 
 - [`docs/final-architecture.md`](final-architecture.md) -- production
@@ -38,14 +39,18 @@ below), start with:
   many W-2 files through one warmed-once Pipeline A/PaddleOCR extractor,
   with model-startup vs. per-document processing latency reported
   separately.
+- [`skills/run-w2-pipeline/SKILL.md`](../skills/run-w2-pipeline/SKILL.md)
+  -- Phase 8D.6's agent skill: lets Claude Code/Codex run one document,
+  an explicit batch, or a deterministic benchmark-demo selection
+  through the two CLIs above, using their machine-readable output as
+  the sole source of truth.
 
 Possible future production work (GPU-cost-vs-review-cost pricing study,
 a review front-end, real-cloud-cost benchmarking, native-PDF evidence
-parity, real-taxpayer-corpus validation, a demo/evaluation skill and
-lightweight frontend over the batch runner) is listed in
-`docs/known-limitations.md` and `docs/architecture-decision-record.md`
-Section 16 as explicitly **not** part of this take-home's scope, not as
-unfinished project tasks.
+parity, real-taxpayer-corpus validation, a lightweight frontend over
+the batch runner) is listed in `docs/known-limitations.md` and
+`docs/architecture-decision-record.md` Section 16 as explicitly **not**
+part of this take-home's scope, not as unfinished project tasks.
 
 The rest of this document (below) is the phase-by-phase historical log,
 preserved as written at the time each phase completed -- including the
@@ -1551,6 +1556,58 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.6 - Deterministic Agent Skill For Single + Batch Execution
+
+Full record: `skills/run-w2-pipeline/SKILL.md`.
+
+Adds a thin agent skill so Claude Code/Codex can run the pipeline
+agentically using the Phase 8D.4/8D.5 entry points, closing the gap
+those phases left open (both documented "a future skill" as an
+explicit follow-up, not a reopening of pipeline behavior). The skill
+contains no extraction/validation/review/export/benchmark logic of its
+own -- it selects input files, invokes `w2_pipeline.cli.run_document`
+or `w2_pipeline.cli.run_batch`, and reads the machine-readable
+`run_summary.json`/`batch_summary.json` those commands already produce
+as the sole source of truth (never terminal-text scraping).
+
+**New**: `skills/run-w2-pipeline/SKILL.md` -- three modes (single
+document; explicit batch; deterministic benchmark-demo selection),
+result-interpretation tables for both CLIs, the exact timing-field
+names/semantics (never mislabeling `total_duration_seconds` as
+"latency"), explicit `needs_review`-is-success framing, review and
+failure handling boundaries (no auto-correction, no auto-retry/backend
+switching), and hard scope guardrails (no source/threshold/environment
+mutation during a normal run).
+
+**Deterministic demo selection**: reads
+`data/evaluation/results/phase8d1b_validator_rows.jsonl` (the most
+recent full 600-document/variant validation-status result, matching
+current production `validate_w2_document` behavior) for
+`document_id`/`variant_id`/`validation_status`, resolves each to a real
+file path via the Symage manifest's `document_path` (never
+hand-constructed filenames), stable-sorts by `document_id`, and takes
+the first N -- reproducible, not randomly guessed. No new committed
+script: the selection is a short inline Python snippet in the skill
+itself (nothing to duplicate pipeline execution). The documented
+default mixed demo (4 accepted + 2 needs_review) is the exact six
+documents Phase 8D.5's own real batch smoke used.
+
+**Manually verified** (PaddleOCR, GPU, via the skill's exact canonical
+commands): single accepted document (`symage_900001`/
+`external_clean_render`) -- exit `0`, `run_summary.json` status
+`accepted`. Single needs_review document (`symage_900021`/`rotated`) --
+exit `2`, `run_summary.json` status `needs_review`, review persisted.
+Default mixed demo batch (six documents) -- exit `0`,
+`batch_summary.json` reports 4 accepted / 2 needs_review / 0 failed,
+aggregate CSV written. All three matched the skill's documented
+expectations exactly.
+
+**0 new tests** (Markdown-only skill; no helper code was added, so no
+new Python test surface exists to cover -- verification is the three
+manual runs above plus confirming every path/file the skill references
+actually exists); full suite: **639 tests passing, unchanged from
+Phase 8D.5, zero regressions.**
+
 ### Phase 8D.5 - Batch W-2 Runner + Per-Document Latency Instrumentation
 
 Full record: `docs/batch-runner.md`.
@@ -2061,16 +2118,17 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Take-Home Scope: Complete (Phase 8D.3 Freeze; Phase 8D.4/8D.5 Demo/Operability Addenda)
+## Take-Home Scope: Complete (Phase 8D.3 Freeze; Phase 8D.4/8D.5/8D.6 Demo/Operability Addenda)
 
 Phase 8D.3 closed the take-home's planned phase sequence (Phase 0
-through 8D.3). Phase 8D.4 and Phase 8D.5 (see above) were subsequently
-added as scoped demo/operability follow-ups -- a single-document runner
-CLI/service, then a batch runner over it with latency instrumentation
--- explicitly requested after the freeze; neither changed
+through 8D.3). Phases 8D.4, 8D.5, and 8D.6 (see above) were
+subsequently added as scoped demo/operability follow-ups -- a
+single-document runner CLI/service, a batch runner over it with
+latency instrumentation, then a thin agent skill over both --
+explicitly requested after the freeze; none changed
 extraction/validation/routing/export behavior, so the "backend
 complete" declaration above still stands. **No further phase beyond
-8D.5 is currently planned.** The items below are possible future
+8D.6 is currently planned.** The items below are possible future
 *production* work, listed for completeness -- they are not unfinished
 take-home tasks.
 
@@ -2110,14 +2168,12 @@ Possible future production work (not in take-home scope):
   management, managed database/object storage) before handling real
   taxpayer data -- see README's Security section.
 
-- A deterministic demo/evaluation skill that selects known benchmark
-  cases and invokes the Phase 8D.5 batch runner (`run_batch()`/
-  `batch_summary.json`/per-document `run_summary.json` only -- no
-  private parser imports).
-
 - A lightweight frontend calling `run_document()`/`run_batch()`
   directly, surfacing filename/status/processing latency/validation
-  issues/review ID and a finalized-batch CSV download.
+  issues/review ID and a finalized-batch CSV download. (The Phase
+  8D.6 agent skill, `skills/run-w2-pipeline/SKILL.md`, already covers
+  the deterministic demo/evaluation-selection use case a skill would
+  have filled here.)
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

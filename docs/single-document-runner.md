@@ -284,11 +284,12 @@ small JSON/CSV files.
 ## Scope
 
 Not built in this phase (tracked as explicit follow-ups, same as
-`docs/known-limitations.md`): a Codex/Claude skill wrapper and a
-frontend/UI over the batch runner. Batch execution over many files and
-a combined multi-document CSV were Phase 8D.5's addition --
-[`docs/batch-runner.md`](batch-runner.md). This CLI, `run_document()`,
-and the batch runner are designed so a future skill or UI can call
-`run_document()`/`run_batch()` directly (or, for a CLI, drive them by
-exit code + `run_summary.json`/`batch_summary.json` -- never by
-scraping terminal text) once built.
+`docs/known-limitations.md`): a frontend/UI over the batch runner.
+Batch execution over many files and a combined multi-document CSV were
+Phase 8D.5's addition -- [`docs/batch-runner.md`](batch-runner.md); an
+agent skill wrapping both CLIs was Phase 8D.6's addition --
+[`skills/run-w2-pipeline/SKILL.md`](../skills/run-w2-pipeline/SKILL.md).
+This CLI, `run_document()`, and the batch runner are designed so a
+future UI can call `run_document()`/`run_batch()` directly (or, for a
+CLI, drive them by exit code + `run_summary.json`/`batch_summary.json`
+-- never by scraping terminal text) once built.

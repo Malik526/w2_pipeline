@@ -2,6 +2,34 @@
 
 ## 2026-09-07
 
+### Phase 8D.6 - Deterministic Agent Skill For Single + Batch Execution
+
+- Added `skills/run-w2-pipeline/SKILL.md`, a thin agent skill for
+  running the pipeline agentically via
+  `w2_pipeline.cli.run_document`/`w2_pipeline.cli.run_batch`. No
+  extraction/validation/review/export/benchmark logic of its own --
+  it selects input files, invokes the canonical CLIs, and treats
+  `run_summary.json`/`batch_summary.json` as the sole source of truth.
+- Three modes: single document, explicit batch, and deterministic
+  benchmark-demo selection (reads
+  `data/evaluation/results/phase8d1b_validator_rows.jsonl` for
+  real per-document validation status, resolves paths via the Symage
+  manifest, stable-sorts by document ID -- no new committed script, no
+  random guessing). Documents the exact timing-field names/semantics,
+  `needs_review`-is-success framing, review/failure-handling
+  boundaries (no auto-correction, no auto-retry/backend switching),
+  and hard scope guardrails (no source/threshold/environment mutation
+  during a normal run).
+- Manually verified via the skill's exact canonical commands: one
+  known accepted document, one known needs_review document, and the
+  documented default mixed demo batch (4 accepted + 2 needs_review) --
+  all matched documented expectations exactly.
+- Updated `README.md` ("Agentic execution" section), `AGENTS.md`
+  (skill list), `docs/single-document-runner.md`, `docs/batch-runner.md`,
+  and `docs/project-state.md`.
+- 0 new tests (Markdown-only skill, no helper code); full suite: 639
+  passing, unchanged from Phase 8D.5, zero regressions.
+
 ### Phase 8D.5 - Batch W-2 Runner + Per-Document Latency Instrumentation
 
 - Added the canonical multi-document production entry point: `python -m

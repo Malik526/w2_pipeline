@@ -48,6 +48,11 @@ Use these project-local skills when the current task matches their scope:
   benchmarking a Pipeline A OCR extraction configuration (named phase
   experiments, PSM configuration runs, smoke tests, or full clean/robustness
   benchmark runs). Pipeline A only.
+- `skills/run-w2-pipeline/SKILL.md` for agentically running one or more W-2
+  documents through the production `run_document()`/`run_batch()` entry
+  points (single-document runs, explicit batches, or a deterministic
+  benchmark-demo selection). Operational only -- no extraction/validation/
+  review logic, and no benchmark tuning.
 
 ## Scope Guard
 
