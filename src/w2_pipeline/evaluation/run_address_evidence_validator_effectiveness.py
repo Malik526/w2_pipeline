@@ -9,6 +9,11 @@ helpers unchanged (`_summarize`, `_unsafe_acceptance_by_field_family`,
 modify or re-run the Phase 8D.1A script itself, matching this project's
 convention of one new instrumented-run script per phase rather than
 mutating a previous phase's frozen script.
+
+Phase 8D.4: the `ExtractionResult` -> `ExtractionSignals` mapping this
+script originated (`_signals_for_result`) now lives as the shared
+production helper `w2_pipeline.extraction.signals.build_extraction_signals`,
+reused here rather than duplicated.
 """
 
 from __future__ import annotations
@@ -28,49 +33,8 @@ from w2_pipeline.evaluation.run_expanded_validator_effectiveness import (
 from w2_pipeline.extraction.acquisition import ObservationAcquirer
 from w2_pipeline.extraction.ocr_paddle import PaddleOcrAdapter, PaddleOcrConfig
 from w2_pipeline.extraction.pipeline_a import PipelineAExtractor
-from w2_pipeline.validation.models import ExtractionSignals
+from w2_pipeline.extraction.signals import build_extraction_signals
 from w2_pipeline.validation.validator import validate_w2_document
-
-
-def _signals_for_result(result: Any) -> ExtractionSignals:
-    checkbox = result.box_13_checkbox_evidence
-    employer_address = result.employer_address_evidence
-    employee_address = result.employee_address_evidence
-    return ExtractionSignals(
-        pipeline_id="pipeline_a",
-        route=result.route.value,
-        employer_name_observation_count=result.employer_name_observation_count,
-        checkbox_evidence_detection_method=checkbox.detection_method if checkbox else None,
-        checkbox_evidence_fallback_used=checkbox.fallback_used if checkbox else None,
-        checkbox_evidence_anchor_found=checkbox.anchor_found if checkbox else None,
-        checkbox_evidence_checkbox_found=checkbox.checkbox_found if checkbox else None,
-        checkbox_evidence_anchor_distance_px=checkbox.anchor_distance_px if checkbox else None,
-        checkbox_evidence_horizontal_alignment_offset_px=(
-            checkbox.horizontal_alignment_offset_px if checkbox else None
-        ),
-        checkbox_evidence_shape_score=checkbox.shape_score if checkbox else None,
-        checkbox_evidence_interior_ink_ratio=checkbox.interior_ink_ratio if checkbox else None,
-        checkbox_evidence_decision_margin=checkbox.decision_margin if checkbox else None,
-        box_12_amount_without_code_found=result.box_12_amount_without_code_found,
-        employer_address_evidence_region_observation_count=(
-            employer_address.region_observation_count if employer_address else None
-        ),
-        employer_address_evidence_usable_row_count=(
-            employer_address.usable_row_count if employer_address else None
-        ),
-        employer_address_evidence_parse_complete=(
-            employer_address.parse_complete if employer_address else None
-        ),
-        employee_address_evidence_region_observation_count=(
-            employee_address.region_observation_count if employee_address else None
-        ),
-        employee_address_evidence_usable_row_count=(
-            employee_address.usable_row_count if employee_address else None
-        ),
-        employee_address_evidence_parse_complete=(
-            employee_address.parse_complete if employee_address else None
-        ),
-    )
 
 
 def run(
@@ -106,7 +70,7 @@ def _process_entry(
     result = extractor.extract_ingested(ingested)
     duration = time.perf_counter() - started
 
-    signals = _signals_for_result(result)
+    signals = build_extraction_signals(result)
     validation_result = validate_w2_document(result.document, signals=signals)
 
     ground_truth = W2Document.model_validate_json((base_dir / entry.ground_truth_path).read_text(encoding="utf-8"))

@@ -99,7 +99,7 @@ behind it: [`docs/final-decisions.md`](docs/final-decisions.md).
 | Validator error-detection recall | same | **88.2%** overall, **100%** on rotated |
 | Validator false-review rate | same | **0%** (never flags a correct document) |
 | Steady-state latency | PaddleOCR GPU | **~1.2-1.35s/doc** |
-| Tests | full suite | **600 passing** |
+| Tests | full suite | **620 passing** |
 
 Every figure is sourced from a committed, unmodified benchmark artifact
 in `data/evaluation/results/`. Full tables, the historical 24-field
@@ -155,13 +155,36 @@ PYTHONPATH=src python3 -m w2_pipeline.evaluation.run_pipeline_b data/evaluation/
 `PYTHONPATH=src python3 -m w2_pipeline.evaluation.prepare_external_dataset`;
 see `data/evaluation/README.md`.)
 
+## Run one W-2
+
+The canonical single-document entry point (Phase 8D.4): ingestion ->
+Pipeline A (PaddleOCR by default) extraction -> evidence-preserving
+validation -> accepted export or a persisted review record, in one
+command:
+
+```bash
+PYTHONPATH=src python3 -m w2_pipeline.cli.run_document path/to/w2.png
+```
+
+Exit codes: `0` accepted (JSON/CSV written), `2` needs human review (not
+a failure -- a `ReviewRecord` is persisted, nothing is finalized), `1`
+processing failure. Full contract, output layout, and flags:
+[`docs/single-document-runner.md`](docs/single-document-runner.md).
+`run_document()` (`w2_pipeline.application.run_document`) is the
+reusable service function behind it -- the CLI is a thin wrapper, so a
+future batch runner or API can call it directly.
+
 ## Operator flow
 
 The full copy/paste runbook, run for real against two documents (one
 that sails straight through, one that needs a correction), including
 proof that finalization is actually blocked before correction and that
 JSON/CSV export is byte-deterministic:
-[`docs/operator-walkthrough.md`](docs/operator-walkthrough.md).
+[`docs/operator-walkthrough.md`](docs/operator-walkthrough.md). (That
+walkthrough predates the single-document runner above and documents the
+review/export commands in isolation from a pre-existing `document.json`;
+the runner above is the current recommended way to go from a raw file
+to that same point.)
 
 Happy path:
 
@@ -181,9 +204,7 @@ PYTHONPATH=src python3 -m w2_pipeline.review.cli export-review <review_id> --rep
 
 `--signals-json` (Phase 8D.2) lets a real extraction's checkbox/address
 evidence reach the validator through the CLI; `--pipeline-id`/`--route`
-alone still work for simpler cases. There is currently no
-single-document *extraction* CLI (only batch/manifest benchmark
-scripts) -- see `docs/known-limitations.md` #6.
+alone still work for simpler cases.
 
 ## Repository structure
 
@@ -196,9 +217,12 @@ src/w2_pipeline/
   review/        ReviewRecord workflow + review/cli.py (operator CLI)
   downstream/    FinalizedW2, JSON/CSV export
   evaluation/    benchmark harnesses, dataset generation, ground truth
+  application/   run_document() -- the single-document service function (Phase 8D.4)
+  cli/           run_document CLI -- thin wrapper over application/ (Phase 8D.4)
 docs/
   final-architecture.md, final-decisions.md,
   final-evaluation-summary.md, known-limitations.md   current state (start here)
+  single-document-runner.md                            single-document CLI/service contract
   operator-walkthrough.md                             operational proof
   architecture-decision-record.md                      full historical narrative through Phase 8C
   experiments/                                         phase-by-phase experiment history
@@ -213,8 +237,8 @@ Synthetic benchmark (not real taxpayer data); 2 of 600 documents still
 unsafely accept an OCR character-misread address; several optional
 canonical fields (Box 14, local tax rows, address line 2) are
 schema-complete but have no populated benchmark example; no global
-calibrated OCR confidence (a deliberate decision, not a gap); no
-single-document extraction CLI or batch export command; no frontend/GUI.
+calibrated OCR confidence (a deliberate decision, not a gap); no batch
+execution or batch export command yet; no frontend/GUI.
 
 Full list, with impact and correctness-criticality for each item:
 [`docs/known-limitations.md`](docs/known-limitations.md).

@@ -14,18 +14,14 @@ from w2_pipeline.evaluation.reporting import (
     write_markdown_report_for_json,
 )
 from w2_pipeline.evaluation.runner import evaluate_manifest
-from w2_pipeline.extraction.acquisition import ObservationAcquirer
+from w2_pipeline.extraction.factory import SUPPORTED_OCR_BACKENDS, build_pipeline_a_extractor
 from w2_pipeline.extraction.ocr import (
     SUPPORTED_MAIN_PAGE_SEGMENTATION_MODES,
     SUPPORTED_SUPPLEMENTAL_PAGE_SEGMENTATION_MODES,
-    TesseractOcrAdapter,
-    TesseractOcrConfig,
 )
 from w2_pipeline.extraction.ocr_backend import OcrAdapter
-from w2_pipeline.extraction.ocr_paddle import PaddleOcrAdapter, PaddleOcrConfig
+from w2_pipeline.extraction.ocr_paddle import PaddleOcrAdapter
 from w2_pipeline.extraction.pipeline_a import PipelineAExtractor
-
-SUPPORTED_OCR_BACKENDS = ("tesseract", "paddleocr")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -147,31 +143,12 @@ def _pipeline_a_extractor(
     tesseract_supplemental_psm: tuple[int, ...] = (6,),
     paddle_device: str = "cpu",
 ) -> PipelineAExtractor:
-    return PipelineAExtractor(
-        observation_acquirer=ObservationAcquirer(
-            ocr_adapter=_build_ocr_adapter(
-                ocr_backend, tesseract_psm, tesseract_supplemental_psm, paddle_device
-            )
-        )
+    return build_pipeline_a_extractor(
+        ocr_backend=ocr_backend,
+        tesseract_psm=tesseract_psm,
+        tesseract_supplemental_psm=tesseract_supplemental_psm,
+        paddle_device=paddle_device,
     )
-
-
-def _build_ocr_adapter(
-    ocr_backend: str,
-    tesseract_psm: int,
-    tesseract_supplemental_psm: tuple[int, ...] = (6,),
-    paddle_device: str = "cpu",
-) -> OcrAdapter:
-    if ocr_backend == "paddleocr":
-        return PaddleOcrAdapter(config=PaddleOcrConfig(device=paddle_device))
-    if ocr_backend == "tesseract":
-        return TesseractOcrAdapter(
-            config=TesseractOcrConfig(
-                page_segmentation_mode=tesseract_psm,
-                supplemental_page_segmentation_modes=tesseract_supplemental_psm,
-            )
-        )
-    raise ValueError(f"Unsupported OCR backend {ocr_backend!r}; expected one of: {SUPPORTED_OCR_BACKENDS}.")
 
 
 def _parse_supplemental_psm(value: str) -> tuple[int, ...]:

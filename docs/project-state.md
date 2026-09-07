@@ -5,8 +5,11 @@ Last updated: 2026-09-07
 ## Project Status: BACKEND COMPLETE / FROZEN FOR TAKE-HOME DELIVERY
 
 **Phase 8D.3 (final architecture/documentation freeze) is complete.**
-No further feature work is planned within this take-home's scope. For
-the current system (not the phase-by-phase history below), start with:
+No further core feature work is planned within this take-home's scope.
+Phase 8D.4 (below) is a demo/operability addition on top of the freeze
+-- a single-document production runner CLI/service -- not a reopening
+of extraction, validation, or export behavior. For the current system
+(not the phase-by-phase history below), start with:
 
 - [`docs/final-architecture.md`](final-architecture.md) -- production
   architecture: PaddleOCR (GPU) + deterministic extraction, evidence-
@@ -15,20 +18,24 @@ the current system (not the phase-by-phase history below), start with:
   decision, what was rejected, and why.
 - [`docs/final-evaluation-summary.md`](final-evaluation-summary.md) --
   final benchmark: 99.649% expanded extraction accuracy, 0.33% unsafe
-  validator acceptance, 0% false-review rate, 600 tests passing.
+  validator acceptance, 0% false-review rate, 620 tests passing.
 - [`docs/known-limitations.md`](known-limitations.md) -- the canonical,
   current limitations list (synthetic benchmark, 2 residual OCR-misread
-  unsafe cases, no calibrated OCR confidence, no single-document
-  extraction CLI, no batch export, no frontend/GUI -- none
-  correctness-blocking for this take-home's scope).
+  unsafe cases, no calibrated OCR confidence, no batch execution/export,
+  no frontend/GUI -- none correctness-blocking for this take-home's
+  scope).
 - [`docs/operator-walkthrough.md`](operator-walkthrough.md) -- the
   operational proof: two real documents run end to end through the
   actual CLI commands, including finalization gating and export
   determinism.
+- [`docs/single-document-runner.md`](single-document-runner.md) --
+  Phase 8D.4's single-document production runner: one CLI command
+  (`python -m w2_pipeline.cli.run_document <file>`) from a raw W-2 file
+  to accepted export or a persisted review record.
 
 Possible future production work (GPU-cost-vs-review-cost pricing study,
-a review front-end, real-cloud-cost benchmarking, a single-document
-extraction CLI, native-PDF evidence parity, real-taxpayer-corpus
+a review front-end, real-cloud-cost benchmarking, batch execution over
+many files, native-PDF evidence parity, real-taxpayer-corpus
 validation) is listed in `docs/known-limitations.md` and
 `docs/architecture-decision-record.md` Section 16 as explicitly **not**
 part of this take-home's scope, not as unfinished project tasks.
@@ -1537,6 +1544,67 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.4 - Single-Document Production Runner
+
+Full record: `docs/single-document-runner.md`.
+
+Phase 8D.3 explicitly closed the take-home with "No Phase 8D.4." This
+phase reopens it as a scoped demo/operability addition, not a reversal
+of that freeze: no extraction, validation, routing, or export behavior
+changed. It adds the one thing `docs/known-limitations.md` #6 had
+flagged as the remaining operator-ergonomics gap -- a canonical
+single-document CLI/service entry point (`W-2 file -> ingestion ->
+Pipeline A/PaddleOCR extraction -> evidence-preserving validation ->
+accepted export or a persisted review record`) -- so a human, a future
+skill, a future batch runner, and a future lightweight UI all have one
+call to make instead of four hand-assembled CLI invocations
+(`docs/operator-walkthrough.md`'s pre-existing per-step commands still
+work unchanged and remain documented).
+
+**New**: `w2_pipeline.application.run_document.run_document()` -- the
+reusable orchestration service, returning a structured
+`DocumentRunResult` (`accepted` / `needs_review` / `failed`), never
+raising for an ingestion/OCR/extraction failure. `w2_pipeline.cli.run_document`
+is a thin argparse wrapper over it (exit codes `0`/`2`/`1` for
+accepted/needs_review/failure -- `needs_review` is deliberately not a
+failure code).
+
+**Centralized, not duplicated**: two mappings that previously existed
+only as private helpers inside evaluation scripts are now shared
+production modules, reused by both the new runner and the scripts that
+originated them:
+- `w2_pipeline.extraction.factory.build_pipeline_a_extractor` (was
+  `run_pipeline_a.py`'s private `_pipeline_a_extractor`/`_build_ocr_adapter`).
+- `w2_pipeline.extraction.signals.build_extraction_signals` (was
+  `run_address_evidence_validator_effectiveness.py`'s private
+  `_signals_for_result`).
+
+**Evidence regression guard**: the runner must never repeat the Phase
+8D.2 CLI gap (`route=ocr` validated without the evidence that route's
+rules require). `tests/application/test_run_document.py::test_regression_full_evidence_is_threaded_not_just_route`
+proves an OCR-route extraction with full checkbox/address evidence is
+accepted, while the identical route with the evidence stripped out
+needs review -- the outcome tracks the evidence, not just the route
+label.
+
+**Real smoke runs** (PaddleOCR, GPU): `symage_900001` /
+`external_clean_render` -- exit `0`, accepted, zero issues, same
+employer/Box 12/Box 13/state values `docs/operator-walkthrough.md`
+already documented, `final.json`/`final.csv` byte-identical across two
+independent runs. `symage_900021` / `rotated_png` -- exit `2`,
+`needs_review`, the same two address-evidence issue codes
+`docs/operator-walkthrough.md` documents, `ReviewRecord` persisted, no
+`final.json`/`final.csv` written. Both match the pre-existing
+walkthrough's real numbers exactly, confirming the new runner is not a
+second, divergent code path.
+
+**20 new tests** (application service: accepted/needs_review/failure/
+nonexistent-file/unsupported-file/evidence-regression/determinism/
+bad-format; CLI: real accepted-path integration test plus exit-code-
+mapping unit tests; the two extracted shared helpers each get their own
+direct unit tests); full suite: **620 tests passing, up from 600, zero
+regressions.**
+
 ### Phase 8D.3 - Final Architecture + Documentation Freeze
 
 Full record: this document's "Project Status" banner (top) plus
@@ -1914,13 +1982,17 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Take-Home Scope: Complete (Phase 8D.3 Freeze)
+## Take-Home Scope: Complete (Phase 8D.3 Freeze; Phase 8D.4 Demo/Operability Addendum)
 
 Phase 8D.3 closed the take-home's planned phase sequence (Phase 0
-through 8D.3). **No Phase 8D.4 or further phase is planned.** The
-items below are possible future *production* work, listed for
-completeness -- they are not unfinished take-home tasks, and nothing
-below blocks the "backend complete" status declared above.
+through 8D.3). Phase 8D.4 (see above) was subsequently added as a
+scoped demo/operability follow-up -- a single-document runner
+CLI/service -- explicitly requested after the freeze; it changed no
+extraction/validation/routing/export behavior, so the "backend
+complete" declaration above still stands. **No further phase beyond
+8D.4 is currently planned.** The items below are possible future
+*production* work, listed for completeness -- they are not unfinished
+take-home tasks.
 
 ```text
 Possible future production work (not in take-home scope):
@@ -1932,10 +2004,6 @@ Possible future production work (not in take-home scope):
   boundary this project has deliberately not crossed since Phase 8C.4)
   or a content-plausibility check (e.g. non-ASCII characters in a
   printed US street address).
-
-- A single-document extraction CLI (mirroring review/cli.py's
-  validate/export-document ergonomics), identified as a gap during the
-  Phase 8D.2 operator walkthrough.
 
 - A native-PDF-route evidence signal, mirroring the OCR-route
   checkbox/address evidence pattern, to close the evidence-parity gap

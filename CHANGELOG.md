@@ -2,6 +2,42 @@
 
 ## 2026-09-07
 
+### Phase 8D.4 - Single-Document Production Runner
+
+- Added the canonical single-document production entry point: `python -m
+  w2_pipeline.cli.run_document <file>` (a thin CLI) over
+  `w2_pipeline.application.run_document.run_document()` (the reusable
+  service function). Orchestrates the existing production components
+  end to end -- ingestion, `PipelineAExtractor` extraction (PaddleOCR by
+  default), full-evidence `ExtractionSignals` construction, validation,
+  and either `finalize_document` + JSON/CSV export (accepted) or
+  `start_review` + `FileReviewRepository` persistence (needs_review) --
+  with no pipeline/validation/review/export logic duplicated.
+- Deterministic exit-code contract: `0` accepted, `2` needs_review (not
+  a failure), `1` runtime/processing failure. Deterministic per-document
+  output directory (`output/<document_id>/`) with `extracted.json`,
+  `signals.json`, `validation.json`, `run_summary.json`, and
+  (accepted-only) `final.json`/`final.csv`.
+- Extracted two mappings that previously existed only as private
+  evaluation-script helpers into shared production modules, reused by
+  both the new runner and their originating scripts:
+  `w2_pipeline.extraction.factory.build_pipeline_a_extractor` (from
+  `run_pipeline_a.py`) and
+  `w2_pipeline.extraction.signals.build_extraction_signals` (from
+  `run_address_evidence_validator_effectiveness.py`).
+- Added a regression test proving the runner threads real extraction
+  evidence into validation rather than repeating the Phase 8D.2
+  `route=ocr`-without-evidence CLI gap.
+- Real PaddleOCR/GPU smoke runs against `symage_900001`/
+  `external_clean_render` (accepted, zero issues, byte-deterministic
+  export) and `symage_900021`/`rotated_png` (needs_review, correct
+  issue codes, review persisted, no finalized output) reconfirmed the
+  same real values `docs/operator-walkthrough.md` already documented.
+- Added `docs/single-document-runner.md`; updated `README.md` ("Run one
+  W-2" section), `docs/known-limitations.md` (#6 marked resolved),
+  and `docs/project-state.md`.
+- 20 new tests; full suite: 620 passing, up from 600, zero regressions.
+
 ### Phase 8D.3 - Final Architecture + Documentation Freeze
 
 - Documentation/reconciliation phase, no behavior changes. Created

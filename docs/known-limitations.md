@@ -1,12 +1,13 @@
 # Known Limitations
 
 The single canonical list of what this system does **not** currently do,
-as of Phase 8D.3 (final freeze). Every item below is either restated
-from an earlier phase (never silently dropped) or newly identified
-during the Phase 8D.2 operator walkthrough. This document does not
-propose fixes -- see each item's "Production follow-up" line for what a
-future phase would look like, and `docs/final-decisions.md` for why the
-current tradeoff was accepted.
+as of Phase 8D.3 (final freeze), updated in Phase 8D.4 to mark item 6
+resolved rather than silently dropped. Every item below is either
+restated from an earlier phase, newly identified during the Phase 8D.2
+operator walkthrough, or marked resolved inline once a later phase
+closed it. This document does not propose fixes -- see each item's
+"Production follow-up" line for what a future phase would look like,
+and `docs/final-decisions.md` for why the current tradeoff was accepted.
 
 ---
 
@@ -87,23 +88,22 @@ Phase 8C.4 found native confidence uninformative for this document type.
 **Production follow-up**: none planned; would require re-litigating the
 Phase 8C.4 decision with new evidence.
 
-### 6. No single-document pipeline-execution CLI
+### 6. ~~No single-document pipeline-execution CLI~~ RESOLVED (Phase 8D.4)
 
-**What it is**: every script that runs `PipelineAExtractor`
+**What it was**: every script that runs `PipelineAExtractor`
 (`run_pipeline_a.py` and its variants) operates over a batch manifest,
 not one arbitrary input file with a `--output` flag. The Phase 8D.2
-operator walkthrough documents a direct Python API call
-(`PipelineAExtractor.extract_ingested`) as today's equivalent for
-"extract this one document."
-**Impact**: an operator cannot run a single new document through
-extraction with one CLI command; they must either write a manifest entry
-or use the short Python snippet in `docs/operator-walkthrough.md`.
-**Correctness-critical**: no -- purely an operator-ergonomics gap; the
-underlying extraction is identical either way.
-**Production follow-up**: a small `extract` CLI command mirroring
-`review/cli.py`'s `validate`/`export-document` ergonomics (ingest one
-file, dump `W2Document` + `ExtractionSignals` JSON). Explicitly out of
-scope for Phase 8D.2 and 8D.3.
+operator walkthrough documented a direct Python API call
+(`PipelineAExtractor.extract_ingested`) as the then-current equivalent
+for "extract this one document."
+**Resolved by**: `python -m w2_pipeline.cli.run_document <file>`
+(`w2_pipeline.application.run_document.run_document()` is the reusable
+service function behind it) -- ingests one file, extracts it, threads
+the real extraction evidence into validation, and either finalizes +
+exports or persists a review record, all in one command. See
+[`docs/single-document-runner.md`](single-document-runner.md).
+**Correctness-critical**: no -- was always purely an
+operator-ergonomics gap; the underlying extraction is unchanged.
 
 ### 7. No batch export command
 
@@ -155,6 +155,8 @@ checkbox rotation robustness (Phase 8C.10-8C.12, anchor-relative
 detector promoted to default), `employer.address`/`employee.address`
 OCR-fallback and unsafe-acceptance gap (Phase 8D.1A/8D.1B), Box 12
 blank-slot semantics ambiguity (Phase 8D.1B, confirmed as an IRS coded-
-item contract, not a bug), and the `review/cli.py` signal-threading gap
+item contract, not a bug), the `review/cli.py` signal-threading gap
 that made real OCR-route documents misvalidate through the CLI
-(Phase 8D.2, fixed with `--signals-json`).
+(Phase 8D.2, fixed with `--signals-json`), and the lack of a
+single-document pipeline-execution CLI (Phase 8D.4, resolved by
+`w2_pipeline.cli.run_document`).
