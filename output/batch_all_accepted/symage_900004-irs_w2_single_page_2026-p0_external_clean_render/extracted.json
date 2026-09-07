@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "document_type": "W-2",
+    "tax_year": 2026,
+    "schema_version": 2026,
+    "document_id": "symage_900004-irs_w2_single_page_2026-p0_external_clean_render",
+    "source_filename": "symage_900004-irs_w2_single_page_2026-p0_external_clean_render.png",
+    "source_file_type": "png"
+  },
+  "employee": {
+    "ssn": "050-15-9561",
+    "first_name": "Jonathan",
+    "middle_initial": "W",
+    "last_name": "Mosley",
+    "suffix": null,
+    "address": {
+      "address_line_1": "5221 Military Rd",
+      "address_line_2": null,
+      "city": "West Harrison",
+      "state": "NY",
+      "postal_code": "10604",
+      "country": "US"
+    }
+  },
+  "employer": {
+    "ein": "62-6885566",
+    "name": "Bright Horizons Corp",
+    "address": {
+      "address_line_1": "82 E Williston Ave",
+      "address_line_2": null,
+      "city": "Rockville Centre",
+      "state": "NY",
+      "postal_code": "11570",
+      "country": "US"
+    },
+    "control_number": null
+  },
+  "federal_wages_and_taxes": {
+    "box_1_wages_tips_other_compensation": "49400.00",
+    "box_2_federal_income_tax_withheld": "4736.23",
+    "box_3_social_security_wages": "49400.00",
+    "box_4_social_security_tax_withheld": "3062.80",
+    "box_5_medicare_wages_and_tips": "49400.00",
+    "box_6_medicare_tax_withheld": "716.30",
+    "box_7_social_security_tips": null,
+    "box_8_allocated_tips": null,
+    "box_9_verification_code": null,
+    "box_10_dependent_care_benefits": null,
+    "box_11_nonqualified_plans": null
+  },
+  "box_12_entries": [
+    {
+      "code": "C",
+      "amount": "448.53"
+    }
+  ],
+  "box_13": {
+    "statutory_employee": false,
+    "retirement_plan": false,
+    "third_party_sick_pay": false
+  },
+  "box_14_entries": [],
+  "tipped_occupation_codes": [],
+  "state_local_entries": [
+    {
+      "box_15_state": "NY",
+      "box_15_employer_state_id_number": "91-7430510",
+      "box_16_state_wages_tips_etc": "49400.00",
+      "box_17_state_income_tax": "2112.00",
+      "box_18_local_wages_tips_etc": null,
+      "box_19_local_income_tax": null,
+      "box_20_locality_name": null
+    }
+  ],
+  "field_observations": []
+}

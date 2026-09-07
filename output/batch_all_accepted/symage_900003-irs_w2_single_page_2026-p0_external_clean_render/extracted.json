@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "document_type": "W-2",
+    "tax_year": 2026,
+    "schema_version": 2026,
+    "document_id": "symage_900003-irs_w2_single_page_2026-p0_external_clean_render",
+    "source_filename": "symage_900003-irs_w2_single_page_2026-p0_external_clean_render.png",
+    "source_file_type": "png"
+  },
+  "employee": {
+    "ssn": "568-92-4459",
+    "first_name": "Isabel",
+    "middle_initial": "K",
+    "last_name": "Lopez",
+    "suffix": null,
+    "address": {
+      "address_line_1": "7044 W Riverside Dr",
+      "address_line_2": null,
+      "city": "Hemet",
+      "state": "CA",
+      "postal_code": "92545",
+      "country": "US"
+    }
+  },
+  "employer": {
+    "ein": "63-4467342",
+    "name": "Infinity Enterprises Inc.",
+    "address": {
+      "address_line_1": "675 Del Prado Ave",
+      "address_line_2": null,
+      "city": "Manhattan Beach",
+      "state": "CA",
+      "postal_code": "90266",
+      "country": "US"
+    },
+    "control_number": null
+  },
+  "federal_wages_and_taxes": {
+    "box_1_wages_tips_other_compensation": "14400.00",
+    "box_2_federal_income_tax_withheld": "148.86",
+    "box_3_social_security_wages": "14400.00",
+    "box_4_social_security_tax_withheld": "892.80",
+    "box_5_medicare_wages_and_tips": "14400.00",
+    "box_6_medicare_tax_withheld": "208.80",
+    "box_7_social_security_tips": null,
+    "box_8_allocated_tips": null,
+    "box_9_verification_code": null,
+    "box_10_dependent_care_benefits": null,
+    "box_11_nonqualified_plans": null
+  },
+  "box_12_entries": [],
+  "box_13": {
+    "statutory_employee": false,
+    "retirement_plan": false,
+    "third_party_sick_pay": false
+  },
+  "box_14_entries": [],
+  "tipped_occupation_codes": [],
+  "state_local_entries": [
+    {
+      "box_15_state": "CA",
+      "box_15_employer_state_id_number": "754-9437-0",
+      "box_16_state_wages_tips_etc": "14400.00",
+      "box_17_state_income_tax": "86.94",
+      "box_18_local_wages_tips_etc": null,
+      "box_19_local_income_tax": null,
+      "box_20_locality_name": null
+    }
+  ],
+  "field_observations": []
+}

@@ -1,0 +1,86 @@
+{
+  "document_id": "symage_900002-irs_w2_single_page_2026-p0_external_clean_render",
+  "status": "accepted",
+  "schema_version": 2026,
+  "tax_year": 2026,
+  "document": {
+    "metadata": {
+      "document_type": "W-2",
+      "tax_year": 2026,
+      "schema_version": 2026,
+      "document_id": "symage_900002-irs_w2_single_page_2026-p0_external_clean_render",
+      "source_filename": "symage_900002-irs_w2_single_page_2026-p0_external_clean_render.png",
+      "source_file_type": "png"
+    },
+    "employee": {
+      "ssn": "080-52-0080",
+      "first_name": "Violeta",
+      "middle_initial": "L",
+      "last_name": "Prince",
+      "suffix": null,
+      "address": {
+        "address_line_1": "7203 East-West Arterial Hwy",
+        "address_line_2": null,
+        "city": "West Henrietta",
+        "state": "NY",
+        "postal_code": "14586",
+        "country": "US"
+      }
+    },
+    "employer": {
+      "ein": "51-6163111",
+      "name": "BlueWave Enterprises",
+      "address": {
+        "address_line_1": "965 E Lamoka Ave",
+        "address_line_2": null,
+        "city": "Wainscott",
+        "state": "NY",
+        "postal_code": "11975",
+        "country": "US"
+      },
+      "control_number": null
+    },
+    "federal_wages_and_taxes": {
+      "box_1_wages_tips_other_compensation": "85911.00",
+      "box_2_federal_income_tax_withheld": "8327.12",
+      "box_3_social_security_wages": "94000.00",
+      "box_4_social_security_tax_withheld": "5828.00",
+      "box_5_medicare_wages_and_tips": "94000.00",
+      "box_6_medicare_tax_withheld": "1363.00",
+      "box_7_social_security_tips": null,
+      "box_8_allocated_tips": null,
+      "box_9_verification_code": null,
+      "box_10_dependent_care_benefits": null,
+      "box_11_nonqualified_plans": null
+    },
+    "box_12_entries": [
+      {
+        "code": "D",
+        "amount": "8089.00"
+      },
+      {
+        "code": "DD",
+        "amount": "2994.37"
+      }
+    ],
+    "box_13": {
+      "statutory_employee": false,
+      "retirement_plan": true,
+      "third_party_sick_pay": false
+    },
+    "box_14_entries": [],
+    "tipped_occupation_codes": [],
+    "state_local_entries": [
+      {
+        "box_15_state": "NY",
+        "box_15_employer_state_id_number": "38-1945248",
+        "box_16_state_wages_tips_etc": "85911.00",
+        "box_17_state_income_tax": "4120.10",
+        "box_18_local_wages_tips_etc": null,
+        "box_19_local_income_tax": null,
+        "box_20_locality_name": null
+      }
+    ],
+    "field_observations": []
+  }
+}

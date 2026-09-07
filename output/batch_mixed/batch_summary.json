@@ -1,0 +1,101 @@
+{
+  "pipeline_id": "pipeline_a",
+  "ocr_backend": "paddleocr",
+  "device": "gpu",
+  "documents_total": 4,
+  "accepted": 3,
+  "needs_review": 1,
+  "failed": 0,
+  "model_startup_seconds": 9.879859843999839,
+  "batch_processing_seconds": 9.631557224999597,
+  "total_duration_seconds": 19.512709771000118,
+  "mean_document_latency_seconds": 2.406944705249998,
+  "median_document_latency_seconds": 1.6443496414999572,
+  "aggregate_csv": "output/batch_mixed/batch_finalized.csv",
+  "documents": [
+    {
+      "status": "accepted",
+      "document_id": "symage_900001-irs_w2_single_page_2026-p0_external_clean_render",
+      "input_file": "data/evaluation/external/symage-synthetic-us-forms-preview-final/documents/symage_900001-irs_w2_single_page_2026-p0_external_clean_render.png",
+      "output_dir": "output/batch_mixed/symage_900001-irs_w2_single_page_2026-p0_external_clean_render",
+      "pipeline_id": "pipeline_a",
+      "ocr_backend": "paddleocr",
+      "route": "ocr",
+      "validation_status": "accepted",
+      "issue_codes": [],
+      "review_id": null,
+      "finalized": true,
+      "outputs": {
+        "json": "output/batch_mixed/symage_900001-irs_w2_single_page_2026-p0_external_clean_render/final.json",
+        "csv": "output/batch_mixed/symage_900001-irs_w2_single_page_2026-p0_external_clean_render/final.csv"
+      },
+      "model_startup_seconds": 0.000013199999557400588,
+      "processing_latency_seconds": 4.874941672000205,
+      "total_duration_seconds": 4.874978171999828,
+      "error_message": null
+    },
+    {
+      "status": "accepted",
+      "document_id": "symage_900002-irs_w2_single_page_2026-p0_external_clean_render",
+      "input_file": "data/evaluation/external/symage-synthetic-us-forms-preview-final/documents/symage_900002-irs_w2_single_page_2026-p0_external_clean_render.png",
+      "output_dir": "output/batch_mixed/symage_900002-irs_w2_single_page_2026-p0_external_clean_render",
+      "pipeline_id": "pipeline_a",
+      "ocr_backend": "paddleocr",
+      "route": "ocr",
+      "validation_status": "accepted",
+      "issue_codes": [],
+      "review_id": null,
+      "finalized": true,
+      "outputs": {
+        "json": "output/batch_mixed/symage_900002-irs_w2_single_page_2026-p0_external_clean_render/final.json",
+        "csv": "output/batch_mixed/symage_900002-irs_w2_single_page_2026-p0_external_clean_render/final.csv"
+      },
+      "model_startup_seconds": 0.00010860000020329608,
+      "processing_latency_seconds": 1.7540589529999124,
+      "total_duration_seconds": 1.7541742530002011,
+      "error_message": null
+    },
+    {
+      "status": "accepted",
+      "document_id": "symage_900003-irs_w2_single_page_2026-p0_external_clean_render",
+      "input_file": "data/evaluation/external/symage-synthetic-us-forms-preview-final/documents/symage_900003-irs_w2_single_page_2026-p0_external_clean_render.png",
+      "output_dir": "output/batch_mixed/symage_900003-irs_w2_single_page_2026-p0_external_clean_render",
+      "pipeline_id": "pipeline_a",
+      "ocr_backend": "paddleocr",
+      "route": "ocr",
+      "validation_status": "accepted",
+      "issue_codes": [],
+      "review_id": null,
+      "finalized": true,
+      "outputs": {
+        "json": "output/batch_mixed/symage_900003-irs_w2_single_page_2026-p0_external_clean_render/final.json",
+        "csv": "output/batch_mixed/symage_900003-irs_w2_single_page_2026-p0_external_clean_render/final.csv"
+      },
+      "model_startup_seconds": 9.899999895424116e-6,
+      "processing_latency_seconds": 1.4641378659998736,
+      "total_duration_seconds": 1.4641561659991567,
+      "error_message": null
+    },
+    {
+      "status": "needs_review",
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0_rotated",
+      "input_file": "data/evaluation/external/symage-synthetic-us-forms-preview-final/documents/symage_900021-irs_w2_single_page_2026-p0_rotated.png",
+      "output_dir": "output/batch_mixed/symage_900021-irs_w2_single_page_2026-p0_rotated",
+      "pipeline_id": "pipeline_a",
+      "ocr_backend": "paddleocr",
+      "route": "ocr",
+      "validation_status": "needs_review",
+      "issue_codes": [
+        "employer_address_extraction_incomplete",
+        "employee_address_extraction_incomplete"
+      ],
+      "review_id": "00c7caa0-16c0-4191-8a2c-e904546b2b48",
+      "finalized": false,
+      "outputs": {},
+      "model_startup_seconds": 0.00002370000038354192,
+      "processing_latency_seconds": 1.534640330000002,
+      "total_duration_seconds": 1.5346738299995195,
+      "error_message": null
+    }
+  ]
+}

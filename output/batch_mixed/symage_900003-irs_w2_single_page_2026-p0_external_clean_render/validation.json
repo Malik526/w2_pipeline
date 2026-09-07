@@ -1,0 +1,9 @@
+{
+  "status": "accepted",
+  "issues": [],
+  "checks_run": 16,
+  "pipeline_metadata": {
+    "pipeline_id": "pipeline_a",
+    "route": "ocr"
+  }
+}
