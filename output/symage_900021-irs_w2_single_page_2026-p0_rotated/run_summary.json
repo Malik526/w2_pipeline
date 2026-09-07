@@ -1,0 +1,19 @@
+{
+  "status": "needs_review",
+  "document_id": "symage_900021-irs_w2_single_page_2026-p0_rotated",
+  "input_file": "data/evaluation/external/symage-synthetic-us-forms-preview-final/documents/symage_900021-irs_w2_single_page_2026-p0_rotated.png",
+  "output_dir": "output/symage_900021-irs_w2_single_page_2026-p0_rotated",
+  "pipeline_id": "pipeline_a",
+  "ocr_backend": "paddleocr",
+  "route": "ocr",
+  "validation_status": "needs_review",
+  "issue_codes": [
+    "employer_address_extraction_incomplete",
+    "employee_address_extraction_incomplete"
+  ],
+  "review_id": "beba294d-9548-4bf1-a753-790f47c34648",
+  "finalized": false,
+  "outputs": {},
+  "duration_seconds": 19.651258864000056,
+  "error_message": null
+}

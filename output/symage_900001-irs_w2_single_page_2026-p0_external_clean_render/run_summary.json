@@ -1,0 +1,19 @@
+{
+  "status": "accepted",
+  "document_id": "symage_900001-irs_w2_single_page_2026-p0_external_clean_render",
+  "input_file": "data/evaluation/external/symage-synthetic-us-forms-preview-final/documents/symage_900001-irs_w2_single_page_2026-p0_external_clean_render.png",
+  "output_dir": "output/symage_900001-irs_w2_single_page_2026-p0_external_clean_render",
+  "pipeline_id": "pipeline_a",
+  "ocr_backend": "paddleocr",
+  "route": "ocr",
+  "validation_status": "accepted",
+  "issue_codes": [],
+  "review_id": null,
+  "finalized": true,
+  "outputs": {
+    "json": "output/symage_900001-irs_w2_single_page_2026-p0_external_clean_render/final.json",
+    "csv": "output/symage_900001-irs_w2_single_page_2026-p0_external_clean_render/final.csv"
+  },
+  "duration_seconds": 13.315126327999906,
+  "error_message": null
+}
