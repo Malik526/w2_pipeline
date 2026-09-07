@@ -15,11 +15,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from w2_pipeline.contracts.w2 import (
     Address,
+    Box12Entry,
     Box13Flags,
     Employee,
     Employer,
     FederalWagesAndTaxes,
     SourceFileType,
+    StateLocalEntry,
     W2Document,
     W2Metadata,
 )
@@ -48,7 +50,27 @@ SYMAGE_W2_FORM_ID = "irs_w2_single_page_2026"
 # from before this change are untouched and still valid for what they
 # measured -- they simply predate employer.name being in scope at all; see
 # docs/experiments/phase8a-final-benchmark-coverage.md.
-EXTERNAL_ADAPTER_VERSION = "symage-w2.phase8a.v2"
+# Phase 8D.1A bumped this from "symage-w2.phase8a.v2": the annotation-
+# coverage audit found the FUNSD source already carries employer.address,
+# employee.address, box_12_entries, and state_local_entries -- previously
+# discarded by this adapter (see
+# docs/experiments/phase8d1a-annotation-coverage-and-full-field-remediation.md),
+# the same "evaluation adapter gap, not a production defect" pattern
+# Phase 8A found for employer.name. Maps them deterministically from the
+# same FUNSD question/answer linking `_extract_funsd_values` already
+# uses -- no new annotation source, no fabricated values, no change to
+# any field this adapter already mapped: ground truth generated under
+# this version is a strict superset of the prior version's coverage.
+# Following the exact precedent the v1->v2 bump set: `generator_version`
+# and `evaluated_field_paths` are regenerated in place across the
+# existing manifest/ground-truth files (`regenerate_external_ground_truth.py`,
+# no network access needed -- it replays the same FUNSD mapping this
+# module already used to build them, against the already-committed
+# annotation bundles), while every already-committed `data/evaluation/
+# results/*.json` benchmark result artifact from before this change is
+# left untouched and remains valid for the (narrower) field set it
+# measured.
+EXTERNAL_ADAPTER_VERSION = "symage-w2.phase8d1a.v3"
 
 _ANSWER_BEARING_COLUMNS = (
     "tokens",
@@ -129,78 +151,8 @@ class SymageW2Adapter:
             )
 
         bundle = self.build_annotation_bundle(record)
-        values, unmapped_questions = _extract_funsd_values(bundle.funsd_json)
         document_id = stable_external_sample_id(record)
-        federal = FederalWagesAndTaxes()
-        employee = Employee(address=Address())
-        employer = Employer(address=Address())
-        box_13 = Box13Flags()
-        evaluated_field_paths: set[str] = {
-            "metadata.document_type",
-            "metadata.tax_year",
-            "metadata.schema_version",
-        }
-
-        for question, answer in values.items():
-            field_path = _map_scalar_field(question)
-            if field_path is None:
-                unmapped_questions.append(question)
-                continue
-            if field_path == "employee.first_name":
-                first_name, middle_initial = split_first_name_and_initial(answer)
-                employee.first_name = first_name
-                employee.middle_initial = middle_initial
-                evaluated_field_paths.add("employee.first_name")
-                evaluated_field_paths.add("employee.middle_initial")
-                continue
-            if field_path == "employer.name":
-                # Box c's linked answer is combined: name, then street
-                # address, then city/state/ZIP, one per line. Only the
-                # first line is authoritative for employer.name -- the
-                # address lines are deliberately not mapped here (Phase 6B
-                # scope: employer.address has its own, separate,
-                # not-yet-resolved extraction gap; expanding ground-truth
-                # coverage to it is out of this task's scope). Never
-                # fabricated: a missing/blank first line leaves
-                # employer.name unset and out of evaluated_field_paths for
-                # this record, the same "excluded rather than treated as a
-                # failure" convention every other unmapped field already
-                # follows (see class docstring / evaluation-plan.md).
-                name = _first_line_of_combined_answer(answer)
-                if name is not None:
-                    employer.name = name
-                    evaluated_field_paths.add("employer.name")
-                continue
-            converted = _convert_value(field_path, answer)
-            _assign_field(employee, employer, federal, box_13, field_path, converted)
-            evaluated_field_paths.add(field_path)
-
-        if len(evaluated_field_paths) == 3:
-            raise ExternalDatasetError(
-                "External record did not contain mappable W-2 FUNSD annotations."
-            )
-
-        document = W2Document(
-            metadata=W2Metadata(
-                document_type="W-2",
-                tax_year=2026,
-                schema_version=2026,
-                document_id=document_id,
-                source_filename=f"{document_id}.png",
-                source_file_type=SourceFileType.PNG,
-            ),
-            employee=employee,
-            employer=employer,
-            federal_wages_and_taxes=federal,
-            box_13=box_13,
-        )
-        coverage_gaps = sorted(_KNOWN_CANONICAL_PATHS - evaluated_field_paths)
-        return ExternalGroundTruthResult(
-            document=document,
-            evaluated_field_paths=sorted(evaluated_field_paths),
-            unmapped_questions=sorted(set(unmapped_questions)),
-            coverage_gaps=coverage_gaps,
-        )
+        return build_ground_truth_from_funsd(bundle.funsd_json, document_id=document_id)
 
     def prepare_record(
         self,
@@ -273,6 +225,170 @@ class SymageW2Adapter:
             annotation_bundle=annotation_bundle,
             manifest_entries=manifest_entries,
         )
+
+
+def build_ground_truth_from_funsd(
+    funsd_json: list[dict[str, Any]], *, document_id: str
+) -> ExternalGroundTruthResult:
+    """Map FUNSD key-value annotations into a canonical W2Document.
+
+    Pure function of the FUNSD entity list and a document ID -- no raw
+    Hugging Face `record` dependency (Phase 8D.1A), so it can run
+    directly against an already-committed `annotations/*.json`
+    (`ExternalAnnotationBundle.funsd_json`) without needing network
+    access to re-fetch the source dataset. `SymageW2Adapter.build_ground_truth`
+    is the live, record-driven caller; `regenerate_external_ground_truth.py`
+    is the offline, already-committed-annotations caller -- both produce
+    identical output for the same FUNSD content and document ID, since
+    this is the only place the mapping is implemented.
+    """
+
+    values, unmapped_questions = _extract_funsd_values(funsd_json)
+    federal = FederalWagesAndTaxes()
+    employee = Employee(address=Address())
+    employer = Employer(address=Address())
+    box_13 = Box13Flags()
+    evaluated_field_paths: set[str] = {
+        "metadata.document_type",
+        "metadata.tax_year",
+        "metadata.schema_version",
+    }
+
+    for question, answer in values.items():
+        field_path = _map_scalar_field(question)
+        if field_path is None:
+            unmapped_questions.append(question)
+            continue
+        if field_path == "employee.first_name":
+            first_name, middle_initial = split_first_name_and_initial(answer)
+            employee.first_name = first_name
+            employee.middle_initial = middle_initial
+            evaluated_field_paths.add("employee.first_name")
+            evaluated_field_paths.add("employee.middle_initial")
+            continue
+        if field_path == "employer.name":
+            # Box c's linked answer is combined: name, then street
+            # address, then city/state/ZIP, one per line -- confirmed
+            # (Phase 8D.1A annotation-coverage audit) uniformly 3 lines
+            # across all 150 base documents, never more/fewer. The first
+            # line is employer.name (unchanged mapping); lines 2-3 are
+            # now also mapped to employer.address (Phase 8D.1A -- Phase
+            # 6B/8A left this unmapped as a separate, then-out-of-scope
+            # gap). Never fabricated: a missing/blank line leaves that
+            # piece unset and out of evaluated_field_paths, the same
+            # "excluded rather than treated as a failure" convention
+            # every other unmapped field already follows.
+            lines = [line.strip() for line in answer.split("\n")]
+            name = _first_line_of_combined_answer(answer)
+            if name is not None:
+                employer.name = name
+                evaluated_field_paths.add("employer.name")
+            if len(lines) >= 3 and lines[1]:
+                employer.address.address_line_1 = lines[1]
+                evaluated_field_paths.add("employer.address.address_line_1")
+                city, state, postal_code = _parse_combined_city_state_zip(lines[2])
+                if city is not None:
+                    employer.address.city = city
+                    evaluated_field_paths.add("employer.address.city")
+                if state is not None:
+                    employer.address.state = state
+                    evaluated_field_paths.add("employer.address.state")
+                if postal_code is not None:
+                    employer.address.postal_code = postal_code
+                    evaluated_field_paths.add("employer.address.postal_code")
+                if city or state or postal_code:
+                    employer.address.country = "US"
+                    evaluated_field_paths.add("employer.address.country")
+            continue
+        if field_path == "employee.address.address_line_1":
+            # Box f's linked answer is "street\nCity, ST ZIP", confirmed
+            # uniformly 2 lines across all 150 base documents (Phase
+            # 8D.1A annotation-coverage audit).
+            lines = [line.strip() for line in answer.split("\n")]
+            if lines and lines[0]:
+                employee.address.address_line_1 = lines[0]
+                evaluated_field_paths.add("employee.address.address_line_1")
+            if len(lines) >= 2:
+                city, state, postal_code = _parse_combined_city_state_zip(lines[1])
+                if city is not None:
+                    employee.address.city = city
+                    evaluated_field_paths.add("employee.address.city")
+                if state is not None:
+                    employee.address.state = state
+                    evaluated_field_paths.add("employee.address.state")
+                if postal_code is not None:
+                    employee.address.postal_code = postal_code
+                    evaluated_field_paths.add("employee.address.postal_code")
+                if city or state or postal_code:
+                    employee.address.country = "US"
+                    evaluated_field_paths.add("employee.address.country")
+            continue
+        if field_path == "box_12_entries" or field_path.startswith("state_local_entries."):
+            # Handled below via `_extract_box_12_entries`/
+            # `_extract_state_local_entry` directly from the raw FUNSD
+            # entities -- recognized here only so this loop does not
+            # report a real, answered question as unmapped (see
+            # `_map_scalar_field`'s docstring note for why).
+            continue
+        converted = _convert_value(field_path, answer)
+        _assign_field(employee, employer, federal, box_13, field_path, converted)
+        evaluated_field_paths.add(field_path)
+
+    # `evaluated_field_paths` entries must be real leaf paths
+    # `w2_pipeline.evaluation.comparison.flatten_w2_document` actually
+    # produces (`box_12_entries[0].code`, not the bare collection name
+    # `box_12_entries`) -- `compare_w2_documents` uses this list as a
+    # literal lookup key into the flattened dicts, so a bare collection
+    # name that never appears in either dict was silently scored as an
+    # automatic `UNEXPECTED` failure on every document (caught during
+    # this phase's own expanded-benchmark smoke test, fixed here before
+    # it ever reached a committed result artifact).
+    box_12_entries = _extract_box_12_entries(funsd_json)
+    for index in range(len(box_12_entries)):
+        evaluated_field_paths.add(f"box_12_entries[{index}].code")
+        evaluated_field_paths.add(f"box_12_entries[{index}].amount")
+
+    state_local_entry = _extract_state_local_entry(values)
+    state_local_entries = [state_local_entry] if state_local_entry is not None else []
+    if state_local_entry is not None:
+        # Unlike Box 12 (where a blank code means no entry at all),
+        # every state/local question is present on every document with
+        # only its *answer* sometimes blank (confirmed by the
+        # annotation-coverage audit) -- the same "question present,
+        # value may legitimately be null" shape the scalar per-question
+        # loop above already scores unconditionally once its question is
+        # found, applied here per sub-field for consistency.
+        for field_name in _STATE_LOCAL_QUESTION_TO_FIELD_NAME.values():
+            evaluated_field_paths.add(f"state_local_entries[0].{field_name}")
+
+    if len(evaluated_field_paths) == 3:
+        raise ExternalDatasetError(
+            "External record did not contain mappable W-2 FUNSD annotations."
+        )
+
+    document = W2Document(
+        metadata=W2Metadata(
+            document_type="W-2",
+            tax_year=2026,
+            schema_version=2026,
+            document_id=document_id,
+            source_filename=f"{document_id}.png",
+            source_file_type=SourceFileType.PNG,
+        ),
+        employee=employee,
+        employer=employer,
+        federal_wages_and_taxes=federal,
+        box_12_entries=box_12_entries,
+        box_13=box_13,
+        state_local_entries=state_local_entries,
+    )
+    coverage_gaps = sorted(_KNOWN_CANONICAL_PATHS - evaluated_field_paths)
+    return ExternalGroundTruthResult(
+        document=document,
+        evaluated_field_paths=sorted(evaluated_field_paths),
+        unmapped_questions=sorted(set(unmapped_questions)),
+        coverage_gaps=coverage_gaps,
+    )
 
 
 def stable_external_sample_id(record: dict[str, Any]) -> str:
@@ -535,6 +651,8 @@ def _map_scalar_field(question: str) -> str | None:
         return "employer.ein"
     if "employer s name" in question:
         return "employer.name"
+    if "employee s address" in question:
+        return "employee.address.address_line_1"
     if "control number" in question:
         return "employer.control_number"
     if "employee s first name" in question:
@@ -571,6 +689,32 @@ def _map_scalar_field(question: str) -> str | None:
         return "box_13.retirement_plan"
     if "third party sick pay" in question:
         return "box_13.third_party_sick_pay"
+    # Phase 8D.1A: these six are recognized here only so
+    # `build_ground_truth_from_funsd`'s main loop does not report them as
+    # `unmapped_questions` -- they carry real, non-blank answers on this
+    # dataset (confirmed by the annotation-coverage audit) but are
+    # deliberately assembled by `_extract_state_local_entry`/
+    # `_extract_box_12_entries` directly from the raw FUNSD entities
+    # instead of through this scalar per-question path: state/local
+    # fields all belong to one shared `StateLocalEntry`, and Box 12's
+    # "Code" question text repeats 4 times (one per 12a-12d slot) so a
+    # flat question-text-keyed dict can only ever keep the last one.
+    if question == "state":
+        return "state_local_entries.box_15_state"
+    if question == "employer s state id number":
+        return "state_local_entries.box_15_employer_state_id_number"
+    if question == "state wages tips etc":
+        return "state_local_entries.box_16_state_wages_tips_etc"
+    if question == "state income tax":
+        return "state_local_entries.box_17_state_income_tax"
+    if question == "local wages tips etc":
+        return "state_local_entries.box_18_local_wages_tips_etc"
+    if question == "local income tax":
+        return "state_local_entries.box_19_local_income_tax"
+    if question == "locality name":
+        return "state_local_entries.box_20_locality_name"
+    if question == "code" or "box 12" in question:
+        return "box_12_entries"
     return None
 
 
@@ -619,6 +763,138 @@ def _first_line_of_combined_answer(answer: str) -> str | None:
     return None
 
 
+def _parse_combined_city_state_zip(value: str) -> tuple[str | None, str | None, str | None]:
+    """Parse a "City, ST ZIP" line (Phase 8D.1A) -- the real W-2 form's
+    combined-block convention, comma-separated, confirmed against all 150
+    base documents' Box c/f annotations (never fewer than city + state +
+    ZIP, city itself sometimes multiple words, e.g. "West Henrietta")."""
+
+    without_comma = value.replace(",", " ")
+    parts = without_comma.split()
+    if len(parts) < 3:
+        return None, None, None
+    postal_code = parts[-1]
+    state = parts[-2]
+    city = " ".join(parts[:-2])
+    return city or None, state or None, postal_code or None
+
+
+_CODE_QUESTION_TEXT = "code"
+_BOX_12_QUESTION_MARKER = "box 12"
+
+
+def _extract_box_12_entries(funsd_json: list[dict[str, Any]]) -> list[Box12Entry]:
+    """Reconstruct Box 12's up-to-four code/amount slots (Phase 8D.1A)
+    directly from FUNSD entity linking, not from `_extract_funsd_values`'s
+    flat question-text-keyed dict: the "Code" question text repeats once
+    per slot (12a-12d), so a flat dict can only retain the last one.
+
+    Slots are paired by geometric row order (each "Code" question's own
+    vertical position), not list/id order -- confirmed robust across all
+    150 base documents by the annotation-coverage audit, where a blank
+    code slot still counts as its own "Code" question/answer pair (answer
+    text `""`), so the count and order always line up with the amount
+    answers' own linking order. A slot is only emitted when its code is
+    non-blank: an amount with no code (a real pattern this dataset
+    exhibits, e.g. a "$0.00" placeholder in an otherwise-unused slot) is
+    not a valid canonical `Box12Entry` (the schema requires a code), so
+    it is correctly excluded rather than fabricated.
+    """
+
+    entities = {entity.get("id"): entity for entity in funsd_json}
+
+    def linked_answer_text(entity: dict[str, Any]) -> str:
+        for link in entity.get("linking") or []:
+            if isinstance(link, list) and len(link) == 2:
+                answer = entities.get(link[1])
+                if answer and answer.get("label") == "answer":
+                    return str(answer.get("text") or "").strip()
+        return ""
+
+    code_questions = [
+        entity
+        for entity in funsd_json
+        if entity.get("label") == "question"
+        and _normalize_question(str(entity.get("text") or "")) == _CODE_QUESTION_TEXT
+    ]
+    code_questions.sort(key=lambda entity: (entity.get("box") or [0, 0, 0, 0])[1])
+    codes = [linked_answer_text(entity) for entity in code_questions]
+
+    box_12_question = next(
+        (
+            entity
+            for entity in funsd_json
+            if entity.get("label") == "question"
+            and _BOX_12_QUESTION_MARKER in _normalize_question(str(entity.get("text") or ""))
+        ),
+        None,
+    )
+    amounts: list[str] = []
+    if box_12_question is not None:
+        for link in box_12_question.get("linking") or []:
+            if not isinstance(link, list) or len(link) != 2:
+                continue
+            answer = entities.get(link[1])
+            if answer and answer.get("label") == "answer":
+                amounts.append(str(answer.get("text") or "").strip())
+
+    entries: list[Box12Entry] = []
+    for code, amount_text in zip(codes, amounts):
+        if not code:
+            continue
+        amount = _parse_decimal(amount_text)
+        if amount is None:
+            continue
+        entries.append(Box12Entry(code=code, amount=amount))
+    return entries
+
+
+_STATE_LOCAL_QUESTION_TO_FIELD_NAME = {
+    "state": "box_15_state",
+    "employer s state id number": "box_15_employer_state_id_number",
+    "state wages tips etc": "box_16_state_wages_tips_etc",
+    "state income tax": "box_17_state_income_tax",
+    "local wages tips etc": "box_18_local_wages_tips_etc",
+    "local income tax": "box_19_local_income_tax",
+    "locality name": "box_20_locality_name",
+}
+_STATE_LOCAL_MONEY_FIELD_NAMES = frozenset(
+    {
+        "box_16_state_wages_tips_etc",
+        "box_17_state_income_tax",
+        "box_18_local_wages_tips_etc",
+        "box_19_local_income_tax",
+    }
+)
+
+
+def _extract_state_local_entry(values: dict[str, str]) -> StateLocalEntry | None:
+    """Build the one `StateLocalEntry` this dataset ever has (Phase
+    8D.1A) from `_extract_funsd_values`'s flat question-text-keyed dict
+    -- unlike Box 12, every state/local question text here is unique, so
+    the flat dict already carries every value correctly with no
+    entity-linking needed. The annotation-coverage audit found exactly
+    one state/local row on all 150 base documents, so this never needs
+    to reconstruct multiple rows; `None` (never a spuriously-empty
+    all-null entry) when nothing at all was found."""
+
+    fields: dict[str, object] = {}
+    for question, field_name in _STATE_LOCAL_QUESTION_TO_FIELD_NAME.items():
+        raw_value = values.get(question, "").strip()
+        if not raw_value:
+            continue
+        if field_name in _STATE_LOCAL_MONEY_FIELD_NAMES:
+            amount = _parse_decimal(raw_value)
+            if amount is not None:
+                fields[field_name] = amount
+        else:
+            fields[field_name] = raw_value
+
+    if not fields:
+        return None
+    return StateLocalEntry(**fields)
+
+
 def _assign_field(
     employee: Employee,
     employer: Employer,
@@ -661,4 +937,21 @@ _KNOWN_CANONICAL_PATHS = {
     "box_13.statutory_employee",
     "box_13.retirement_plan",
     "box_13.third_party_sick_pay",
+    # Phase 8D.1A additions -- see EXTERNAL_ADAPTER_VERSION's docstring.
+    "employer.address.address_line_1",
+    "employer.address.city",
+    "employer.address.state",
+    "employer.address.postal_code",
+    "employer.address.country",
+    "employee.address.address_line_1",
+    "employee.address.city",
+    "employee.address.state",
+    "employee.address.postal_code",
+    "employee.address.country",
+    # box_12_entries/state_local_entries are deliberately absent here:
+    # their real evaluated_field_paths are index-qualified
+    # (`box_12_entries[0].code`, `state_local_entries[0].box_15_state`,
+    # ...) and vary in count per document, so there is no single fixed
+    # path to track as a coverage gap the way every scalar field above
+    # has one.
 }

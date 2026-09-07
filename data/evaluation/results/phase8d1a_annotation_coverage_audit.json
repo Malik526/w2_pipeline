@@ -1,0 +1,296 @@
+{
+  "annotations_dir": "data/evaluation/external/symage-synthetic-us-forms-preview-final/annotations",
+  "box_12_entry_count_distribution": {
+    "0": 33,
+    "1": 69,
+    "2": 48
+  },
+  "documents": 150,
+  "errors": [],
+  "fields_newly_covered_by_phase_8d1a": [
+    "box_12_entries",
+    "employee.address.address_line_1",
+    "employee.address.city",
+    "employee.address.country",
+    "employee.address.postal_code",
+    "employee.address.state",
+    "employer.address.address_line_1",
+    "employer.address.city",
+    "employer.address.country",
+    "employer.address.postal_code",
+    "employer.address.state",
+    "state_local_entries"
+  ],
+  "repaired_ground_truth_coverage": {
+    "box_12_entries": {
+      "documents_with_value": 117,
+      "of": 150
+    },
+    "box_13.retirement_plan": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_13.statutory_employee": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_13.third_party_sick_pay": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.address.address_line_1": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.address.city": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.address.country": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.address.postal_code": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.address.state": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.first_name": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.last_name": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.middle_initial": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.ssn": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.suffix": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.address.address_line_1": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.address.city": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.address.country": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.address.postal_code": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.address.state": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.control_number": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.ein": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.name": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "metadata.document_type": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "metadata.schema_version": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "metadata.tax_year": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "state_local_entries": {
+      "documents_with_value": 150,
+      "of": 150
+    }
+  },
+  "source_annotation_coverage": {
+    "box_1": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_10": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_11": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_12_amount": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_12_code": {
+      "documents_with_value": 117,
+      "of": 150
+    },
+    "box_13_retirement_plan": {
+      "documents_with_value": 90,
+      "of": 150
+    },
+    "box_13_statutory_employee": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_13_third_party_sick_pay": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_15_employer_state_id": {
+      "documents_with_value": 114,
+      "of": 150
+    },
+    "box_15_state": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_16_state_wages": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_17_state_income_tax": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_18_local_wages": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_19_local_income_tax": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_2": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_20_locality_name": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_3": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_4": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_5": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_6": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "box_7": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "box_8": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "employee.address_block": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.first_name": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.last_name": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.ssn": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employee.suffix": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "employer.control_number": {
+      "documents_with_value": 0,
+      "of": 150
+    },
+    "employer.ein": {
+      "documents_with_value": 150,
+      "of": 150
+    },
+    "employer.name_and_address_block": {
+      "documents_with_value": 150,
+      "of": 150
+    }
+  },
+  "state_local_entry_count_distribution": {
+    "1": 150
+  },
+  "summary": "12 canonical field paths gained ground-truth coverage that the pre-8D.1A adapter discarded, across the same 150 base documents whose annotations already carried them."
+}

@@ -2,6 +2,77 @@
 
 ## 2026-09-06
 
+### Phase 8D.1A - Annotation Coverage Audit, Ground-Truth Adapter Repair, and Full-Field Downstream Verification
+
+- Root cause: an evaluation-adapter gap, not a production-extraction
+  gap (the same pattern Phase 8A already found once for
+  `employer.name`). The external Symage FUNSD annotations always had
+  employer/employee address, Box 12, and state/local values; the
+  ground-truth adapter never mapped them, so no benchmark ever scored
+  them.
+- Repaired `external_symage.py`'s ground-truth adapter (bumped
+  `EXTERNAL_ADAPTER_VERSION` to `symage-w2.phase8d1a.v3`): employer
+  address (Box c lines 2-3), employee address (new question mapping),
+  Box 12 (entity-linking-based, code/amount paired by row position, a
+  blank-code "$0.00" placeholder correctly excluded), and state/local
+  (one row, all 150 base documents). New
+  `regenerate_external_ground_truth.py` rewrites ground truth/manifest
+  from already-committed annotation bundles, no network access needed.
+- Built new production OCR-zone fallbacks for all four families
+  (`parser_2026.py`), mirroring the existing federal-box/employer-name
+  fallback pattern, calibrated against real PaddleOCR output across all
+  four variants. Found and fixed three real bugs during this work:
+  employee-name bleeding into the address zone under rotation, Box 15's
+  own printed label bleeding into its value under rotation (both fixed
+  with positive content/shape matches rather than tighter zone
+  boundaries), and an initial EIN-shaped assumption for state employer
+  IDs that real annotation data (114 non-blank values swept) proved
+  wrong -- caught as a uniform 180/600 "missing" failure across all four
+  variants by this phase's own first benchmark run, fixed with a
+  general `\d+([/-]\d+)+` shape match.
+- A real evaluator bug found and fixed before it reached a committed
+  artifact: `evaluated_field_paths` initially recorded bare collection
+  names (`"box_12_entries"`) that `flatten_w2_document` never produces
+  (only index-qualified `box_12_entries[0].code`), causing an automatic
+  `UNEXPECTED` failure on every document -- caught by this phase's own
+  smoke test, fixed with real index-qualified paths.
+- Expanded 600-document benchmark (real, unmodified `run_pipeline_a.py`,
+  repaired ground truth): **99.649% overall field accuracy**
+  (25,829/25,920), 100% on `external_clean_render`, 98.627% on
+  `rotated_png`. New-field accuracy 98.2-98.7% for address sub-fields,
+  100% for Box 12 and state/local (populated- and null-case both
+  reported separately). 17 distinct (document, variant) pairs still
+  fail an address field -- 4 are the pre-existing `employer.name`
+  residual, 13 are new, address-specific, concentrated in `rotated_png`
+  -- reported honestly, not chased further given this project's
+  established lesson that fixed-ratio-zone rotation robustness has
+  diminishing returns.
+- New `address_format` validation rule (USPS state code, 5-digit/ZIP+4
+  postal code); Box 12/state-local money and code-format validity
+  needed no new rule at all, since the pre-existing schema-generic
+  rules already iterate these collections.
+- **Validator effectiveness measured, not assumed, under the expanded
+  contract: unsafe acceptance is no longer 0%** -- 2.17% overall, 7.33%
+  on `rotated_png` (13/600 documents), entirely from fully-missing
+  address extractions no current rule treats as suspicious. This is a
+  real, surfaced gap (not closed this phase) recommended as immediate
+  follow-up work.
+- Confirmed with zero code changes needed: downstream JSON/CSV already
+  preserve the newly-populated repeated structures correctly, and the
+  review-correction workflow's generic path-based field access already
+  supports correcting every new field family
+  (`employer.address.city`, `box_12_entries[0].code`,
+  `state_local_entries[0].box_15_state`, all verified directly).
+- Canonical field coverage matrix classifies all 54 canonical field
+  paths; no historical Phase 8C/8D result artifact was overwritten.
+- 33 new tests; full suite: **573 tests passing, up from 564, zero
+  regressions.**
+- Decision: B/A hybrid -- extraction and downstream substantially
+  repaired; two residual gaps (a rotation-variant address-extraction
+  margin, and the unsafe-acceptance validation gap above) reported
+  honestly rather than force-closed.
+- Full record: `docs/experiments/phase8d1a-annotation-coverage-and-full-field-remediation.md`.
+
 ### Phase 8D.1 - Downstream JSON/CSV Verification
 
 - Verified the existing Phase 7 downstream layer

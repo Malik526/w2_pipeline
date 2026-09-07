@@ -1499,6 +1499,62 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.1A - Annotation Coverage Audit, Ground-Truth Adapter Repair, and Full-Field Downstream Verification
+
+Full record: `docs/experiments/phase8d1a-annotation-coverage-and-full-field-remediation.md`.
+
+Phase 8D.1's downstream verification surfaced a real evaluation blind
+spot: the rendered W-2 visibly had a populated employer/employee
+address, a Box 12 entry, and state/local values, but canonical ground
+truth had them null. Root cause: an evaluation-adapter gap (the FUNSD
+annotations always had these values; `external_symage.py` never mapped
+them), the same pattern Phase 8A already found once for `employer.name`
+-- not a production-extraction gap, mostly.
+
+Repaired the ground-truth adapter (`EXTERNAL_ADAPTER_VERSION` bumped to
+`symage-w2.phase8d1a.v3`) to map employer/employee address, Box 12
+(entity-linking-based, code/amount paired by row position), and
+state/local. Built new production OCR-zone fallbacks for all four
+families in `parser_2026.py`, mirroring the existing federal-box/
+employer-name pattern. Found and fixed three real bugs along the way:
+two rotation-specific zone collisions (employee name bleeding into the
+address zone; Box 15's own label bleeding into its value), both fixed
+with positive content/shape matches, and an initial EIN-shaped
+assumption for state employer IDs that a full annotation sweep (114
+real values) proved wrong -- caught as a uniform 180/600 failure across
+all four variants by this phase's own benchmark, fixed with a general
+digit/separator shape match.
+
+**Expanded 600-document benchmark** (real, unmodified `run_pipeline_a.py`,
+repaired ground truth): **99.649% overall field accuracy**
+(25,829/25,920), 100% clean-render, 98.627% rotated. New-field accuracy
+98.2-98.7% for address, 100% for Box 12/state-local. 17 (document,
+variant) pairs still fail an address field (4 pre-existing
+`employer.name` residual, 13 new and rotation-concentrated) -- reported
+honestly, not chased further per the project's established
+fixed-zone-rotation-robustness lesson (Phase 8C.9).
+
+New `address_format` validation rule (USPS state code, ZIP format); Box
+12/state-local validity needed no new rule (pre-existing schema-generic
+rules already cover them). **Validator effectiveness measured, not
+assumed, under the expanded contract: unsafe acceptance is no longer
+0%** -- 2.17% overall, 7.33% on `rotated_png` (13/600 documents), all
+from fully-missing address extractions no current rule flags as
+suspicious. Surfaced as a real, immediate-follow-up-recommended gap, not
+closed this phase.
+
+Downstream JSON/CSV and the review-correction workflow needed **zero
+code changes** -- both already generically support the newly-populated
+field families, verified directly. Canonical field coverage matrix
+classifies all 54 canonical field paths. No historical Phase 8C/8D
+result artifact was overwritten; this phase's artifacts are new
+`phase8d1a_*` files.
+
+33 new tests; full suite: **573 tests passing, up from 564, zero
+regressions.** Decision: B/A hybrid -- substantially repaired, two
+residual gaps (rotation-variant address-extraction margin; the
+unsafe-acceptance validation gap) reported honestly.
+
 ### Phase 8D.1 - Downstream JSON/CSV Verification
 
 Full record: `docs/experiments/phase8d1-downstream-json-csv-verification.md`.
@@ -1697,9 +1753,17 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Future Phases (after Phase 8D.1)
+## Future Phases (after Phase 8D.1A)
 
 ```text
+Phase 8D.1B (recommended, not yet scoped) - close the unsafe-acceptance
+gap Phase 8D.1A surfaced: an evidence-calibrated validator signal for
+"address extraction produced nothing at all," analogous to how Phase
+8C.12 calibrated the checkbox validator, rather than a hasty bolt-on.
+Should happen before address fields are treated as production-
+trustworthy without human review. Optionally also close the ~13-document
+rotated_png address-extraction margin found in the same phase.
+
 Phase 8D.2 (not yet scoped, per the Phase 8D.1 brief) - end-user/
 operator walkthrough of the complete backend.
 

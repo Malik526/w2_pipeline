@@ -1,0 +1,88 @@
+{
+  "by_variant": {
+    "blurred_png": {
+      "accepted_documents": 150,
+      "automatic_acceptance_rate": 1.0,
+      "correct_accepted": 149,
+      "correct_documents": 149,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 1,
+      "erroneous_documents": 1,
+      "erroneous_routed_needs_review": 0,
+      "error_detection_recall": 0.0,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 0,
+      "review_queue_precision": null,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.006666666666666667
+    },
+    "compressed_jpeg": {
+      "accepted_documents": 150,
+      "automatic_acceptance_rate": 1.0,
+      "correct_accepted": 149,
+      "correct_documents": 149,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 1,
+      "erroneous_documents": 1,
+      "erroneous_routed_needs_review": 0,
+      "error_detection_recall": 0.0,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 0,
+      "review_queue_precision": null,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.006666666666666667
+    },
+    "external_clean_render": {
+      "accepted_documents": 150,
+      "automatic_acceptance_rate": 1.0,
+      "correct_accepted": 150,
+      "correct_documents": 150,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 0,
+      "erroneous_documents": 0,
+      "erroneous_routed_needs_review": 0,
+      "error_detection_recall": null,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 0,
+      "review_queue_precision": null,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.0
+    },
+    "rotated_png": {
+      "accepted_documents": 146,
+      "automatic_acceptance_rate": 0.9733333333333334,
+      "correct_accepted": 135,
+      "correct_documents": 135,
+      "correct_routed_needs_review": 0,
+      "erroneous_accepted": 11,
+      "erroneous_documents": 15,
+      "erroneous_routed_needs_review": 4,
+      "error_detection_recall": 0.26666666666666666,
+      "false_review_rate": 0.0,
+      "needs_review_documents": 4,
+      "review_queue_precision": 1.0,
+      "total_documents": 150,
+      "unsafe_acceptance_rate": 0.07333333333333333
+    }
+  },
+  "overall": {
+    "accepted_documents": 596,
+    "automatic_acceptance_rate": 0.9933333333333333,
+    "correct_accepted": 583,
+    "correct_documents": 583,
+    "correct_routed_needs_review": 0,
+    "erroneous_accepted": 13,
+    "erroneous_documents": 17,
+    "erroneous_routed_needs_review": 4,
+    "error_detection_recall": 0.23529411764705882,
+    "false_review_rate": 0.0,
+    "needs_review_documents": 4,
+    "review_queue_precision": 1.0,
+    "total_documents": 600,
+    "unsafe_acceptance_rate": 0.021666666666666667
+  },
+  "source_manifest": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "unsafe_acceptance_by_field_family": {
+    "address": 13
+  }
+}

@@ -1,0 +1,1178 @@
+{
+  "accuracy_by_route": {
+    "ocr": {
+      "correct_fields": 25829,
+      "documents": 600,
+      "field_accuracy": 0.9964891975308642,
+      "total_fields": 25920
+    }
+  },
+  "accuracy_by_variant": {
+    "blurred_png": {
+      "correct_fields": 6479,
+      "documents": 150,
+      "field_accuracy": 0.9998456790123457,
+      "total_fields": 6480
+    },
+    "compressed_jpeg": {
+      "correct_fields": 6479,
+      "documents": 150,
+      "field_accuracy": 0.9998456790123457,
+      "total_fields": 6480
+    },
+    "external_clean_render": {
+      "correct_fields": 6480,
+      "documents": 150,
+      "field_accuracy": 1.0,
+      "total_fields": 6480
+    },
+    "rotated_png": {
+      "correct_fields": 6391,
+      "documents": 150,
+      "field_accuracy": 0.9862654320987654,
+      "total_fields": 6480
+    }
+  },
+  "average_duration_seconds": 1.3496890600499378,
+  "benchmark_metadata": {
+    "git_commit": "14f385dbfaab48bab5178b5685889727ff573c09",
+    "ocr_backend": "paddleocr",
+    "ocr_configuration": {
+      "device": "gpu",
+      "lang": "en",
+      "use_doc_orientation_classify": false,
+      "use_doc_unwarping": false,
+      "use_textline_orientation": false
+    },
+    "pipeline_id": "pipeline_a",
+    "run_timestamp": "2026-09-07T01:24:18.031948+00:00",
+    "schema_version": 2026,
+    "source_datasets": [
+      "Symage/synthetic-us-forms-preview"
+    ],
+    "variant_filter": null,
+    "variant_scope": [
+      "blurred_png",
+      "compressed_jpeg",
+      "external_clean_render",
+      "rotated_png"
+    ]
+  },
+  "correct_fields": 25829,
+  "document_conditions": [
+    "blurred_png",
+    "compressed_jpeg",
+    "external_clean_render",
+    "rotated_png"
+  ],
+  "documents": 600,
+  "failed_documents": 0,
+  "failure_rate": 0.0,
+  "field_accuracy": 0.9964891975308642,
+  "field_failure_count": 91,
+  "field_failures": [
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "expected": "369 Pennsylvania Ave N",
+      "failure_kind": "mismatch",
+      "field_path": "employer.address.address_line_1",
+      "predicted": "369 Pennsylvania \u00c1ve N",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "blurred_png"
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "expected": "9992 S Jefferson St",
+      "failure_kind": "mismatch",
+      "field_path": "employer.address.address_line_1",
+      "predicted": "9992 \u0160 Jefferson St",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "34 Spring Creek Rd",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "Colorado Springs",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "80919",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "expected": "CO",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "9099 Zerex St",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "Colorado Springs",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "80949",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "CO",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "288 E-470",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "Grand Junction",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "81501",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "expected": "CO",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "8 Whitesburg Rd",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "Cumberland City",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "37050",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "expected": "TN",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "2861 Geneva Ponce De Leon Rd",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "Bartow",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "33830",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "FL",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "expected": "Elan Consulting Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "Elan Consulting Corp 2861 Geneva Ponce De Leon Rd",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "260 Grant St",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "East Vandergrift",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "15629",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "expected": "PA",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "363 N Main St",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "Cumberland Furnace",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "37051",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "TN",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "6878 Normandy Tullahoma Rd",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "Memphis",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "38132",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "TN",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "expected": "Bespoke Designs LLC",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "Bespoke Designs LLC 6878 Normandy Tullahoma Rd",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "736 Blenheim Hwy",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "North Charleston",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "29415",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "expected": "SC",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "660 S Loop 289",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "Corpus Christi",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "78416",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "expected": "TX",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "7551 Airport Expy",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "West Springfield",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "16443",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "expected": "PA",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "4 S Meridian St",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "Thompsons Station",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "37179",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "expected": "TN",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "875 Francis Case Memorial Brg",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "Washington",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "20203",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "DC",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "expected": "FutureReady Services",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "FutureReady Services 875 Francis Case Memorial Brg",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "840 Slide Rd",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "South Padre Island",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "78597",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "expected": "TX",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "6468 Lake Front Dr",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "Chenango Bridge",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "13745",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "expected": "NY",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "3086 Marina Fwy",
+      "failure_kind": "missing",
+      "field_path": "employee.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "Huntington Park",
+      "failure_kind": "missing",
+      "field_path": "employee.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employee.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "90255",
+      "failure_kind": "missing",
+      "field_path": "employee.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "expected": "CA",
+      "failure_kind": "missing",
+      "field_path": "employee.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "4522 Eastern Transportation Corridor",
+      "failure_kind": "missing",
+      "field_path": "employer.address.address_line_1",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "Cathedral City",
+      "failure_kind": "missing",
+      "field_path": "employer.address.city",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "US",
+      "failure_kind": "missing",
+      "field_path": "employer.address.country",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "92234",
+      "failure_kind": "missing",
+      "field_path": "employer.address.postal_code",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "CA",
+      "failure_kind": "missing",
+      "field_path": "employer.address.state",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "expected": "Global Insights Corp",
+      "failure_kind": "mismatch",
+      "field_path": "employer.name",
+      "predicted": "Global Insights Corp 4522 Eastern Transportation Corridor",
+      "route": "ocr",
+      "source_dataset": "Symage/synthetic-us-forms-preview",
+      "variant_id": "rotated_png"
+    }
+  ],
+  "per_field_accuracy": {
+    "box_12_entries[0].amount": {
+      "correct": 468,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 468
+    },
+    "box_12_entries[0].code": {
+      "correct": 468,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 468
+    },
+    "box_12_entries[1].amount": {
+      "correct": 192,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 192
+    },
+    "box_12_entries[1].code": {
+      "correct": 192,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 192
+    },
+    "box_13.retirement_plan": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "box_13.statutory_employee": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "box_13.third_party_sick_pay": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.address.address_line_1": {
+      "correct": 592,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 8,
+      "total": 600
+    },
+    "employee.address.city": {
+      "correct": 592,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 8,
+      "total": 600
+    },
+    "employee.address.country": {
+      "correct": 592,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 8,
+      "total": 600
+    },
+    "employee.address.postal_code": {
+      "correct": 592,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 8,
+      "total": 600
+    },
+    "employee.address.state": {
+      "correct": 592,
+      "field_accuracy": 0.9866666666666667,
+      "incorrect": 8,
+      "total": 600
+    },
+    "employee.first_name": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.last_name": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.middle_initial": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.ssn": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employee.suffix": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.address.address_line_1": {
+      "correct": 589,
+      "field_accuracy": 0.9816666666666667,
+      "incorrect": 11,
+      "total": 600
+    },
+    "employer.address.city": {
+      "correct": 591,
+      "field_accuracy": 0.985,
+      "incorrect": 9,
+      "total": 600
+    },
+    "employer.address.country": {
+      "correct": 591,
+      "field_accuracy": 0.985,
+      "incorrect": 9,
+      "total": 600
+    },
+    "employer.address.postal_code": {
+      "correct": 591,
+      "field_accuracy": 0.985,
+      "incorrect": 9,
+      "total": 600
+    },
+    "employer.address.state": {
+      "correct": 591,
+      "field_accuracy": 0.985,
+      "incorrect": 9,
+      "total": 600
+    },
+    "employer.control_number": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.ein": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "employer.name": {
+      "correct": 596,
+      "field_accuracy": 0.9933333333333333,
+      "incorrect": 4,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_10_dependent_care_benefits": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_11_nonqualified_plans": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_3_social_security_wages": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_7_social_security_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "federal_wages_and_taxes.box_8_allocated_tips": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.document_type": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.schema_version": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "metadata.tax_year": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "state_local_entries[0].box_15_employer_state_id_number": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "state_local_entries[0].box_15_state": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "state_local_entries[0].box_16_state_wages_tips_etc": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "state_local_entries[0].box_17_state_income_tax": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "state_local_entries[0].box_18_local_wages_tips_etc": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "state_local_entries[0].box_19_local_income_tax": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    },
+    "state_local_entries[0].box_20_locality_name": {
+      "correct": 600,
+      "field_accuracy": 1.0,
+      "incorrect": 0,
+      "total": 600
+    }
+  },
+  "pipeline_id": "pipeline_a",
+  "source_datasets": [
+    "Symage/synthetic-us-forms-preview"
+  ],
+  "successful_documents": 600,
+  "total_fields": 25920
+}

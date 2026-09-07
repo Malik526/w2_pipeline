@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 
+from w2_pipeline.contracts.w2 import Box12Entry
 from w2_pipeline.extraction.models import (
     AcquisitionRoute,
     BoundingBox,
@@ -843,10 +844,15 @@ def test_parser_recovers_employer_name_from_ocr_full_page_layout() -> None:
 
     assert warnings == []
     assert document.employer.name == "Timberline Trading Co."
-    # The fix is scoped to employer.name only; address recovery is a
-    # separate, out-of-scope gap (see the investigation doc's "Known
-    # Limitations") and must not silently start working as a side effect.
-    assert document.employer.address.address_line_1 is None
+    # Phase 8D.1A: employer.address recovery from the same Box c block
+    # (street on row 2, "City, ST ZIP" on row 3) -- previously an
+    # out-of-scope gap (see the investigation doc's "Known Limitations"),
+    # now a deliberate capability expansion using the exact same rows the
+    # employer.name fallback already reads.
+    assert document.employer.address.address_line_1 == "105 Penland St"
+    assert document.employer.address.city == "Murphy"
+    assert document.employer.address.state == "NC"
+    assert document.employer.address.postal_code == "28906"
     # Unrelated fields recovered by other mechanisms must not regress.
     assert document.employer.ein == "75-5696876"
     assert document.employee.ssn == "242-48-4959"
@@ -1242,3 +1248,365 @@ def test_compute_employer_name_observation_count_is_none_when_employer_name_is_n
 
     assert document.employer.name is None
     assert compute_employer_name_observation_count(document, observations) is None
+
+
+# --- Phase 8D.1A: employer/employee address, Box 12, state/local OCR fallbacks ---
+
+
+def _rotated_realistic_external_symage_900001_observations() -> list[TextObservation]:
+    """Real PaddleOCR output for the same symage_900001 document's 2deg
+    `rotated_png` variant (measured directly, the same way
+    `_realistic_external_symage_900001_observations` above documents its
+    own clean-render source) -- used specifically to reproduce two real
+    bugs found and fixed only under this variant's rotation-shifted ratio
+    positions: the employee name row bleeding into
+    `EMPLOYEE_ADDRESS_ZONE`, and Box 15's own printed label bleeding into
+    its value zone. Both collisions are real-measurement-derived, not
+    guessed coordinates, since Section 1 already showed how easily a
+    hand-picked pixel value can land just outside a zone boundary by a
+    single pixel.
+    """
+
+    return [
+        ocr_obs("a Employee's social security number", 655, 205, 495, 51),
+        ocr_obs("242-48-4959", 808, 259, 195, 41),
+        ocr_obs("b Employer identification number (EIN)", 178, 321, 516, 51),
+        ocr_obs("75-5696876", 686, 363, 183, 42),
+        ocr_obs("1 Wages, tips, other compensation", 1416, 282, 440, 46),
+        ocr_obs("$114,858.00", 1694, 327, 193, 45),
+        ocr_obs("2 Federal income tax withheld", 1923, 264, 415, 45),
+        ocr_obs("$21,930.26", 2221, 309, 176, 45),
+        ocr_obs("3 Social security wages", 1418, 387, 330, 40),
+        ocr_obs("$122,000.00", 1701, 427, 193, 45),
+        ocr_obs("4 Social security tax withheld", 1928, 364, 403, 46),
+        ocr_obs("$7,564.00", 2243, 408, 157, 46),
+        ocr_obs("5 Medicare wages and tips", 1420, 483, 376, 46),
+        ocr_obs("$122,000.00", 1705, 527, 192, 45),
+        ocr_obs("6 Medicare tax withheld", 1931, 466, 335, 44),
+        ocr_obs("$1,769.00", 2245, 508, 159, 48),
+        ocr_obs("e Employee's first name and initial", 197, 822, 460, 50),
+        ocr_obs("Steven D", 189, 882, 145, 42),
+        ocr_obs("Last name", 759, 815, 143, 35),
+        ocr_obs("Armstrong", 756, 865, 160, 41),
+        ocr_obs("13", 1419, 845, 43, 33),
+        ocr_obs("Retirement", 1626, 832, 108, 27),
+        ocr_obs("plan", 1626, 857, 49, 27),
+        # Anchors reproducing the real rotated document's full layout
+        # extent (max_x=2452, max_y=1674) -- omitting the page's footer
+        # text here would shrink `_layout_extent` and silently shift
+        # every zone-ratio calculation above, the same pitfall
+        # `_realistic_external_symage_900001_observations` (the clean-
+        # render fixture) already guards against for the same reason.
+        ocr_obs("Department of the Treasury—Internal Revenue Service", 1736, 1423, 716, 59),
+        ocr_obs("This information is being furnished to the Internal Revenue Service.", 200, 1606, 999, 68),
+    ]
+
+
+def _rotated_employee_address_observations() -> list[TextObservation]:
+    return [
+        ocr_obs("709 Mountain Island Hwy", 192, 944, 380, 49),
+        ocr_obs("Charlotte, NC 28273", 195, 984, 309, 44),
+    ]
+
+
+def _rotated_state_local_observations() -> list[TextObservation]:
+    return [
+        ocr_obs("15 State", 197, 1285, 116, 36),
+        ocr_obs("Employer's state ID number", 328, 1272, 373, 45),
+        ocr_obs("16 State wages, tips, etc.", 861, 1254, 343, 46),
+        ocr_obs("17 State income tax", 1220, 1244, 276, 41),
+        ocr_obs("NC", 226, 1332, 60, 41),
+        ocr_obs("35-6152316", 491, 1321, 184, 41),
+        ocr_obs("$114,858.00", 1011, 1302, 193, 45),
+        ocr_obs("$4,339.59", 1378, 1289, 157, 46),
+    ]
+
+
+def _employer_address_observations() -> list[TextObservation]:
+    return _employer_box_c_observations()
+
+
+def _employee_address_observations() -> list[TextObservation]:
+    return [
+        ocr_obs("709 Mountain Island Hwy", 163, 873, 380, 40),
+        ocr_obs("Charlotte, NC 28273", 164, 912, 310, 40),
+    ]
+
+
+def _box_12_observations() -> list[TextObservation]:
+    return [
+        ocr_obs("Code", 1906, 788, 20, 60),
+        ocr_obs("D", 1966, 804, 30, 40),
+        ocr_obs("$7,142.00", 2230, 804, 160, 40),
+        ocr_obs("12b", 1903, 856, 60, 30),
+        ocr_obs("Code", 1906, 888, 20, 60),
+        ocr_obs("$0.00", 2294, 901, 90, 40),
+    ]
+
+
+def _state_local_observations() -> list[TextObservation]:
+    return [
+        ocr_obs("15 State", 155, 1206, 115, 30),
+        ocr_obs("Employer's state ID number", 289, 1207, 370, 30),
+        ocr_obs("16 State wages, tips, etc.", 819, 1205, 340, 30),
+        ocr_obs("17 State income tax", 1178, 1204, 270, 30),
+        ocr_obs("NC", 181, 1252, 60, 40),
+        ocr_obs("35-6152316", 448, 1256, 180, 40),
+        ocr_obs("$114,858.00", 969, 1256, 190, 40),
+        ocr_obs("$4,339.59", 1335, 1255, 155, 40),
+    ]
+
+
+def test_parser_recovers_employer_address_from_ocr_full_page_layout() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            *_employer_address_observations(),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employer-address-fallback",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    address = document.employer.address
+    assert address.address_line_1 == "105 Penland St"
+    assert address.city == "Murphy"
+    assert address.state == "NC"
+    assert address.postal_code == "28906"
+    assert address.country == "US"
+
+
+def test_parser_recovers_employee_address_from_ocr_full_page_layout() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            *_employee_address_observations(),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employee-address-fallback",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    address = document.employee.address
+    assert address.address_line_1 == "709 Mountain Island Hwy"
+    assert address.city == "Charlotte"
+    assert address.state == "NC"
+    assert address.postal_code == "28273"
+    # Regression guard for the real bug found under this dataset's 2deg
+    # rotation variant: the employee's own name ("Steven D", printed just
+    # above this zone) must never be mistaken for the address.
+    assert "Steven" not in (address.address_line_1 or "")
+
+
+def test_parser_employee_address_fallback_excludes_employee_name_row() -> None:
+    """Direct regression test, from real measured rotated-variant OCR
+    output, for a genuine bug this phase found and fixed: under this
+    dataset's 2deg rotation, "Steven D" (Box e's name) sits at ratio y
+    0.527-0.552, just inside `EMPLOYEE_ADDRESS_ZONE`'s y0=0.53 boundary,
+    and was incorrectly recovered as `employee.address.address_line_1`
+    before `_make_employee_name_row_filter` was added."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_rotated_realistic_external_symage_900001_observations(),
+            *_rotated_employee_address_observations(),
+        ],
+    )
+
+    document, _warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="employee-address-name-collision",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert document.employee.first_name == "Steven"
+    assert document.employee.middle_initial == "D"
+    assert document.employee.address.address_line_1 == "709 Mountain Island Hwy"
+    assert document.employee.address.city == "Charlotte"
+
+
+def test_parser_recovers_box_12_single_entry_from_ocr_layout() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            *_box_12_observations(),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="box12-fallback",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.box_12_entries == [Box12Entry(code="D", amount=Decimal("7142.00"))]
+
+
+def test_parser_box_12_blank_code_with_amount_is_not_a_fabricated_entry() -> None:
+    """The 12b slot in `_box_12_observations` has an amount ("$0.00")
+    but no code observation at all -- must not become a Box12Entry."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            *_box_12_observations(),
+        ],
+    )
+
+    document, _warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="box12-blank-code",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert len(document.box_12_entries) == 1
+    assert document.box_12_entries[0].code == "D"
+
+
+def test_parser_recovers_box_12_multiple_entries_from_ocr_layout() -> None:
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        ocr_obs("Code", 1906, 788, 20, 60),
+        ocr_obs("D", 1966, 804, 30, 40),
+        ocr_obs("$8,089.00", 2230, 804, 160, 40),
+        ocr_obs("Code", 1906, 888, 20, 60),
+        ocr_obs("DD", 1960, 904, 40, 40),
+        ocr_obs("$2,994.37", 2230, 904, 160, 40),
+    ]
+
+    document, warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="box12-multi",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert document.box_12_entries == [
+        Box12Entry(code="D", amount=Decimal("8089.00")),
+        Box12Entry(code="DD", amount=Decimal("2994.37")),
+    ]
+
+
+def test_parser_recovers_state_local_entry_from_ocr_full_page_layout() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_realistic_external_symage_900001_observations(),
+            *_state_local_observations(),
+        ],
+    )
+
+    document, warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="state-local-fallback",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert warnings == []
+    assert len(document.state_local_entries) == 1
+    entry = document.state_local_entries[0]
+    assert entry.box_15_state == "NC"
+    assert entry.box_15_employer_state_id_number == "35-6152316"
+    assert entry.box_16_state_wages_tips_etc == Decimal("114858.00")
+    assert entry.box_17_state_income_tax == Decimal("4339.59")
+    assert entry.box_18_local_wages_tips_etc is None
+
+
+@pytest.mark.parametrize(
+    "state_id",
+    ["35-6152316", "754-9437-0", "12-762324", "184/509-390-309"],
+)
+def test_parser_recovers_non_ein_shaped_state_employer_id_formats(state_id: str) -> None:
+    """Real state employer IDs are not reliably EIN-shaped (`\\d{2}-\\d{7}`)
+    -- the annotation-coverage audit found real formats like `\\d{3}-\\d{4}-\\d{1}`
+    and even `\\d{3}/\\d{3}-\\d{3}-\\d{3}` across the 150 base documents, a gap
+    this phase's own expanded 600-document benchmark caught as a 180/600
+    "missing" failure (uniform across all four variants, so not a
+    rotation/OCR-quality issue) before `_STATE_ID_RE` was broadened to
+    replace the too-narrow initial `_EIN_RE` assumption."""
+
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        ocr_obs("15 State", 155, 1206, 115, 30),
+        ocr_obs("Employer's state ID number", 289, 1207, 370, 30),
+        ocr_obs("NC", 181, 1252, 60, 40),
+        ocr_obs(state_id, 448, 1256, 180, 40),
+    ]
+
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="state-id-format",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert document.state_local_entries[0].box_15_employer_state_id_number == state_id
+
+
+def test_parser_state_local_value_does_not_leak_printed_label() -> None:
+    """Direct regression test, from real measured rotated-variant OCR
+    output, for a genuine bug this phase found and fixed: under this
+    dataset's 2deg rotation, Box 15's own printed label ("15 State") sits
+    close enough above its value that `_zone_text` (which joins every
+    observation found anywhere in a zone) previously produced
+    "15 State NC" instead of "NC" -- `_STATE_CODE_RE`'s positive shape
+    match fixes this by construction rather than by tightening an
+    already-tight zone boundary."""
+
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=[
+            *_rotated_realistic_external_symage_900001_observations(),
+            *_rotated_state_local_observations(),
+        ],
+    )
+
+    document, _warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="state-local-label-leak",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    entry = document.state_local_entries[0]
+    assert entry.box_15_state == "NC"
+    assert entry.box_15_employer_state_id_number == "35-6152316"
+    assert entry.box_16_state_wages_tips_etc == Decimal("114858.00")
+    assert entry.box_17_state_income_tax == Decimal("4339.59")
+
+
+def test_parser_state_local_no_observations_yields_no_entries() -> None:
+    observation_set = ObservationSet(
+        route=AcquisitionRoute.OCR,
+        observations=_realistic_external_symage_900001_observations(),
+    )
+
+    document, _warnings = parse_w2_2026_observations(
+        observation_set,
+        document_id="state-local-absent",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    assert document.state_local_entries == []

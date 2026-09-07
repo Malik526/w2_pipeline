@@ -7,7 +7,7 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from w2_pipeline.contracts.w2 import W2Document
+from w2_pipeline.contracts.w2 import Box12Entry, W2Document
 from w2_pipeline.evaluation.external_symage import (
     HF_DATASET_NAME,
     SYMAGE_W2_FORM_ID,
@@ -132,18 +132,22 @@ def test_external_adapter_splits_box_e_first_name_and_initial_variants(
     assert result.document.employee.middle_initial == expected_initial
 
 
-def test_external_adapter_does_not_map_employer_address_lines() -> None:
-    """Phase 8A scope: only employer.name is mapped from the combined Box c
-    answer. The address/city-state-ZIP lines remain unmapped -- Phase 6B
-    established employer.address has its own, separate, unresolved
-    extraction gap, and expanding ground-truth coverage to it is
-    explicitly out of scope for this task."""
+def test_external_adapter_maps_employer_address_lines() -> None:
+    """Phase 8D.1A: the combined Box c answer's 2nd/3rd lines (street,
+    "City, ST ZIP") are now mapped to employer.address -- the
+    annotation-coverage audit found this was an evaluation-adapter gap
+    (Phase 6B/8A had left it unmapped as then-out-of-scope), not a
+    missing annotation."""
 
     result = SymageW2Adapter().build_ground_truth(sample_record())
 
-    assert result.document.employer.address.address_line_1 is None
-    assert result.document.employer.address.city is None
-    assert "employer.address.address_line_1" not in result.evaluated_field_paths
+    assert result.document.employer.address.address_line_1 == "105 Penland St"
+    assert result.document.employer.address.city == "Murphy"
+    assert result.document.employer.address.state == "NC"
+    assert result.document.employer.address.postal_code == "28906"
+    assert result.document.employer.address.country == "US"
+    assert "employer.address.address_line_1" in result.evaluated_field_paths
+    assert "employer.address.city" in result.evaluated_field_paths
 
 
 def test_external_adapter_maps_multiword_employer_name_with_punctuation() -> None:
@@ -186,6 +190,168 @@ def test_external_adapter_does_not_map_employer_name_when_question_unlinked() ->
 
     assert result.document.employer.name is None
     assert "employer.name" not in result.evaluated_field_paths
+
+
+# --- Phase 8D.1A: employee.address, box_12_entries, state_local_entries ---
+
+
+def _full_coverage_record() -> dict:
+    """A `sample_record()` extended with the field families Phase 8D.1A
+    added: Box f (employee address), two Box 12 code/amount slots (one
+    populated with a blank-code "$0.00" artifact -- confirmed a real
+    pattern in the annotation-coverage audit -- one genuinely populated),
+    and one state/local row. Geometry (`box`) matches real relative
+    top-to-bottom ordering so `_extract_box_12_entries`'s row-order
+    sort behaves the same way it does on real documents."""
+
+    record = sample_record()
+    form = json.loads(record["funsd_json"])
+    form.extend(
+        [
+            _entity(20, "Employee's address and ZIP code", "question", [[20, 21]]),
+            _entity(21, "709 Mountain Island Hwy\nCharlotte, NC 28273", "answer"),
+            _entity(22, "Code", "question", [[22, 23]], ),
+            _entity(23, "", "answer"),
+            _entity(24, "Code", "question", [[24, 25]]),
+            _entity(25, "DD", "answer"),
+            _entity(26, "See instructions for box 12", "question", [[26, 27], [26, 28]]),
+            _entity(27, "$0.00", "answer"),
+            _entity(28, "$2,994.37", "answer"),
+            _entity(29, "State", "question", [[29, 30]]),
+            _entity(30, "NC", "answer"),
+            _entity(31, "Employer's state ID number", "question", [[31, 32]]),
+            _entity(32, "35-6152316", "answer"),
+            _entity(33, "State wages, tips, etc.", "question", [[33, 34]]),
+            _entity(34, "$114,858.00", "answer"),
+            _entity(35, "State income tax", "question", [[35, 36]]),
+            _entity(36, "$4,339.59", "answer"),
+        ]
+    )
+    # Geometric row order for the two "Code" questions: entity 22 (blank)
+    # above entity 24 (DD), matching the 12a-then-12b top-to-bottom shape
+    # `_extract_box_12_entries` sorts by.
+    for entity in form:
+        if entity["id"] == 22:
+            entity["box"] = [0, 100, 10, 110]
+        elif entity["id"] == 24:
+            entity["box"] = [0, 200, 10, 210]
+    record["funsd_json"] = json.dumps(form)
+    return record
+
+
+def test_external_adapter_maps_employee_address() -> None:
+    result = SymageW2Adapter().build_ground_truth(_full_coverage_record())
+
+    address = result.document.employee.address
+    assert address.address_line_1 == "709 Mountain Island Hwy"
+    assert address.city == "Charlotte"
+    assert address.state == "NC"
+    assert address.postal_code == "28273"
+    assert address.country == "US"
+    assert "employee.address.address_line_1" in result.evaluated_field_paths
+    assert "employee.address.postal_code" in result.evaluated_field_paths
+
+
+def test_external_adapter_maps_box_12_second_slot_only() -> None:
+    """The first Code slot is blank with only a "$0.00" placeholder
+    amount -- not a valid Box12Entry (the schema requires a code) -- so
+    only the second, genuinely-coded slot should be emitted."""
+
+    result = SymageW2Adapter().build_ground_truth(_full_coverage_record())
+
+    assert result.document.box_12_entries == [Box12Entry(code="DD", amount=Decimal("2994.37"))]
+    # Index-qualified paths (compare_w2_documents uses these as literal
+    # flatten_w2_document lookup keys -- a bare "box_12_entries" is never
+    # produced by flattening and would score as an automatic failure).
+    assert "box_12_entries[0].code" in result.evaluated_field_paths
+    assert "box_12_entries[0].amount" in result.evaluated_field_paths
+    assert "box_12_entries[1].code" not in result.evaluated_field_paths
+
+
+def test_external_adapter_maps_box_12_multiple_real_entries() -> None:
+    record = _full_coverage_record()
+    form = json.loads(record["funsd_json"])
+    next(entity for entity in form if entity["id"] == 23)["text"] = "D"
+    next(entity for entity in form if entity["id"] == 27)["text"] = "$7,142.00"
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert result.document.box_12_entries == [
+        Box12Entry(code="D", amount=Decimal("7142.00")),
+        Box12Entry(code="DD", amount=Decimal("2994.37")),
+    ]
+
+
+def test_external_adapter_box_12_all_slots_blank_yields_no_entries() -> None:
+    record = _full_coverage_record()
+    form = json.loads(record["funsd_json"])
+    next(entity for entity in form if entity["id"] == 25)["text"] = ""
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert result.document.box_12_entries == []
+    assert not any(path.startswith("box_12_entries[") for path in result.evaluated_field_paths)
+
+
+def test_external_adapter_maps_state_local_entry() -> None:
+    result = SymageW2Adapter().build_ground_truth(_full_coverage_record())
+
+    entries = result.document.state_local_entries
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.box_15_state == "NC"
+    assert entry.box_15_employer_state_id_number == "35-6152316"
+    assert entry.box_16_state_wages_tips_etc == Decimal("114858.00")
+    assert entry.box_17_state_income_tax == Decimal("4339.59")
+    assert entry.box_18_local_wages_tips_etc is None
+    assert entry.box_19_local_income_tax is None
+    # Index-qualified paths, same reasoning as Box 12 above; every
+    # state/local sub-field is scored even when null, since the question
+    # itself is present on every document (unlike Box 12's per-slot
+    # presence, which is itself the ground-truth signal).
+    assert "state_local_entries[0].box_15_state" in result.evaluated_field_paths
+    assert "state_local_entries[0].box_18_local_wages_tips_etc" in result.evaluated_field_paths
+
+
+def test_external_adapter_state_local_missing_employer_id_still_maps_rest() -> None:
+    """Confirmed a real pattern (114/150 base documents in the
+    annotation-coverage audit have a blank employer state ID): a missing
+    optional piece must not block the rest of the row."""
+
+    record = _full_coverage_record()
+    form = json.loads(record["funsd_json"])
+    next(entity for entity in form if entity["id"] == 32)["text"] = ""
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    entry = result.document.state_local_entries[0]
+    assert entry.box_15_employer_state_id_number is None
+    assert entry.box_15_state == "NC"
+
+
+def test_external_adapter_no_state_local_questions_yields_no_entries() -> None:
+    result = SymageW2Adapter().build_ground_truth(sample_record())
+
+    assert result.document.state_local_entries == []
+    assert not any(path.startswith("state_local_entries[") for path in result.evaluated_field_paths)
+
+
+def test_external_adapter_employee_address_missing_second_line_maps_street_only() -> None:
+    record = _full_coverage_record()
+    form = json.loads(record["funsd_json"])
+    next(entity for entity in form if entity["id"] == 21)["text"] = "709 Mountain Island Hwy"
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    address = result.document.employee.address
+    assert address.address_line_1 == "709 Mountain Island Hwy"
+    assert address.city is None
+    assert "employee.address.address_line_1" in result.evaluated_field_paths
+    assert "employee.address.city" not in result.evaluated_field_paths
 
 
 def test_first_line_of_combined_answer_is_a_pure_string_function() -> None:

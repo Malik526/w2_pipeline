@@ -31,7 +31,7 @@ from __future__ import annotations
 from decimal import Decimal
 import re
 
-from w2_pipeline.contracts.w2 import Box12Entry, StateLocalEntry, W2Document
+from w2_pipeline.contracts.w2 import Address, Box12Entry, StateLocalEntry, W2Document
 from w2_pipeline.validation.models import (
     ExtractionOutcome,
     ExtractionSignals,
@@ -47,6 +47,22 @@ SUPPORTED_DOCUMENT_TYPE = "W-2"
 _SSN_RE = re.compile(r"^\d{3}-\d{2}-\d{4}$")
 _EIN_RE = re.compile(r"^\d{2}-\d{7}$")
 _BOX_12_CODE_RE = re.compile(r"^[A-Z]{1,2}$")
+_ZIP_RE = re.compile(r"^\d{5}(-\d{4})?$")
+
+# Phase 8D.1A: the 50 states, DC, and the USPS territories/military codes
+# a real W-2 address can legitimately carry -- a fixed, documented
+# structural list (USPS Publication 28's own two-letter abbreviation
+# table), not fit to this benchmark's own observed values.
+_VALID_ADDRESS_STATE_CODES = frozenset(
+    {
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "DC", "AS", "GU", "MP", "PR", "VI", "AA", "AE", "AP",
+    }
+)
 
 # Phase 8C.8: promotes the Phase 8C.5 address-leak heuristic's winning
 # candidate (`contains_street_number AND contains_road_suffix`, expanded
@@ -125,6 +141,7 @@ ALL_RULE_NAMES = (
     "ein_format",
     "employer_name_address_leak",
     "employer_name_layout_anomaly",
+    "address_format",
     "retirement_plan_checkbox_evidence",
     "core_wage_tax_fields_required",
     "monetary_fields_valid",
@@ -151,6 +168,7 @@ def run_all_rules(document: W2Document, signals: ExtractionSignals) -> list[Vali
     issues.extend(_check_ein_format(document))
     issues.extend(_check_employer_name_address_leak(document))
     issues.extend(_check_employer_name_layout_anomaly(document, signals))
+    issues.extend(_check_address_format(document))
     issues.extend(_check_retirement_plan_checkbox_evidence(signals))
     issues.extend(_check_core_wage_tax_fields_required(document))
     issues.extend(_check_monetary_fields_valid(document))
@@ -343,6 +361,56 @@ def _check_employer_name_layout_anomaly(
             metadata={"observation_count": count},
         )
     ]
+
+
+def _check_address_format(document: W2Document) -> list[ValidationIssue]:
+    """Structural plausibility for `employer.address`/`employee.address`
+    (Phase 8D.1A, newly populated by the promoted OCR address fallbacks):
+    a two-letter USPS state/territory code and a 5-digit or ZIP+4 postal
+    code, the same "format, not content" scope SSN/EIN format checks
+    already have. Deliberately narrow: city-emptiness and address/label-
+    leak checks were considered (see the phase's brief) but not added --
+    this benchmark's real addresses are OCR-recovered from a single
+    unlabeled block with no annotated examples of either failure mode to
+    calibrate against, so adding them now would be exactly the kind of
+    unevidenced threshold the rest of this module avoids.
+    """
+
+    issues: list[ValidationIssue] = []
+    issues.extend(_address_format_issues(document.employer.address, "employer.address"))
+    issues.extend(_address_format_issues(document.employee.address, "employee.address"))
+    return issues
+
+
+def _address_format_issues(address: Address, field_prefix: str) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    if address.state is not None and address.state not in _VALID_ADDRESS_STATE_CODES:
+        issues.append(
+            ValidationIssue(
+                code="invalid_address_state_format",
+                field_path=f"{field_prefix}.state",
+                severity=ValidationSeverity.ERROR,
+                message=(
+                    f"{field_prefix}.state {address.state!r} is not a recognized USPS "
+                    "two-letter state/territory code."
+                ),
+                observed_value=address.state,
+            )
+        )
+    if address.postal_code is not None and not _ZIP_RE.match(address.postal_code):
+        issues.append(
+            ValidationIssue(
+                code="invalid_address_postal_code_format",
+                field_path=f"{field_prefix}.postal_code",
+                severity=ValidationSeverity.ERROR,
+                message=(
+                    f"{field_prefix}.postal_code {address.postal_code!r} does not match the "
+                    "expected 5-digit or ZIP+4 format."
+                ),
+                observed_value=address.postal_code,
+            )
+        )
+    return issues
 
 
 def _check_retirement_plan_checkbox_evidence(signals: ExtractionSignals) -> list[ValidationIssue]:

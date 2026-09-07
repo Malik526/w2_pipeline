@@ -53,6 +53,72 @@ _STATE_LOCAL_RE = re.compile(
 # duplicated literal.
 EMPLOYER_NAME_ZONE: tuple[float, float, float, float] = (0.04, 0.35, 0.25, 0.33)
 
+# Phase 8D.1A: Box c's combined block is name + street + "City, ST ZIP",
+# three lines -- `EMPLOYER_NAME_ZONE` above only needs to stretch far
+# enough to catch the topmost (name) line, but address recovery needs all
+# three. `_row_texts_in_zone`'s address-only callers use this taller
+# zone instead of widening `EMPLOYER_NAME_ZONE` itself (which is also
+# reused as-is by earlier phases' employer.name path and 8C.8's
+# `compute_employer_name_observation_count` -- touching its bounds would
+# risk perturbing already-benchmarked behavior for a field this phase
+# does not need to change). Calibrated against a rotated real document,
+# where the block's ratio position shifts measurably (0.29-0.37 vs.
+# 0.25-0.34 on the clean render) yet stays well clear of Box d ("Control
+# number", ratio ~0.46) either way.
+EMPLOYER_ADDRESS_ZONE: tuple[float, float, float, float] = (0.04, 0.35, 0.25, 0.39)
+
+# The real 2026 W-2 form's Box f ("Employee's address and ZIP code") is
+# the same kind of unlabeled, position-only block as Box c -- street
+# address on one line, "City, ST ZIP" on the next -- calibrated the same
+# way (against `_layout_extent`, not raw image pixels) from real
+# PaddleOCR observations on the external Symage clean render. Box e's
+# name row sits close enough above this zone that a small rotation-
+# induced ratio shift can pull the name row inside it too (observed
+# directly: "Steven D" at ratio y 0.527-0.552 under this dataset's 2deg
+# rotation vs. this zone's y0=0.53) -- `_looks_like_employee_name_row`
+# below guards against that specifically, since tightening the zone
+# boundary further would just move the same collision to a different
+# rotation angle.
+EMPLOYEE_ADDRESS_ZONE: tuple[float, float, float, float] = (0.04, 0.30, 0.53, 0.61)
+
+# Box 12's four code/amount slots (12a-12d): the code letter and its
+# amount sit in two distinct columns, calibrated the same way. Paired by
+# nearest row (vertical center), not list position -- a blank code slot
+# prints no OCR observation at all (unlike a blank amount slot, which
+# still prints "$0.00"), so index-based zipping would misalign slots
+# once any code is missing.
+BOX_12_CODE_ZONE: tuple[float, float, float, float] = (0.78, 0.87, 0.44, 0.76)
+BOX_12_AMOUNT_ZONE: tuple[float, float, float, float] = (0.90, 1.00, 0.44, 0.76)
+_BOX_12_CODE_TOKEN_RE = re.compile(r"^[A-Z]{1,2}$")
+_STATE_CODE_RE = re.compile(r"^[A-Z]{2}$")
+_STATE_ID_RE = re.compile(r"^\d+(?:[/-]\d+)+$")
+
+# Boxes 15-20 print their own box-number label directly in OCR text
+# ("15 State", "16 State wages, tips, etc.", ...), unlike Box c/f -- so
+# each value sits in its own fixed zone the same way Boxes 1-11 already
+# do in `_apply_ocr_federal_layout_fallbacks`, rather than needing
+# row-grouping. Local wages/tax/locality (18-20) are calibrated from the
+# same real document even though this dataset never populates them
+# (0/150 in the annotation-coverage audit), so a real-world document that
+# does populate them is still handled.
+_STATE_LOCAL_VALUE_ZONES: dict[str, tuple[float, float, float, float]] = {
+    "box_15_state": (0.055, 0.125, 0.77, 0.83),
+    "box_15_employer_state_id_number": (0.155, 0.285, 0.77, 0.83),
+    "box_16_state_wages_tips_etc": (0.365, 0.50, 0.77, 0.83),
+    "box_17_state_income_tax": (0.53, 0.635, 0.77, 0.83),
+    "box_18_local_wages_tips_etc": (0.615, 0.79, 0.77, 0.835),
+    "box_19_local_income_tax": (0.765, 0.91, 0.77, 0.835),
+    "box_20_locality_name": (0.90, 1.00, 0.77, 0.835),
+}
+_STATE_LOCAL_MONEY_FIELDS = frozenset(
+    {
+        "box_16_state_wages_tips_etc",
+        "box_17_state_income_tax",
+        "box_18_local_wages_tips_etc",
+        "box_19_local_income_tax",
+    }
+)
+
 _FEDERAL_MONEY_FIELDS = {
     1: "box_1_wages_tips_other_compensation",
     2: "box_2_federal_income_tax_withheld",
@@ -99,9 +165,13 @@ def parse_w2_2026_observations(
     if _has_ocr_observations(observations):
         federal = _apply_ocr_federal_layout_fallbacks(federal, observations, warnings)
     box_12_entries = _parse_box_12(lines, warnings)
+    if not box_12_entries and _has_ocr_observations(observations):
+        box_12_entries = _apply_ocr_box_12_layout_fallback(observations, warnings)
     box_13 = _parse_box_13(lines, observations, observation_set.box_13_visual_marks)
     box_14_entries, tipped_codes = _parse_box_14(lines, warnings)
     state_local_entries = _parse_state_local(lines, warnings)
+    if not state_local_entries and _has_ocr_observations(observations):
+        state_local_entries = _apply_ocr_state_local_layout_fallback(observations, warnings)
 
     document = W2Document(
         metadata=W2Metadata(
@@ -360,7 +430,77 @@ def _apply_ocr_employee_layout_fallbacks(
             (0.50, 0.58, 0.505, 0.555),
             discard_tiny_artifacts=True,
         )
+    if employee.address.address_line_1 is None:
+        skip_name_row = _make_employee_name_row_filter(
+            first_name=updates.get("first_name", employee.first_name),
+            middle_initial=updates.get("middle_initial", employee.middle_initial),
+            last_name=updates.get("last_name", employee.last_name),
+            suffix=updates.get("suffix", employee.suffix),
+        )
+        address_update = _address_from_two_line_block(
+            _row_texts_in_zone(observations, EMPLOYEE_ADDRESS_ZONE, skip_row=skip_name_row),
+            employee.address,
+        )
+        if address_update is not None:
+            updates["address"] = address_update
     return employee.model_copy(update=updates)
+
+
+def _make_employee_name_row_filter(
+    *,
+    first_name: str | None,
+    middle_initial: str | None,
+    last_name: str | None,
+    suffix: str | None,
+) -> Callable[[str], bool]:
+    """Build a `skip_row` predicate excluding rows that are the employee's
+    own name, not their address (Phase 8D.1A).
+
+    Box e's name row sits close enough above `EMPLOYEE_ADDRESS_ZONE` that
+    a small rotation-induced ratio shift can pull it inside that zone
+    too (see the zone's own docstring) -- filtering by the name value
+    already resolved elsewhere in this same function is more robust
+    than trying to tighten a zone boundary that is already this tight in
+    the non-rotated case.
+    """
+
+    name_rows = {
+        normalized
+        for normalized in (
+            " ".join(part for part in (first_name, middle_initial) if part),
+            last_name,
+            suffix,
+        )
+        if normalized
+    }
+    normalized_name_rows = {value.strip().casefold() for value in name_rows}
+
+    def skip_row(row_text: str) -> bool:
+        return row_text.strip().casefold() in normalized_name_rows
+
+    return skip_row
+
+
+def _address_from_two_line_block(rows: list[str], existing: Address) -> Address | None:
+    """Build an `Address` update from a street-line + "City, ST ZIP"-line
+    block (Phase 8D.1A) -- the shape Box f (employee) always uses, and
+    Box c (employer) uses starting from its second line. `None` when the
+    block has fewer than two rows (nothing safely parseable), never a
+    partially-fabricated address."""
+
+    if len(rows) < 2:
+        return None
+    street, city_state_zip = rows[0], rows[1]
+    city, state, postal_code = _parse_city_state_zip(city_state_zip)
+    return existing.model_copy(
+        update={
+            "address_line_1": _empty_to_none(street),
+            "city": city,
+            "state": state,
+            "postal_code": postal_code,
+            "country": "US" if (city or state or postal_code) else existing.country,
+        }
+    )
 
 
 def _apply_ocr_employer_layout_fallbacks(
@@ -398,6 +538,17 @@ def _apply_ocr_employer_layout_fallbacks(
             EMPLOYER_NAME_ZONE,
             skip_row=_looks_like_employer_name_label_row,
         )
+    if employer.address.address_line_1 is None:
+        # `EMPLOYER_ADDRESS_ZONE` (taller than `EMPLOYER_NAME_ZONE`) to
+        # reliably catch all three Box c lines -- see its own docstring
+        # for why this is a separate zone rather than widening
+        # `EMPLOYER_NAME_ZONE` itself.
+        rows = _row_texts_in_zone(
+            observations, EMPLOYER_ADDRESS_ZONE, skip_row=_looks_like_employer_name_label_row
+        )
+        address_update = _address_from_two_line_block(rows[1:], employer.address)
+        if address_update is not None:
+            updates["address"] = address_update
     return employer.model_copy(update=updates) if updates else employer
 
 
@@ -456,6 +607,129 @@ def _apply_ocr_box_13_layout_fallbacks(
             or _has_checkbox_mark(observations, (0.715, 0.770, 0.535, 0.585)),
         }
     )
+
+
+def _apply_ocr_box_12_layout_fallback(
+    observations: list[TextObservation],
+    warnings: list[ExtractionWarning],
+) -> list[Box12Entry]:
+    """OCR full-page zone fallback for Box 12 (Phase 8D.1A).
+
+    The real 2026 W-2 form (and external Symage renders) print Box 12's
+    code and amount in two separate columns with no literal "12 D: ..."
+    text for the label-based primary path (`_parse_box_12`) to match --
+    the same "positional block, not literal label text" shape as Box c/f.
+    Each of the four slots (12a-12d) prints its amount even when empty
+    ("$0.00"), but prints no code observation at all when the slot has no
+    code -- so slots are paired by nearest row (vertical center), not by
+    list position, and a slot is only emitted when a real code is found:
+    an amount with no matching code is a blank-slot artifact, not a Box
+    12 entry (the canonical schema requires a code).
+    """
+
+    if not _looks_like_full_page_ocr_form(observations):
+        return []
+
+    _, max_y = _layout_extent(observations)
+    row_tolerance = 0.05 * max_y
+    code_observations = [
+        observation
+        for observation in _observations_in_zone(observations, BOX_12_CODE_ZONE)
+        if _BOX_12_CODE_TOKEN_RE.match(observation.text.strip())
+    ]
+    amount_observations = _observations_in_zone(observations, BOX_12_AMOUNT_ZONE)
+
+    entries: list[Box12Entry] = []
+    for code_observation in sorted(code_observations, key=_vertical_center):
+        code_center = _vertical_center(code_observation)
+        candidate_amounts = [
+            observation
+            for observation in amount_observations
+            if abs(_vertical_center(observation) - code_center) <= row_tolerance
+        ]
+        if not candidate_amounts:
+            continue
+        amount_observation = min(
+            candidate_amounts, key=lambda observation: abs(_vertical_center(observation) - code_center)
+        )
+        amount_text = amount_observation.text.strip()
+        if not (any(separator in amount_text for separator in ("$", ",", ".")) and _MONEY_RE.match(amount_text)):
+            continue
+        try:
+            amount = parse_money(amount_text, field_path="box_12_entries.amount")
+        except ValueError as exc:
+            warnings.append(ExtractionWarning(field_path="box_12_entries.amount", message=str(exc)))
+            continue
+        if amount is None:
+            continue
+        entries.append(Box12Entry(code=code_observation.text.strip(), amount=amount))
+    return entries
+
+
+def _apply_ocr_state_local_layout_fallback(
+    observations: list[TextObservation],
+    warnings: list[ExtractionWarning],
+) -> list[StateLocalEntry]:
+    """OCR full-page zone fallback for Boxes 15-20 (Phase 8D.1A).
+
+    Unlike Box c/f/12, Boxes 15-20 print their own box-number label
+    directly in OCR text ("15 State", "16 State wages, tips, etc.", ...),
+    so each value sits in one fixed zone -- the same pattern
+    `_apply_ocr_federal_layout_fallbacks` already uses for Boxes 1-11,
+    just with a hardcoded per-box zone instead of a label lookup, since
+    the label and value are two distinct printed elements here (unlike
+    boxes 1-11's single "N label: value"-shaped internal-format line).
+    This dataset's own annotation-coverage audit found exactly one
+    state/local row per document (never more), so this always emits at
+    most one `StateLocalEntry`.
+    """
+
+    if not _looks_like_full_page_ocr_form(observations):
+        return []
+
+    fields: dict[str, object] = {}
+    for field_name, zone in _STATE_LOCAL_VALUE_ZONES.items():
+        if field_name in _STATE_LOCAL_MONEY_FIELDS:
+            value_text = _first_money_text_in_zone(observations, zone)
+            if value_text is None:
+                continue
+            field_path = f"state_local_entries.{field_name}"
+            try:
+                fields[field_name] = parse_money(value_text, field_path=field_path)
+            except ValueError as exc:
+                warnings.append(ExtractionWarning(field_path=field_path, message=str(exc)))
+        elif field_name == "box_15_state":
+            # Box 15's own printed label ("15 State") sits close enough
+            # above its value that a small rotation-induced ratio shift
+            # can pull the label into this zone alongside the real value
+            # (the same collision class as `EMPLOYEE_ADDRESS_ZONE`'s,
+            # observed directly under this dataset's 2deg rotation) -- a
+            # positive shape match (a bare 2-letter state code) sidesteps
+            # it entirely rather than fighting over the zone boundary.
+            fields[field_name] = _first_regex_text_in_zone(observations, _STATE_CODE_RE, zone)
+        elif field_name == "box_15_employer_state_id_number":
+            # Same collision class as box_15_state. A state employer ID
+            # is NOT reliably EIN-shaped -- an initial implementation
+            # assumed `_EIN_RE` from a handful of spot-checked samples,
+            # but the annotation-coverage audit's full sweep of all 114
+            # non-blank values across the 150 base documents found real
+            # state-specific formats `_EIN_RE` misses entirely
+            # (`\d{3}-\d{6}`, `\d{3}-\d{4}-\d{1}`, even
+            # `\d{3}/\d{3}-\d{3}-\d{3}`) -- caught as a 180/600 "missing"
+            # gap in this phase's own expanded 600-document benchmark
+            # before being fixed here, not assumed correct. `_STATE_ID_RE`
+            # matches all 114 real values with no false-positive risk
+            # against nearby label/dollar text (neither contains only
+            # digits/dashes/slashes).
+            fields[field_name] = _first_regex_text_in_zone(observations, _STATE_ID_RE, zone)
+        else:
+            value_text = _zone_text(observations, zone)
+            if value_text is not None:
+                fields[field_name] = value_text
+
+    if not any(value is not None for value in fields.values()):
+        return []
+    return [StateLocalEntry(**fields)]
 
 
 def _has_ocr_observations(observations: list[TextObservation]) -> bool:
@@ -546,19 +820,37 @@ def _first_row_text_in_zone(
     docs/experiments/phase8c1-employer-name-rotation-remediation.md.
     """
 
+    for row_text in _row_texts_in_zone(observations, zone, skip_row=skip_row):
+        return row_text
+    return None
+
+
+def _row_texts_in_zone(
+    observations: list[TextObservation],
+    zone: tuple[float, float, float, float],
+    *,
+    skip_row: Callable[[str], bool] | None = None,
+) -> list[str]:
+    """Every printed line within a zone, top-to-bottom, tokens joined
+    left-to-right -- the multi-row generalization of `_first_row_text_in_zone`
+    (Phase 8D.1A), for zones whose answer spans several lines the caller
+    needs individually (e.g. Box c's name/street/city-state-ZIP block),
+    rather than only the first."""
+
     zone_observations = _observations_in_zone(observations, zone)
     if not zone_observations:
-        return None
+        return []
     ordered_rows = sorted(
         _group_observation_rows(zone_observations),
         key=lambda row: min(_vertical_center(observation) for observation in row),
     )
+    row_texts: list[str] = []
     for row in ordered_rows:
         tokens = [text for observation in row if (text := observation.text.strip())]
         row_text = " ".join(tokens)
         if row_text and (skip_row is None or not skip_row(row_text)):
-            return row_text
-    return None
+            row_texts.append(row_text)
+    return row_texts
 
 
 _EMPLOYER_NAME_LABEL_MARKERS = ("employer", "zip code")
@@ -817,7 +1109,11 @@ def _parse_city_state_zip(value: str) -> tuple[str | None, str | None, str | Non
         return None, None, None
     postal_code = parts[-1]
     state = parts[-2]
-    city = " ".join(parts[:-2])
+    # The internal synthetic generator's "City/State/ZIP" line has no
+    # comma ("Springfield IL 62704"); the real W-2 form (and the external
+    # Symage renders replicating it) prints "City, ST ZIP" -- strip a
+    # trailing comma from the city so both formats parse the same way.
+    city = " ".join(parts[:-2]).rstrip(",")
     return city or None, state or None, postal_code or None
 
 

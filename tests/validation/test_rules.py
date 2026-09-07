@@ -197,6 +197,95 @@ def test_populated_state_local_entry_not_flagged_empty(happy_path_document: W2Do
     assert "empty_entry" not in codes
 
 
+# --- Phase 8D.1A: employer/employee address format ------------------------
+
+
+def test_valid_address_not_flagged(happy_path_document: W2Document) -> None:
+    document = happy_path_document.model_copy(
+        update={
+            "employer": happy_path_document.employer.model_copy(
+                update={
+                    "address": happy_path_document.employer.address.model_copy(
+                        update={"state": "NC", "postal_code": "28906"}
+                    )
+                }
+            )
+        }
+    )
+
+    codes = _issue_codes(document)
+
+    assert "invalid_address_state_format" not in codes
+    assert "invalid_address_postal_code_format" not in codes
+
+
+def test_valid_zip_plus_4_not_flagged(happy_path_document: W2Document) -> None:
+    document = happy_path_document.model_copy(
+        update={
+            "employee": happy_path_document.employee.model_copy(
+                update={
+                    "address": happy_path_document.employee.address.model_copy(
+                        update={"state": "NY", "postal_code": "10001-1234"}
+                    )
+                }
+            )
+        }
+    )
+
+    assert "invalid_address_postal_code_format" not in _issue_codes(document)
+
+
+def test_invalid_address_state_code_detected(happy_path_document: W2Document) -> None:
+    document = happy_path_document.model_copy(
+        update={
+            "employer": happy_path_document.employer.model_copy(
+                update={
+                    "address": happy_path_document.employer.address.model_copy(update={"state": "ZZ"})
+                }
+            )
+        }
+    )
+
+    matching = [
+        issue for issue in run_all_rules(document, ExtractionSignals()) if issue.code == "invalid_address_state_format"
+    ]
+    assert len(matching) == 1
+    assert matching[0].severity == ValidationSeverity.ERROR
+    assert matching[0].field_path == "employer.address.state"
+
+
+def test_invalid_address_postal_code_detected(happy_path_document: W2Document) -> None:
+    document = happy_path_document.model_copy(
+        update={
+            "employee": happy_path_document.employee.model_copy(
+                update={
+                    "address": happy_path_document.employee.address.model_copy(
+                        update={"postal_code": "ABCDE"}
+                    )
+                }
+            )
+        }
+    )
+
+    matching = [
+        issue
+        for issue in run_all_rules(document, ExtractionSignals())
+        if issue.code == "invalid_address_postal_code_format"
+    ]
+    assert len(matching) == 1
+    assert matching[0].field_path == "employee.address.postal_code"
+
+
+def test_address_with_no_state_or_postal_code_not_flagged(happy_path_document: W2Document) -> None:
+    """A wholly-null address (this dataset's own default, before Phase
+    8D.1A's OCR recovery ran) must never be treated as malformed."""
+
+    codes = _issue_codes(happy_path_document)
+
+    assert "invalid_address_state_format" not in codes
+    assert "invalid_address_postal_code_format" not in codes
+
+
 def test_extraction_failed_signal_reported_as_error(happy_path_document: W2Document) -> None:
     from w2_pipeline.validation.models import ExtractionOutcome
 
@@ -234,7 +323,7 @@ def test_multiple_issues_are_all_returned_not_short_circuited(happy_path_documen
 
 
 def test_all_rule_names_documents_the_checks_run_count() -> None:
-    assert len(ALL_RULE_NAMES) == 13
+    assert len(ALL_RULE_NAMES) == 14
 
 
 # --- Phase 8C.8: employer.name address-leak rule -----------------------
