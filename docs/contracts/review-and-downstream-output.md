@@ -343,6 +343,14 @@ canonical `W2Document` is treated as a `None` document with an
 exits with an error, since there is no valid document to attach a review
 record to.
 
+**Phase 8D.2 addition**: `validate`, `review-create`, and
+`export-document` also accept an optional `--signals-json <path>`,
+loading a full `ExtractionSignals` JSON document instead of only the
+bare `--pipeline-id`/`--route` pair shown above -- required to thread a
+real OCR-route extraction's checkbox/address evidence through to the
+route-scoped validator rules. See `docs/operator-walkthrough.md` for the
+full command sequence with this flag.
+
 ## End-To-End Flows (Both Committed As Tests)
 
 **Flow A (accepted)**: `tests/downstream/test_finalize.py::test_finalize_accepted_document` --

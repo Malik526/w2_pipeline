@@ -1,13 +1,22 @@
 # Architecture Decision Record
 
-This is the final, synthesized engineering decision for the W-2 Pipeline
-project: what was built, what was tested, what the evidence shows, and
-what is recommended for production. It is written to be readable by a
-technical decision-maker without reconstructing the project from commit
-history. Deep evidence (raw benchmark artifacts, full experiment
-narratives) lives in `docs/experiments/` and
+This is the engineering narrative for the W-2 Pipeline project through
+Phase 8C: what was built, what was tested, what the evidence shows, and
+what was recommended for production at that point. It is written to be
+readable by a technical decision-maker without reconstructing the
+project from commit history. Deep evidence (raw benchmark artifacts,
+full experiment narratives) lives in `docs/experiments/` and
 `data/evaluation/results/`; this document cites it rather than repeating
 it.
+
+**This document is preserved as written** (with inline `~~strikethrough~~`
+annotations where a later phase closed something it described as open).
+Phases 8D.1-8D.3 extended the system after this document's Section 16
+recommendation; for the **current** system boundary, decisions, metrics,
+and limitations, see `docs/final-architecture.md`,
+`docs/final-decisions.md`, `docs/final-evaluation-summary.md`, and
+`docs/known-limitations.md`. This document remains the fuller narrative
+of *how* the project arrived there.
 
 ## 1. Final System Architecture
 
@@ -482,16 +491,34 @@ added later without touching extraction, validation, or review code.
   `docs/experiments/phase8c11-anchor-checkbox-promotion.md`.
 - Tesseract has residual accent-recognition and blur-robustness
   weaknesses beyond what PaddleOCR shows on the same documents.
-- `employer.address` has the identical OCR-layout-fallback gap
-  `employer.name` had before Phase 6B's fix -- not yet remediated.
-- The Symage benchmark's field coverage (`evaluated_field_paths`) still
+- ~~`employer.address` has the identical OCR-layout-fallback gap
+  `employer.name` had before Phase 6B's fix -- not yet remediated.~~
+  **Resolved (Phase 8D.1A/8D.1B).** `employer.address`/`employee.address`
+  got the same OCR-layout-fallback treatment `employer.name` did, plus a
+  dedicated evidence-based validator rule (`address_extraction_evidence`)
+  closing unsafe acceptance on this field family from 2.17% to 0.33%
+  overall (7.33% to 0.0% on `rotated_png`). See
+  `docs/experiments/phase8d1a-annotation-coverage-and-full-field-remediation.md`,
+  `docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`.
+- ~~The Symage benchmark's field coverage (`evaluated_field_paths`) still
   excludes `employer.address` (`employer.name` was added in Phase 8A --
   Section 11), so benchmark accuracy numbers cannot yet reflect quality
   on `employer.address`, and no benchmark has yet been rerun to measure
-  `employer.name` at scale under the new coverage (Phase 8B, not yet run).
+  `employer.name` at scale under the new coverage (Phase 8B, not yet run).~~
+  **Resolved (Phase 8D.1A).** The ground-truth adapter now maps
+  employer/employee address, Box 12, and state/local values (previously
+  present in source annotations but never scored); the expanded
+  600-document benchmark reached 99.649% overall field accuracy across
+  the wider field set. See `docs/final-evaluation-summary.md`.
 - Deterministic validation cannot detect a plausible-but-wrong value
-  (measured directly in Section 8: 9.2% recall on subtle value-swap
-  errors, vs. 88.1% on severe/missing-field corruption).
+  that passes format checks (measured directly in Section 8: 9.2%
+  recall on subtle value-swap errors at that phase). **Narrowed, not
+  fully closed (Phase 8D.1B)**: the evidence-based rules added since
+  raised overall error-detection recall to 88.2% (100% on
+  `rotated_png`) by distinguishing *incomplete* extraction from a
+  *wrong-but-complete* one; 2 of 600 documents still slip through as a
+  plausible-looking OCR character misread, honestly reported in
+  `docs/known-limitations.md` rather than absorbed into this number.
 - Review-record persistence is filesystem-only; no reopen workflow for a
   resolved review.
 - No authentication or multi-tenancy anywhere in the system.

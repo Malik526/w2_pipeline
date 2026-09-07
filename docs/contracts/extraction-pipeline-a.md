@@ -2,6 +2,16 @@
 
 Phase 4 implements Pipeline A, the deterministic native-text/OCR baseline.
 
+**Note (Phase 8D.3)**: this document is preserved as written from Phase
+4, when Tesseract PSM 3 was the incumbent OCR configuration and
+PaddleOCR was a newly-added, not-yet-selected alternative backend. As
+of Phase 8B/8C, **PaddleOCR (GPU) is the selected production OCR
+backend**; Tesseract remains a supported, documented CPU-only
+cost-optimized alternative. See `docs/final-architecture.md` and
+`docs/final-decisions.md` for the current selection and evidence. The
+observation model, routing, and parser architecture described below are
+unchanged.
+
 ## Scope
 
 Pipeline A starts after Phase 2 ingestion:

@@ -1,5 +1,57 @@
 # Changelog
 
+## 2026-09-07
+
+### Phase 8D.3 - Final Architecture + Documentation Freeze
+
+- Documentation/reconciliation phase, no behavior changes. Created
+  four canonical current-state docs: `docs/final-architecture.md`
+  (production component flow + Mermaid diagram), `docs/final-decisions.md`
+  (16-row decision log: selected vs. rejected, with evidence), 
+  `docs/final-evaluation-summary.md` (final benchmark numbers by
+  generation, plus a field-coverage table), and `docs/known-limitations.md`
+  (9-item canonical limitations list with impact/correctness-criticality
+  per item) -- explicitly separate from `docs/architecture-decision-record.md`
+  and `docs/experiments/*.md`, which remain preserved as historical
+  narrative.
+- Reconciled stale statements in `docs/architecture-decision-record.md`:
+  the `employer.address` OCR-fallback gap, the Symage benchmark's
+  field-coverage exclusion, and the 9.2%-recall validator limitation are
+  all superseded by Phase 8D.1A/8D.1B -- marked resolved inline with
+  `~~strikethrough~~` plus a dated note (the same convention that
+  section already used for the Phase 8C.10/8C.11 checkbox fix), not
+  deleted or rewritten. Added a top-of-document redirect note pointing
+  to the new final docs for current numbers.
+- Rewrote `README.md` to reflect current architecture, current (Phase
+  8D.1A/8D.1B) benchmark numbers, and current known limitations
+  (previously still listing the since-fixed checkbox-rotation gap and
+  `employer.address` gap as open, and a stale 9%-recall validator
+  figure); restructured around what it does / architecture / why this
+  design / evaluation results / run locally / operator flow /
+  repository structure / known limitations / design history, linking to
+  every new final doc.
+- Updated `docs/project-state.md`: added a "Project Status: BACKEND
+  COMPLETE / FROZEN FOR TAKE-HOME DELIVERY" banner linking to the new
+  final docs; reframed the "Future Phases" section as "possible future
+  production work, not in take-home scope" rather than pending tasks.
+  The pre-existing stale "Current Phase" section (a frozen Phase 4E
+  snapshot the project already never updated once phases moved to a
+  dated changelog format) is left as an explicitly-labeled historical
+  artifact rather than rewritten.
+- Read-only code/docs consistency audit (checkbox detector default,
+  16-rule validator count, route scoping, OCR backend selection,
+  downstream export behavior) found no discrepancies requiring a code
+  change. Repo-hygiene audit found no secrets, stray scratch files, or
+  unintended large files.
+- No OCR/parser/validator logic changed; no new heuristics; no
+  frontend; no single-document extraction CLI added (restated as a
+  known limitation, not built, per this phase's explicit scope).
+- 0 new tests (documentation-only); full suite unchanged: **600
+  passing**. Lightweight happy-path + review-path CLI smoke re-run
+  (not a full OCR benchmark rerun, since no code changed) reconfirmed
+  both paths.
+- Decision: **W-2 backend take-home marked COMPLETE.** No Phase 8D.4.
+
 ## 2026-09-06
 
 ### Phase 8D.2 - Operator / End-to-End Workflow Walkthrough

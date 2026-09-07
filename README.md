@@ -1,25 +1,38 @@
 # W-2 Automation Platform
 
-A prototype system that takes a W-2 tax form (PDF or image), extracts its
-data into a structured, typed representation, automatically judges
-whether the result is safe to trust, routes anything uncertain to a human
-for a quick correction, and produces a clean downstream JSON/CSV artifact
--- end to end, with two extraction architectures evaluated head to head
-along the way.
+A backend system that takes a completed individual W-2 tax form (PDF or
+image), extracts its data into a structured, typed representation,
+automatically judges whether the result is safe to trust, routes
+anything uncertain to a human for a quick correction, and produces a
+clean downstream JSON/CSV artifact -- end to end, proven by running two
+real documents through the entire pipeline with the actual operator
+commands.
 
-**Start here for the full engineering story**:
-[`docs/architecture-decision-record.md`](docs/architecture-decision-record.md)
--- what was tested, what the evidence shows, what is recommended for
-production, and what is explicitly left as a follow-up. This README is a
-map to that document and to the rest of the repo, not a replacement for it.
+**Status: backend complete and frozen for take-home delivery (Phase 8D.3).**
+See [`docs/project-state.md`](docs/project-state.md) for the full phase
+history.
 
-## Problem
+## What it does
 
 An accounting/tax-preparation firm receives many client W-2s and needs
 their data (SSN, employer EIN, wages, withholding, etc.) turned into
 structured records quickly and safely enough to use in downstream
-tax-preparation workflows, without a human re-keying every field by hand
--- while still catching cases an automated system got wrong.
+tax-preparation workflows, without a human re-keying every field by
+hand -- while still catching cases an automated system got wrong.
+
+```text
+INPUT:  one completed individual W-2 document (PDF or image)
+SYSTEM: ingestion -> extraction -> canonical W2Document -> validation
+        -> accepted OR needs_review -> human correction if needed ->
+        revalidation -> finalization -> JSON/CSV downstream output
+OUTPUT: validated canonical W-2 data ready for downstream
+        tax-preparation systems
+```
+
+Explicitly **not** built: payroll/W-2 generation, tax calculation, Form
+1040 preparation, IRS e-file transmission, a production GUI, or a
+broad document-type platform beyond the 2026 W-2. Full boundary:
+[`docs/final-architecture.md`](docs/final-architecture.md).
 
 ## Architecture
 
@@ -27,109 +40,110 @@ tax-preparation workflows, without a human re-keying every field by hand
 W-2 PDF / image
         |
         v
-Ingestion + rendering
+Ingestion + route classification
         |
         v
-Extraction  (Pipeline A: OCR + deterministic parser  |  Pipeline B: VLM)
+Extraction  (Pipeline A: OCR + deterministic parser  |  Pipeline B: VLM, evaluated, not selected)
         |
         v
-Canonical W2Document
+Canonical W2Document  +  extraction evidence (checkbox/address signals)
         |
         v
-Production validation (no ground truth available here -- see below)
+Validation (16 rules: structural, format, consistency, evidence-based, routing)
       /   \
  accepted   needs_review
     |            |
     v            v
- Finalize   ReviewRecord -> human correction -> re-validate (loops back up)
+ Finalize   ReviewRecord -> human correction -> revalidate (loops back up)
     |            |
     v            v
         JSON / CSV output
 ```
 
-Full diagram (including both extraction architectures) and the reasoning
-behind every arrow: `docs/architecture-decision-record.md` Sections 1-2.
+Full diagram, component-by-component detail, and current production
+defaults: [`docs/final-architecture.md`](docs/final-architecture.md).
 
-## Quick Start
+## Why this design
 
-All commands below are run from the repository root. `pytest` finds the
-`src/` layout automatically (`pyproject.toml` sets `pythonpath`), but a
-direct `python3 -m w2_pipeline...` module invocation needs either a real
-install or `PYTHONPATH=src` -- use whichever your environment supports;
-both are shown once here, `PYTHONPATH=src` throughout the rest of this
-README since it needs no install step at all:
+- **Deterministic OCR + rule-based parsing over a generative VLM** --
+  Pipeline A (OCR + parser) reached 100% accuracy on the clean benchmark
+  at 1.2-1.4s/doc; Pipeline B (Qwen3-VL-4B-Instruct) needed 58-70s/doc
+  and a large GPU for no accuracy advantage on a document type OCR
+  already handles well.
+- **PaddleOCR over Tesseract as the production OCR backend** -- 100%
+  vs. 99.3% on the same clean benchmark, and 100% vs. 67.7% under blur,
+  at lower latency; Tesseract is retained as a documented CPU-only
+  cost-optimized alternative, not removed.
+- **Evidence-based validation, never a single confidence score** -- a
+  boolean or an address can be *structurally valid and still wrong*.
+  Dedicated evidence signals (checkbox detector quality, OCR address
+  region completeness) catch this, threaded from extraction through to
+  validation as explicit primitives -- never a collapsed probability.
+- **Human review is mandatory, never bypassable** -- finalization
+  raises an error for any non-`accepted` document; the only way to
+  output a `needs_review` document is through the real review ->
+  correction -> revalidation workflow.
+- **No global deskew, no OCR-confidence-based routing, no dual-engine
+  voting** -- each was considered and rejected on measured evidence, not
+  by default.
+
+Every decision above, with the rejected alternative and the evidence
+behind it: [`docs/final-decisions.md`](docs/final-decisions.md).
+
+## Evaluation results
+
+| Benchmark | Scope | Result |
+|---|---|---|
+| Extraction accuracy (expanded, 600 docs, PaddleOCR GPU) | employee/employer identity+address, federal boxes, Box 12, state/local | **99.649%** overall (100% clean, 98.627% rotated) |
+| Validator unsafe-acceptance rate | same 600 docs, 16-rule validator | **0.33%** overall, **0%** on rotated |
+| Validator error-detection recall | same | **88.2%** overall, **100%** on rotated |
+| Validator false-review rate | same | **0%** (never flags a correct document) |
+| Steady-state latency | PaddleOCR GPU | **~1.2-1.35s/doc** |
+| Tests | full suite | **600 passing** |
+
+Every figure is sourced from a committed, unmodified benchmark artifact
+in `data/evaluation/results/`. Full tables, the historical 24-field
+benchmark, the Pipeline B feasibility numbers, and the field-coverage
+breakdown: [`docs/final-evaluation-summary.md`](docs/final-evaluation-summary.md).
+
+**These numbers are synthetic-benchmark-specific, not a universal
+production accuracy claim** -- see
+[`docs/known-limitations.md`](docs/known-limitations.md).
+
+## Run locally
+
+All commands run from the repository root. `pytest` finds the `src/`
+layout automatically (`pyproject.toml` sets `pythonpath`); a direct
+`python3 -m w2_pipeline...` module invocation needs either a real
+install or `PYTHONPATH=src`:
 
 ```bash
-python3 -m pytest                                    # full suite, no GPU/model download required
-python3 -m pip install .                              # OR: prefix every command below with PYTHONPATH=src
+python3 -m pytest                     # full suite, no GPU/model download required -- 600 passing
+python3 -m pip install .              # OR: prefix every command below with PYTHONPATH=src
 ```
-
-Validate an existing canonical document and see the accept/review
-decision:
-
-```bash
-PYTHONPATH=src python3 -m w2_pipeline.validation.validate_w2 data/evaluation/generated/ground_truth/w2_2026_0001.json
-```
-
-(If `data/evaluation/generated/` doesn't exist yet, generate it first --
-see "End-to-End Workflow" below.)
-
-Run the full review-and-export workflow demo (Flow B: a document that
-needs review, gets corrected, and is exported) end to end:
-
-```bash
-PYTHONPATH=src python3 -m w2_pipeline.review.cli review-create <needs-review-w2.json> --repo-dir data/review
-PYTHONPATH=src python3 -m w2_pipeline.review.cli review-correct <review_id> --repo-dir data/review --field-path employee.ssn --new-value '"123-45-6789"'
-PYTHONPATH=src python3 -m w2_pipeline.review.cli review-revalidate <review_id> --repo-dir data/review
-PYTHONPATH=src python3 -m w2_pipeline.review.cli export-review <review_id> --repo-dir data/review --format csv
-```
-
-No large downloads or a GPU are required for any of the above. Pipeline
-A's OCR step needs the `tesseract` system binary (or the optional
-PaddleOCR extra) installed; see "Extraction A/B Test" below.
-
-## End-To-End Workflow
-
-1. **Ingestion** (`src/w2_pipeline/ingestion/`) -- validates a local
-   PDF/JPEG/PNG, records file metadata, and classifies PDF text routing.
-2. **Extraction** (`src/w2_pipeline/extraction/`,
-   `src/w2_pipeline/extraction/pipeline_b/`) -- produces a canonical
-   `W2Document`. Two architectures exist; see the A/B section below.
-3. **Validation** (`src/w2_pipeline/validation/`) -- judges the
-   `W2Document` with no ground truth available (that's a benchmark-only
-   concept) and returns `accepted` or `needs_review` with explainable
-   issue codes.
-4. **Review** (`src/w2_pipeline/review/`) -- `needs_review` documents get
-   a durable `ReviewRecord`; a human applies an explicit correction by
-   field path; the corrected document is re-validated through the exact
-   same validator.
-5. **Downstream output** (`src/w2_pipeline/downstream/`) -- only an
-   `accepted` document (immediately, or after review resolves) is
-   finalized into JSON or CSV.
 
 Generate a small reproducible local dataset and run each stage against it:
 
 ```bash
 PYTHONPATH=src python3 -m w2_pipeline.evaluation.generate_dataset
 PYTHONPATH=src python3 -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/generated/manifest.jsonl --variant-id clean_pdf --limit 5
-PYTHONPATH=src python3 -m w2_pipeline.validation.validate_w2 data/evaluation/generated/ground_truth/w2_2026_0001.json
+PYTHONPATH=src python3 -m w2_pipeline.review.cli validate data/evaluation/generated/ground_truth/w2_2026_0001.json
 PYTHONPATH=src python3 -m w2_pipeline.review.cli export-document data/evaluation/generated/ground_truth/w2_2026_0001.json --format json
 ```
 
-## Extraction A/B Test
+No large downloads or a GPU are required for any of the above. Pipeline
+A's OCR step needs the `tesseract` system binary (or the optional
+PaddleOCR extra) installed to run OCR itself; validation/review/export
+commands against an already-extracted document need neither.
 
 **Pipeline A** (`src/w2_pipeline/extraction/`) -- deterministic:
-pixels -> OCR (Tesseract or PaddleOCR, selectable) -> rule-based parser
-(with targeted visual fallbacks, e.g. pixel-based Box 13 checkbox
-detection) -> `W2Document`.
-
-```bash
-PYTHONPATH=src python3 -m w2_pipeline.evaluation.run_pipeline_a data/evaluation/generated/manifest.jsonl --variant-id clean_pdf --limit 5
-```
+pixels -> OCR (Tesseract or PaddleOCR, selectable via `--ocr-backend`)
+-> rule-based parser (with targeted visual fallbacks, e.g. the
+anchor-relative Box 13 checkbox detector) -> `W2Document`.
 
 **Pipeline B** (`src/w2_pipeline/extraction/pipeline_b/`) -- generative:
 pixels -> `Qwen/Qwen3-VL-4B-Instruct` -> structured JSON -> `W2Document`.
-No OCR or deterministic parsing anywhere in this path.
+Evaluated, not selected as primary (see Why this design, above).
 
 ```bash
 python3 -m pip install '.[vlm]'   # torch/transformers/torchvision; needs a real GPU for practical latency
@@ -141,151 +155,98 @@ PYTHONPATH=src python3 -m w2_pipeline.evaluation.run_pipeline_b data/evaluation/
 `PYTHONPATH=src python3 -m w2_pipeline.evaluation.prepare_external_dataset`;
 see `data/evaluation/README.md`.)
 
-**Result**: Pipeline A (OCR + deterministic parsing) is the selected
-primary architecture. Full evidence and reasoning:
-`docs/architecture-decision-record.md` Sections 2-4.
+## Operator flow
 
-## Results
+The full copy/paste runbook, run for real against two documents (one
+that sails straight through, one that needs a correction), including
+proof that finalization is actually blocked before correction and that
+JSON/CSV export is byte-deterministic:
+[`docs/operator-walkthrough.md`](docs/operator-walkthrough.md).
 
-| Architecture | Hardware | Accuracy (clean / worst-condition) | Latency | Decision |
-|---|---|---|---|---|
-| Tesseract (Pipeline A) | CPU | 99.3% / 67.7% (blur) | 2.3s/doc | Cost-optimized alternative |
-| PaddleOCR (Pipeline A) | GPU | **100.0%** / **100.0%** (blur) | **1.3-1.4s/doc** | **Selected primary** |
-| Qwen3-VL-4B-Instruct (Pipeline B) | GPU (large) | 100% *conditional* on the 80% of documents that succeeded | 58-70s/doc | Not selected |
-
-Every figure above is sourced from a committed, unmodified benchmark
-artifact in `data/evaluation/results/` -- see
-`docs/architecture-decision-record.md` Section 3-4 for the full table,
-citations, and important scope caveats (in particular: do not read the
-VLM's "100%" as an end-to-end accuracy claim -- see Section 4).
-
-**Validation effectiveness, measured against real historical errors**
-(`docs/experiments/phase8-validator-effectiveness.md`): the Phase 6
-validator has a **0% false-review rate** in every condition analyzed (it
-never sends a correctly-extracted document to review) and correctly
-catches **88% of severe/missing-field errors** but only **9% of subtle,
-plausible-looking value errors** (e.g. a checkbox read backwards) --
-exactly the limitation described below, now quantified.
-
-## Architecture Decision
-
-**Selected**: PaddleOCR (GPU) + deterministic parsing, as Pipeline A.
-**Cost-optimized alternative**: Tesseract (CPU), same pipeline.
-**Not selected as primary**: Qwen3-VL-4B-Instruct (Pipeline B) -- far
-higher latency and hardware cost for no accuracy advantage on this
-already-well-suited-to-OCR document type.
-
-Full reasoning, including production-economics discussion (GPU cost vs.
-human-review cost is an open, not-yet-priced trade-off) and throughput's
-connection to the actual business value:
-`docs/architecture-decision-record.md` Sections 2, 5-6, 9, 16.
-
-## Production Validation (No Ground Truth)
-
-A benchmark can compare a prediction against a known correct answer.
-Production cannot -- there is no answer key for a new customer's W-2. The
-Phase 6 validator (`docs/contracts/validation-and-routing.md`) instead
-checks what's checkable without one: required fields present, SSN/EIN
-format, supported tax year, monetary sign/precision, and a few structural
-sanity checks. **It cannot prove every accepted value is correct** -- a
-plausible-but-wrong SSN passes format validation. This is stated
-explicitly, not glossed over, and measured directly in
-`docs/experiments/phase8-validator-effectiveness.md`.
-
-A real, unplanned example of why this layer matters even alongside a
-"complete" benchmark: `docs/architecture-decision-record.md` Section 10
-(the employer-name benchmark blind spot) -- production validation caught
-a real extraction gap that had been invisible to every accuracy number
-this project had ever computed.
-
-## Human Review
+Happy path:
 
 ```bash
-PYTHONPATH=src python3 -m w2_pipeline.review.cli review-create <needs-review-w2.json> --repo-dir data/review
-PYTHONPATH=src python3 -m w2_pipeline.review.cli review-correct <review_id> --repo-dir data/review --field-path employee.ssn --new-value '"123-45-6789"'
-PYTHONPATH=src python3 -m w2_pipeline.review.cli review-revalidate <review_id> --repo-dir data/review
+PYTHONPATH=src python3 -m w2_pipeline.review.cli validate <w2.json> --pipeline-id pipeline_a --route ocr --signals-json <signals.json>
+PYTHONPATH=src python3 -m w2_pipeline.review.cli export-document <w2.json> --pipeline-id pipeline_a --route ocr --signals-json <signals.json> --format json
 ```
 
-A `needs_review` document gets a durable, auditable `ReviewRecord`
-(`src/w2_pipeline/review/`). The original extraction is never mutated;
-every correction is an explicit, human-supplied field/value pair,
-recorded append-only; a correction is only "resolved" once the corrected
-document passes the *same* Phase 6 validator again. No AI auto-correction
-exists anywhere in this workflow. Full contract:
-`docs/contracts/review-and-downstream-output.md`.
-
-## Downstream Output
+Review path:
 
 ```bash
-PYTHONPATH=src python3 -m w2_pipeline.review.cli export-document <w2.json> --format json
+PYTHONPATH=src python3 -m w2_pipeline.review.cli review-create <w2.json> --repo-dir data/review --pipeline-id pipeline_a --route ocr --signals-json <signals.json>
+PYTHONPATH=src python3 -m w2_pipeline.review.cli review-correct <review_id> --repo-dir data/review --field-path employee.address.city --new-value '"Colorado Springs"'
+PYTHONPATH=src python3 -m w2_pipeline.review.cli review-revalidate <review_id> --repo-dir data/review
 PYTHONPATH=src python3 -m w2_pipeline.review.cli export-review <review_id> --repo-dir data/review --format csv
 ```
 
-Only an `accepted` document can be finalized (`FinalizedW2`,
-`src/w2_pipeline/downstream/`) into JSON or CSV. The adapter boundary is
-deliberately generic -- a future database, REST API, webhook, or
-tax-prep/accounting-platform adapter could plug in without touching
-extraction, validation, or review code. No vendor-specific integration
-(e.g. QuickBooks) exists in this prototype.
+`--signals-json` (Phase 8D.2) lets a real extraction's checkbox/address
+evidence reach the validator through the CLI; `--pipeline-id`/`--route`
+alone still work for simpler cases. There is currently no
+single-document *extraction* CLI (only batch/manifest benchmark
+scripts) -- see `docs/known-limitations.md` #6.
+
+## Repository structure
+
+```text
+src/w2_pipeline/
+  ingestion/     file intake, route classification
+  extraction/    Pipeline A (OCR + deterministic parser) and pipeline_b/ (VLM)
+  contracts/     canonical W2Document schema (Pydantic, extra="forbid")
+  validation/    16-rule validator, backend-neutral, evidence-based
+  review/        ReviewRecord workflow + review/cli.py (operator CLI)
+  downstream/    FinalizedW2, JSON/CSV export
+  evaluation/    benchmark harnesses, dataset generation, ground truth
+docs/
+  final-architecture.md, final-decisions.md,
+  final-evaluation-summary.md, known-limitations.md   current state (start here)
+  operator-walkthrough.md                             operational proof
+  architecture-decision-record.md                      full historical narrative through Phase 8C
+  experiments/                                         phase-by-phase experiment history
+  contracts/                                            per-component design contracts
+  project-state.md                                      phase-by-phase status log
+data/evaluation/results/   every committed benchmark artifact cited in the docs above
+```
+
+## Known limitations
+
+Synthetic benchmark (not real taxpayer data); 2 of 600 documents still
+unsafely accept an OCR character-misread address; several optional
+canonical fields (Box 14, local tax rows, address line 2) are
+schema-complete but have no populated benchmark example; no global
+calibrated OCR confidence (a deliberate decision, not a gap); no
+single-document extraction CLI or batch export command; no frontend/GUI.
+
+Full list, with impact and correctness-criticality for each item:
+[`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Security
 
 W-2s carry SSNs, EINs, names, addresses, and wage/tax data.
-**Implemented**: SSN/EIN masking and name/address redaction in validation
-diagnostics; review records named only by an opaque ID, never PII;
-PII-bearing local directories gitignored by policy
+**Implemented**: SSN/EIN masking and name/address redaction in
+validation diagnostics; review records named only by an opaque ID,
+never PII; PII-bearing local directories gitignored by policy
 (`data/documents/README.md`, `data/review/README.md`); production
 validation/review code structurally cannot see benchmark ground truth
 (enforced by tests, not just convention).
 **Not implemented -- explicit production follow-ups**: encryption at
 rest/in transit, authentication/RBAC, multi-tenant isolation, durable
-audit logging, a data retention policy, secrets management, and a managed
-database/object-storage backend. Full list:
-`docs/architecture-decision-record.md` Section 14.
+audit logging, a data retention policy, secrets management, and a
+managed database/object-storage backend.
 
-## Known Limitations
+## Design / experiment history
 
-Box 13's checkbox detector doesn't track rotation geometry; Tesseract has
-residual accent-recognition and blur weaknesses; `employer.address` has
-the same OCR-fallback gap `employer.name` had before it was fixed, and
-the Symage benchmark's field coverage still excludes it (`employer.name`
-was added to scoring in Phase 8A, not yet re-benchmarked at scale);
-deterministic validation can't catch a plausible-but-wrong value (measured
-above); review persistence is filesystem-only with no reopen workflow; no
-auth/multi-tenancy; the VLM evaluation is a 5-document spike, not a
-statistically meaningful sample; no real cloud cost has been benchmarked.
-Full list with context: `docs/architecture-decision-record.md` Section 15.
-
-## What I Would Build Next
-
-1. A real GPU-cost-vs-review-cost pricing study to close the outstanding
-   Paddle-vs-Tesseract economics question (Section 9 of the ADR).
-2. Extend the employer-name OCR fallback to `employer.address`, and run
-   the final PaddleOCR/Tesseract benchmarks (prepared, not yet run --
-   Phase 8A) to measure `employer.name` accuracy at scale now that the
-   Symage adapter scores it.
-3. A rotation-aware recalibration of the Box 13 checkbox detector -- the
-   single largest remaining Pipeline A accuracy gap.
-4. A larger, statistically meaningful Pipeline B benchmark (150+
-   documents) before drawing any conclusion about VLM extraction beyond
-   "feasible, not yet competitive on cost/latency for this workload."
-5. A review front-end on top of the existing `ReviewRecord`/`review.cli`
-   API -- the backend workflow is complete; only the UI layer is missing.
-6. Production security hardening per the "Not implemented" list above,
-   before handling real taxpayer data.
-
-## Contracts And Deep-Dive Docs
-
-- `docs/architecture-decision-record.md` -- the full engineering story (start here).
-- `docs/contracts/system-contract.md`, `workflow-and-architecture.md`, `evaluation-plan.md` -- product/architecture scope.
-- `docs/contracts/canonical-w2-schema.md` -- the typed `W2Document` contract.
-- `docs/contracts/ingestion-contract.md` -- document intake.
-- `docs/contracts/extraction-pipeline-a.md`, `extraction-pipeline-b.md` -- the two extraction architectures.
-- `docs/contracts/validation-and-routing.md` -- production validation.
-- `docs/contracts/review-and-downstream-output.md` -- human review and output.
-- `docs/experiments/` -- what was tried and learned, phase by phase, including the full validator-effectiveness analysis and the employer-name investigation.
-- `docs/project-state.md` -- current phase status and history.
-- `data/evaluation/results/` -- every committed benchmark artifact cited above.
+- [`docs/architecture-decision-record.md`](docs/architecture-decision-record.md)
+  -- the full engineering narrative through Phase 8C: what was tested,
+  what the evidence showed, what was recommended at that point.
+- [`docs/experiments/`](docs/experiments/) -- every phase's experiment
+  writeup, preserved as run (rejected approaches marked, not deleted).
+- [`docs/contracts/`](docs/contracts/) -- per-component design contracts
+  (`system-contract.md`, `canonical-w2-schema.md`, `ingestion-contract.md`,
+  `extraction-pipeline-a.md`/`extraction-pipeline-b.md`,
+  `validation-and-routing.md`, `review-and-downstream-output.md`).
+- [`docs/project-state.md`](docs/project-state.md) -- phase-by-phase
+  status log, current phase first.
+- [`CHANGELOG.md`](CHANGELOG.md) -- dated, per-phase change history.
 
 ## Working Product Assumption
 

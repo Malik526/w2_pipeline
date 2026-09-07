@@ -1,8 +1,46 @@
 # Project State
 
-Last updated: 2026-09-05
+Last updated: 2026-09-07
 
-## Current Phase
+## Project Status: BACKEND COMPLETE / FROZEN FOR TAKE-HOME DELIVERY
+
+**Phase 8D.3 (final architecture/documentation freeze) is complete.**
+No further feature work is planned within this take-home's scope. For
+the current system (not the phase-by-phase history below), start with:
+
+- [`docs/final-architecture.md`](final-architecture.md) -- production
+  architecture: PaddleOCR (GPU) + deterministic extraction, evidence-
+  based validation, human review, deterministic downstream JSON/CSV.
+- [`docs/final-decisions.md`](final-decisions.md) -- every major design
+  decision, what was rejected, and why.
+- [`docs/final-evaluation-summary.md`](final-evaluation-summary.md) --
+  final benchmark: 99.649% expanded extraction accuracy, 0.33% unsafe
+  validator acceptance, 0% false-review rate, 600 tests passing.
+- [`docs/known-limitations.md`](known-limitations.md) -- the canonical,
+  current limitations list (synthetic benchmark, 2 residual OCR-misread
+  unsafe cases, no calibrated OCR confidence, no single-document
+  extraction CLI, no batch export, no frontend/GUI -- none
+  correctness-blocking for this take-home's scope).
+- [`docs/operator-walkthrough.md`](operator-walkthrough.md) -- the
+  operational proof: two real documents run end to end through the
+  actual CLI commands, including finalization gating and export
+  determinism.
+
+Possible future production work (GPU-cost-vs-review-cost pricing study,
+a review front-end, real-cloud-cost benchmarking, a single-document
+extraction CLI, native-PDF evidence parity, real-taxpayer-corpus
+validation) is listed in `docs/known-limitations.md` and
+`docs/architecture-decision-record.md` Section 16 as explicitly **not**
+part of this take-home's scope, not as unfinished project tasks.
+
+The rest of this document (below) is the phase-by-phase historical log,
+preserved as written at the time each phase completed -- including the
+"Current Phase" section immediately following, which is a frozen
+snapshot from Phase 4E and has intentionally not been rewritten to
+describe later phases (each later phase instead appends its own dated
+entry further down, under "Completed Phase History").
+
+## Current Phase (historical snapshot, frozen as of Phase 4E)
 
 Phase 4E has moved from evaluation into a code fix, now fully reconfirmed at
 full scale on both backends. The 150-document PaddleOCR GPU benchmark
@@ -1499,6 +1537,40 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.3 - Final Architecture + Documentation Freeze
+
+Full record: this document's "Project Status" banner (top) plus
+`docs/final-architecture.md`, `docs/final-decisions.md`,
+`docs/final-evaluation-summary.md`, `docs/known-limitations.md`.
+
+Documentation/reconciliation phase, no behavior changes. Created the
+four canonical "final" docs (architecture, decisions, evaluation
+summary with field-coverage table, known limitations) as the current-
+state reference, explicitly separate from the historical
+`docs/architecture-decision-record.md` and `docs/experiments/*.md`,
+which remain preserved as written. Reconciled stale statements in
+`docs/architecture-decision-record.md` (the `employer.address`
+OCR-fallback gap, the Symage benchmark's field-coverage exclusion, and
+the 9.2%-recall validator limitation are all superseded by Phase
+8D.1A/8D.1B -- marked resolved inline with `~~strikethrough~~` plus a
+dated note, matching this document's existing convention, rather than
+deleted) and rewrote `README.md` to reflect current architecture,
+current benchmark numbers, and current (not historical) known
+limitations, linking to the new final docs.
+
+Performed a read-only code/docs consistency audit (checkbox detector
+default, validator rule count, route scoping, OCR backend selection,
+downstream export behavior) and a repo-hygiene pass (no secrets, no
+stray scratch files, no unintended large files). No code defects found
+requiring a fix. Full test suite reconfirmed passing; a lightweight
+happy-path + review-path smoke re-run (not a full OCR benchmark rerun,
+since no code changed) reconfirmed both.
+
+**0 new tests** (documentation-only phase); full suite: **600 tests
+passing, unchanged from Phase 8D.2, zero regressions.**
+
+Decision: W-2 backend take-home marked **COMPLETE**. No Phase 8D.4.
+
 ### Phase 8D.2 - Operator / End-to-End Workflow Walkthrough
 
 Full record: `docs/operator-walkthrough.md`.
@@ -1842,51 +1914,53 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Future Phases (after Phase 8D.2)
+## Take-Home Scope: Complete (Phase 8D.3 Freeze)
+
+Phase 8D.3 closed the take-home's planned phase sequence (Phase 0
+through 8D.3). **No Phase 8D.4 or further phase is planned.** The
+items below are possible future *production* work, listed for
+completeness -- they are not unfinished take-home tasks, and nothing
+below blocks the "backend complete" status declared above.
 
 ```text
-Phase 8D.1C (optional, not yet scoped) - the 2 residual unsafe address
-cases (OCR character-recognition misreads under blur/compression) are a
-different failure class than Phase 8D.1B's evidence signal targets;
-closing them would need either an OCR-confidence-based signal (a
-boundary this project has deliberately not crossed since Phase 8C.4) or
-a content-plausibility check (e.g. non-ASCII characters in a printed
-US street address), not attempted here.
+Possible future production work (not in take-home scope):
 
-Phase 8D.2 (done) - operator walkthrough of the complete backend
-(`docs/operator-walkthrough.md`), including a small `review/cli.py`
-signal-threading bug fix (`--signals-json`) found and fixed along the
-way. Surfaced one real, currently-open gap as a documented limitation:
-no single-document pipeline-execution CLI exists yet (only batch/
-manifest benchmark scripts do) -- a reasonable, separately-scoped
-follow-up.
+- The 2 residual unsafe-acceptance address cases (OCR
+  character-recognition misreads under blur/compression) are a
+  different failure class than Phase 8D.1B's evidence signal targets;
+  closing them would need either an OCR-confidence-based signal (a
+  boundary this project has deliberately not crossed since Phase 8C.4)
+  or a content-plausibility check (e.g. non-ASCII characters in a
+  printed US street address).
 
-Phase 8D.3 (not yet scoped, per the Phase 8D.2 brief) - final
-architecture/docs freeze, if Phase 8D.2 is judged to have passed.
+- A single-document extraction CLI (mirroring review/cli.py's
+  validate/export-document ergonomics), identified as a gap during the
+  Phase 8D.2 operator walkthrough.
 
-Phase 8D (not yet scoped) - the architecture-decision synthesis this
-evidence feeds into (docs/architecture-decision-record.md update),
-including the full employer-name signal-development arc (Phase
-8C.5-8C.8: measurement, promotion, and the resulting 9.67%
-unsafe-acceptance rate on rotated documents), the negative result and
-root-cause lesson from the Phase 8C.9 deskew experiment (calibrated OCR
-zones are canvas-geometry-specific, not just rotation-specific), and the
-now-completed Phase 8C.10-8C.12 arc: promoting the anchor-relative
-checkbox detector to production default, and the dedicated
-evidence-based validator built on top of it.
+- A native-PDF-route evidence signal, mirroring the OCR-route
+  checkbox/address evidence pattern, to close the evidence-parity gap
+  documented in docs/known-limitations.md #4.
 
-Phase 9 (not yet scoped, at the user's direction) - a review UI/frontend
-consuming ReviewRecord and the review/cli.py workflow; a real cloud-cost
-pricing study to close the Paddle-vs-Tesseract economics question; the
-employer.address OCR fallback and extraction follow-up;
-a fix for the employer.name row-merge residual itself, either via a
-genuine canvas-geometry-normalizing preprocessing redesign (Phase 8C.9
-showed a bare rotation correction is not sufficient and actively
-regresses ten other fields) or by reworking
-`_group_observation_rows`'s shared tolerance logic directly; broader
-real-world/adversarial employer-name and checkbox testing to
-stress-test both now-production mechanisms beyond this one synthetic
-dataset's variants; and/or a larger-scale Pipeline B evaluation.
+- A review UI/frontend consuming ReviewRecord and the review/cli.py
+  workflow -- the backend workflow is complete and independently
+  provable via CLI alone (Phase 8D.2).
+
+- A real cloud-cost pricing study to close the Paddle-vs-Tesseract
+  economics question (still open/directional, per
+  docs/architecture-decision-record.md Section 9).
+
+- Benchmarking against a real (properly consented) taxpayer W-2 sample
+  instead of the synthetic Symage dataset.
+
+- Broader real-world/adversarial employer-name and checkbox testing to
+  stress-test both production mechanisms beyond this one synthetic
+  dataset's variants; and/or a larger-scale Pipeline B evaluation
+  (current VLM spike is 5 documents, not statistically meaningful).
+
+- Production security hardening (encryption at rest/in transit,
+  auth/RBAC, multi-tenant isolation, audit logging, secrets
+  management, managed database/object storage) before handling real
+  taxpayer data -- see README's Security section.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

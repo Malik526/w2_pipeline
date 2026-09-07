@@ -48,7 +48,11 @@ tests/validation/
 - `models.py` -- `ValidationSeverity`, `ValidationStatus`, `ExtractionOutcome`,
   `ExtractionSignals`, `ValidationIssue`, `ValidationResult`.
 - `redaction.py` -- PII masking for issue diagnostics.
-- `rules.py` -- the ten deterministic rule functions and `run_all_rules`.
+- `rules.py` -- the deterministic rule functions and `run_all_rules`
+  (10 at Phase 6; 16 as of Phase 8D.1B -- see `ALL_RULE_NAMES` and
+  `docs/final-architecture.md`'s Validation section for the current
+  layered rule set, including the evidence-based rules Phases
+  8C.8/8C.12/8D.1B added).
 - `routing.py` -- `RoutingPolicy`/`decide_status`, kept separate from rule
   evaluation.
 - `validator.py` -- `validate_w2_document`, the single entry point.
@@ -390,8 +394,8 @@ is nothing to check) and returns `needs_review` with exactly one
 `extraction_output_invalid` issue and `checks_run = 1`. A document that
 *did* construct successfully but whose originating pipeline reported
 `ExtractionOutcome.EXTRACTION_FAILED`/`INVALID_CANONICAL_RESULT` via
-`ExtractionSignals.outcome` still runs every field rule (`checks_run = 12`,
-since Phase 8C.8 added two more) in addition to the resulting
+`ExtractionSignals.outcome` still runs every field rule (`checks_run =
+len(ALL_RULE_NAMES)`, 16 as of Phase 8D.1B) in addition to the resulting
 `extraction_failure` issue -- both cases are covered, but they are
 structurally different situations (no document to check, vs. a document
 plus a signal saying something else went wrong).
