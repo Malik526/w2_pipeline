@@ -8,6 +8,9 @@ from w2_pipeline.evaluation.inputs import ExtractionInput
 from w2_pipeline.extraction.acquisition import ObservationAcquirer
 from w2_pipeline.extraction.models import ExtractionResult, ExtractionWarning
 from w2_pipeline.extraction.parser_2026 import (
+    compute_box_12_amount_without_code_found,
+    compute_employee_address_evidence,
+    compute_employer_address_evidence,
     compute_employer_name_observation_count,
     parse_w2_2026_observations,
 )
@@ -54,6 +57,15 @@ class PipelineAExtractor:
                 document, observations.observations
             ),
             box_13_checkbox_evidence=observations.box_13_checkbox_evidence,
+            box_12_amount_without_code_found=compute_box_12_amount_without_code_found(
+                observations.observations
+            ),
+            employer_address_evidence=compute_employer_address_evidence(
+                document, observations.observations
+            ),
+            employee_address_evidence=compute_employee_address_evidence(
+                document, observations.observations
+            ),
         )
 
     def extract(self, extraction_input: ExtractionInput) -> ExtractionResult:

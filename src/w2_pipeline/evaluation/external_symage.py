@@ -795,10 +795,20 @@ def _extract_box_12_entries(funsd_json: list[dict[str, Any]]) -> list[Box12Entry
     code slot still counts as its own "Code" question/answer pair (answer
     text `""`), so the count and order always line up with the amount
     answers' own linking order. A slot is only emitted when its code is
-    non-blank: an amount with no code (a real pattern this dataset
-    exhibits, e.g. a "$0.00" placeholder in an otherwise-unused slot) is
-    not a valid canonical `Box12Entry` (the schema requires a code), so
-    it is correctly excluded rather than fabricated.
+    non-blank.
+
+    Per the 2026 Form W-2 instructions, Box 12 represents IRS-coded
+    items -- a code paired with an amount -- not a fixed set of visually
+    printed slots; a slot with no code is not a coded item, whatever it
+    happens to print. Confirmed empirically, not merely inferred from
+    the schema (Phase 8D.1B): a dedicated audit of all 600 real slots
+    (`phase8d1b_box12_slot_semantics_audit.json`) found a blank code's
+    amount is *always* either blank or exactly "$0.00" -- 0/600
+    exceptions in either direction -- and a populated code's amount is
+    *always* nonzero. A blank-code "$0.00" is therefore a rendering
+    placeholder for an unused slot, not a real entry with a genuinely
+    zero-dollar amount, and is correctly excluded. See
+    docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md.
     """
 
     entities = {entity.get("id"): entity for entity in funsd_json}

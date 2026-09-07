@@ -2,6 +2,53 @@
 
 ## 2026-09-06
 
+### Phase 8D.1B - Address Safety Closure + Box 12 Blank-Slot Semantics Audit
+
+- **Address safety**: traced all 13 unsafe-accepted address failures
+  from Phase 8D.1A's expanded benchmark and found a clean, deterministic
+  evidence separator, measured not assumed -- every correct address
+  extraction has `usable_row_count` exactly at the expected line count
+  (3 for employer, 2 for employee), every structurally-failed one is
+  below it, with zero exceptions across all 600 documents. Built the
+  full evidence-threading architecture (`AddressExtractionEvidence` ->
+  `ExtractionResult` -> `ExtractionSignals` -> new
+  `address_extraction_evidence` validator rule), scoped to `ocr`/`mixed`
+  routes, mirroring the Phase 8C.12 checkbox-evidence pattern exactly --
+  not a bare `if address is null` check.
+- Result: unsafe acceptance **2.17% -> 0.33% overall**, **7.33% -> 0.0%
+  on `rotated_png`**; error detection recall 23.5% -> 88.2% overall,
+  26.7% -> 100% on `rotated_png`; **zero false-review cost** (false
+  review rate stayed 0.0%). 11 of 13 unsafe cases closed. The remaining
+  2 (`symage_900027`/`blurred_png`, `symage_900061`/`compressed_jpeg`)
+  are honestly reported as a different failure class -- OCR
+  character-recognition misreads ("Ave" read as "Áve") under blur/
+  compression -- outside this evidence signal's design, consistent with
+  this project's Phase 8C.4 decision against OCR-confidence-based
+  validation decisions.
+- Demonstrated the full formerly-unsafe-case review path end-to-end for
+  real (`symage_900021`/`rotated_png`): extraction -> `needs_review` ->
+  reviewer corrects both addresses -> revalidation -> `accepted` ->
+  finalized -> JSON/CSV.
+- **Box 12 semantics**: per the 2026 IRS W-2 instructions, Box 12
+  represents coded items (a code paired with an amount), not every
+  visually printed 12a-12d slot. Audited all 600 real slots directly:
+  a blank-code amount is always blank or exactly "$0.00" (0/600
+  exceptions), a populated-code amount is always nonzero (0/600
+  exceptions) -- airtight, symmetric evidence confirming the existing
+  omission of blank-code "$0.00" placeholders from canonical
+  `box_12_entries` was already correct, not an oversight. `Box12Entry`'s
+  docstring updated to state this as a confirmed contract. Added a
+  defensive (never-observed-in-practice) production signal and
+  validator rule, `box_12_amount_without_code`, for the one anomalous
+  shape the appended contract explicitly calls out: a nonzero amount
+  with no matching code routes to review rather than being silently
+  dropped.
+- 22 new tests; full suite: **597 tests passing, up from 573, zero
+  regressions.**
+- Decision: Address A (safety gap substantially closed); Box 12 A
+  (current omission confirmed semantically correct).
+- Full record: `docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`.
+
 ### Phase 8D.1A - Annotation Coverage Audit, Ground-Truth Adapter Repair, and Full-Field Downstream Verification
 
 - Root cause: an evaluation-adapter gap, not a production-extraction

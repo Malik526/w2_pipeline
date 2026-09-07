@@ -28,6 +28,7 @@ from w2_pipeline.contracts.employee_name import (
 )
 from w2_pipeline.extraction.models import (
     AcquisitionRoute,
+    AddressExtractionEvidence,
     ExtractionWarning,
     ObservationSet,
     ObservationSource,
@@ -664,6 +665,113 @@ def _apply_ocr_box_12_layout_fallback(
             continue
         entries.append(Box12Entry(code=code_observation.text.strip(), amount=amount))
     return entries
+
+
+def compute_box_12_amount_without_code_found(observations: list[TextObservation]) -> bool:
+    """Whether OCR found a real (nonzero) Box 12 amount with no code
+    observation in the same row to pair it with (Phase 8D.1B).
+
+    Per the 2026 Form W-2 instructions, Box 12 represents coded items --
+    a code paired with an amount -- so a nonzero amount with no code is
+    not a placeholder (a placeholder is always exactly "$0.00" or blank,
+    confirmed across all 600 real slots in this dataset, 0 exceptions;
+    see `docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`)
+    but evidence of possibly-incomplete extraction: either the code was
+    printed but OCR missed it, or the amount observation landed in the
+    Box 12 column by coincidence. Either way, silently omitting the
+    entry (as `_apply_ocr_box_12_layout_fallback` correctly does -- a
+    code must never be fabricated) would hide that uncertainty from
+    validation entirely; this signal lets the validator route the
+    document to review instead.
+
+    Read-only and independent of whichever path (label-based primary
+    parse or OCR fallback) produced `document.box_12_entries` -- carried
+    to the validator via
+    `ExtractionSignals.box_12_amount_without_code_found`, never a
+    parser/extraction decision input. `False` (never fabricated `True`)
+    when the page is not a full-page OCR form, or no observation in the
+    amount zone is money-shaped and nonzero.
+    """
+
+    if not _looks_like_full_page_ocr_form(observations):
+        return False
+
+    _, max_y = _layout_extent(observations)
+    row_tolerance = 0.05 * max_y
+    code_centers = [
+        _vertical_center(observation)
+        for observation in _observations_in_zone(observations, BOX_12_CODE_ZONE)
+        if _BOX_12_CODE_TOKEN_RE.match(observation.text.strip())
+    ]
+    for observation in _observations_in_zone(observations, BOX_12_AMOUNT_ZONE):
+        text = observation.text.strip()
+        if not (any(separator in text for separator in ("$", ",", ".")) and _MONEY_RE.match(text)):
+            continue
+        try:
+            amount = parse_money(text, field_path="box_12_entries.amount")
+        except ValueError:
+            continue
+        if not amount:
+            continue
+        center = _vertical_center(observation)
+        if not any(abs(center - code_center) <= row_tolerance for code_center in code_centers):
+            return True
+    return False
+
+
+def compute_employer_address_evidence(
+    document: W2Document, observations: list[TextObservation]
+) -> AddressExtractionEvidence:
+    """Production evidence for `employer.address` extraction (Phase
+    8D.1B), read-only: reuses the exact zone/skip-filter
+    `_apply_ocr_employer_layout_fallbacks` already used to decide
+    `employer.address`, so this measures the real decision path, not an
+    independent reconstruction (same pattern as
+    `compute_employer_name_observation_count`). `region_observation_count`
+    can be nonzero even when `usable_row_count` is too low to complete
+    parsing -- e.g. under rotation, two printed lines can OCR-merge into
+    one row -- which is exactly the evidence gap
+    `Section 2 of docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`
+    found separates every measured extraction failure from every
+    success. All fields `None` when the route never attempted this zone.
+    """
+
+    if not _looks_like_full_page_ocr_form(observations):
+        return AddressExtractionEvidence()
+    region_observations = _observations_in_zone(observations, EMPLOYER_ADDRESS_ZONE)
+    rows = _row_texts_in_zone(
+        observations, EMPLOYER_ADDRESS_ZONE, skip_row=_looks_like_employer_name_label_row
+    )
+    return AddressExtractionEvidence(
+        region_observation_count=len(region_observations),
+        usable_row_count=len(rows),
+        parse_complete=document.employer.address.address_line_1 is not None,
+    )
+
+
+def compute_employee_address_evidence(
+    document: W2Document, observations: list[TextObservation]
+) -> AddressExtractionEvidence:
+    """Same as `compute_employer_address_evidence`, for `employee.address`
+    -- reuses `_apply_ocr_employee_layout_fallbacks`'s own name-row
+    filter (built from the document's own already-resolved name fields)
+    so this measures the real decision path exactly."""
+
+    if not _looks_like_full_page_ocr_form(observations):
+        return AddressExtractionEvidence()
+    region_observations = _observations_in_zone(observations, EMPLOYEE_ADDRESS_ZONE)
+    skip_name_row = _make_employee_name_row_filter(
+        first_name=document.employee.first_name,
+        middle_initial=document.employee.middle_initial,
+        last_name=document.employee.last_name,
+        suffix=document.employee.suffix,
+    )
+    rows = _row_texts_in_zone(observations, EMPLOYEE_ADDRESS_ZONE, skip_row=skip_name_row)
+    return AddressExtractionEvidence(
+        region_observation_count=len(region_observations),
+        usable_row_count=len(rows),
+        parse_complete=document.employee.address.address_line_1 is not None,
+    )
 
 
 def _apply_ocr_state_local_layout_fallback(

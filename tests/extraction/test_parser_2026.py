@@ -14,6 +14,9 @@ from w2_pipeline.extraction.parser_2026 import (
     _clean_layout_token,
     _first_row_text_in_zone,
     _looks_like_employer_name_label_row,
+    compute_box_12_amount_without_code_found,
+    compute_employee_address_evidence,
+    compute_employer_address_evidence,
     compute_employer_name_observation_count,
     parse_money,
     parse_w2_2026_observations,
@@ -1610,3 +1613,151 @@ def test_parser_state_local_no_observations_yields_no_entries() -> None:
     )
 
     assert document.state_local_entries == []
+
+
+# --- Phase 8D.1B: address extraction evidence + Box 12 amount-without-code ---
+
+
+def test_compute_employer_address_evidence_strong_case() -> None:
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        *_employer_box_c_observations(),
+    ]
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="employer-address-evidence-strong",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    evidence = compute_employer_address_evidence(document, observations)
+
+    assert evidence.region_observation_count == 3
+    assert evidence.usable_row_count == 3
+    assert evidence.parse_complete is True
+
+
+def test_compute_employer_address_evidence_incomplete_case() -> None:
+    """Only 2 of the 3 real Box c lines present (the street line is
+    missing entirely) -- the exact "OCR saw something, but not enough to
+    complete" shape the validator rule targets."""
+
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        ocr_obs("Timberline Trading Co.", 162, 414, 342, 39),
+        ocr_obs("Murphy, NC 28906", 163, 489, 285, 40),
+    ]
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="employer-address-evidence-incomplete",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    evidence = compute_employer_address_evidence(document, observations)
+
+    assert evidence.region_observation_count == 2
+    assert evidence.usable_row_count == 2
+    assert evidence.parse_complete is False
+    assert document.employer.address.address_line_1 is None
+
+
+def test_compute_employer_address_evidence_no_region_observations() -> None:
+    observations = _realistic_external_symage_900001_observations()
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="employer-address-evidence-empty",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    evidence = compute_employer_address_evidence(document, observations)
+
+    assert evidence.region_observation_count == 0
+    assert evidence.usable_row_count == 0
+    assert evidence.parse_complete is False
+
+
+def test_compute_address_evidence_none_when_not_full_page_ocr_form() -> None:
+    observations = [ocr_obs("Steven", 10, 10, 20, 10)]
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="employer-address-evidence-not-full-page",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    evidence = compute_employer_address_evidence(document, observations)
+
+    assert evidence.region_observation_count is None
+    assert evidence.usable_row_count is None
+    assert evidence.parse_complete is None
+
+
+def test_compute_employee_address_evidence_strong_case() -> None:
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        *_employee_address_observations(),
+    ]
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="employee-address-evidence-strong",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    evidence = compute_employee_address_evidence(document, observations)
+
+    assert evidence.region_observation_count == 2
+    assert evidence.usable_row_count == 2
+    assert evidence.parse_complete is True
+
+
+def test_compute_employee_address_evidence_incomplete_case() -> None:
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        ocr_obs("709 Mountain Island Hwy", 163, 873, 380, 40),
+    ]
+    document, _warnings = parse_w2_2026_observations(
+        ObservationSet(route=AcquisitionRoute.OCR, observations=observations),
+        document_id="employee-address-evidence-incomplete",
+        source_filename="external.png",
+        source_type=SourceDocumentType.PNG,
+    )
+
+    evidence = compute_employee_address_evidence(document, observations)
+
+    assert evidence.usable_row_count == 1
+    assert evidence.parse_complete is False
+    assert document.employee.address.address_line_1 is None
+
+
+def test_compute_box_12_amount_without_code_found_true_case() -> None:
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        ocr_obs("$7,142.00", 2230, 804, 160, 40),
+    ]
+
+    assert compute_box_12_amount_without_code_found(observations) is True
+
+
+def test_compute_box_12_amount_without_code_found_false_when_code_matches() -> None:
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        *_box_12_observations(),
+    ]
+
+    assert compute_box_12_amount_without_code_found(observations) is False
+
+
+def test_compute_box_12_amount_without_code_found_false_for_zero_placeholder() -> None:
+    """A "$0.00" placeholder with no code must never be flagged -- it is
+    the normal unused-slot pattern, not an anomaly (Phase 8D.1B Box 12
+    semantics audit)."""
+
+    observations = [
+        *_realistic_external_symage_900001_observations(),
+        ocr_obs("$0.00", 2294, 901, 90, 40),
+    ]
+
+    assert compute_box_12_amount_without_code_found(observations) is False

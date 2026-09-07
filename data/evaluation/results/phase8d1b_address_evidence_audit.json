@@ -1,0 +1,171 @@
+{
+  "phase": "8D.1B",
+  "method": "For each of 600 real documents, compute employer/employee address zone evidence (region_observation_count, usable_row_count via the exact row-grouping+skip-filter production extraction uses) and compare against ground truth correctness.",
+  "employer_address_row_count_distribution": {
+    "correct": {
+      "3": 589
+    },
+    "incorrect": {
+      "2": 9,
+      "3": 2
+    }
+  },
+  "employee_address_row_count_distribution": {
+    "correct": {
+      "2": 592
+    },
+    "incorrect": {
+      "1": 8
+    }
+  },
+  "finding": "employer_row_count < 3 <=> extraction incomplete (0 exceptions across 600 docs); employee_row_count < 2 <=> extraction incomplete (0 exceptions across 600 docs). All correct extractions have row_count exactly at the expected count (3 for employer, 2 for employee); every row-count-deficient case has parse_complete=False.",
+  "unsafe_cases_traced": [
+    {
+      "document_id": "symage_900021-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 1,
+      "employee_correct": false
+    },
+    {
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 3,
+      "employer_correct": true,
+      "employee_row_count": 1,
+      "employee_correct": false
+    },
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "variant_id": "blurred_png",
+      "employer_row_count": 3,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900039-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900049-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900058-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 3,
+      "employer_correct": true,
+      "employee_row_count": 1,
+      "employee_correct": false
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "variant_id": "compressed_jpeg",
+      "employer_row_count": 3,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900077-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900081-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 3,
+      "employer_correct": true,
+      "employee_row_count": 1,
+      "employee_correct": false
+    },
+    {
+      "document_id": "symage_900087-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 3,
+      "employer_correct": true,
+      "employee_row_count": 1,
+      "employee_correct": false
+    },
+    {
+      "document_id": "symage_900137-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 3,
+      "employer_correct": true,
+      "employee_row_count": 1,
+      "employee_correct": false
+    },
+    {
+      "document_id": "symage_900000-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 3,
+      "employer_correct": true,
+      "employee_row_count": 1,
+      "employee_correct": false
+    },
+    {
+      "document_id": "symage_900125-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    }
+  ],
+  "already_reviewed_cases_for_comparison": [
+    {
+      "document_id": "symage_900033-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900082-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900146-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 2,
+      "employee_correct": true
+    },
+    {
+      "document_id": "symage_900045-irs_w2_single_page_2026-p0",
+      "variant_id": "rotated_png",
+      "employer_row_count": 2,
+      "employer_correct": false,
+      "employee_row_count": 1,
+      "employee_correct": false
+    }
+  ],
+  "evidence_signal_coverage": {
+    "unsafe_cases_total": 13,
+    "caught_by_row_count_evidence": 11,
+    "not_caught_by_row_count_evidence": [
+      "symage_900027-irs_w2_single_page_2026-p0:blurred_png",
+      "symage_900061-irs_w2_single_page_2026-p0:compressed_jpeg"
+    ],
+    "not_caught_reason": "Both remaining cases (symage_900027/blurred_png, symage_900061/compressed_jpeg) have row_count at the expected value (parse_complete=True) but the OCR-recognized text itself is a character-level misread (e.g. \"Ave\" read as \"Aacute;ve\"), a different failure class (OCR recognition accuracy) this structural evidence signal is not designed to detect -- consistent with this project (Phase 8C.4) never using OCR confidence scores as a validation/decision input."
+  }
+}

@@ -117,6 +117,25 @@ class Box13CheckboxEvidence(ExtractionModel):
     decision_margin: float | None = None
 
 
+class AddressExtractionEvidence(ExtractionModel):
+    """Discrete production evidence for one party's address extraction
+    (Phase 8D.1B) -- deliberately not collapsed into one "address
+    confidence" score, the same reasoning `Box13CheckboxEvidence` already
+    documents. `region_observation_count` is raw OCR observations found
+    in the address zone (can be nonzero even when extraction still
+    fails, e.g. under rotation two printed lines can OCR-merge into one
+    row); `usable_row_count` is the same observations after row-grouping
+    -- the number of distinct printed lines extraction could actually
+    work with; `parse_complete` is whether a value ultimately made it
+    into `address_line_1`. All `None` (never fabricated) when the route
+    never attempted this zone at all.
+    """
+
+    region_observation_count: int | None = None
+    usable_row_count: int | None = None
+    parse_complete: bool | None = None
+
+
 class ObservationSet(ExtractionModel):
     """Common text/layout representation consumed by the W-2 parser."""
 
@@ -180,5 +199,33 @@ class ExtractionResult(ExtractionModel):
             "never fabricated. Threaded to the validator via "
             "ExtractionSignals.checkbox_evidence_* fields, never a parser/"
             "extraction decision input."
+        ),
+    )
+    box_12_amount_without_code_found: bool = Field(
+        default=False,
+        description=(
+            "Whether OCR found a real (nonzero) Box 12 amount with no "
+            "matching code observation (Phase 8D.1B) -- "
+            "w2_pipeline.extraction.parser_2026.compute_box_12_amount_without_code_found, "
+            "read-only production evidence of possibly-incomplete Box 12 "
+            "extraction. Carried to the validator via "
+            "ExtractionSignals.box_12_amount_without_code_found -- never "
+            "a parser/extraction decision input."
+        ),
+    )
+    employer_address_evidence: AddressExtractionEvidence | None = Field(
+        default=None,
+        description=(
+            "Phase 8D.1B production evidence for employer.address "
+            "extraction -- w2_pipeline.extraction.parser_2026."
+            "compute_address_extraction_evidence. Carried to the "
+            "validator via ExtractionSignals.employer_address_evidence_* "
+            "fields, never a parser/extraction decision input."
+        ),
+    )
+    employee_address_evidence: AddressExtractionEvidence | None = Field(
+        default=None,
+        description=(
+            "Same as employer_address_evidence, for employee.address."
         ),
     )

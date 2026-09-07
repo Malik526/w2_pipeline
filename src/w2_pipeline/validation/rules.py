@@ -142,10 +142,12 @@ ALL_RULE_NAMES = (
     "employer_name_address_leak",
     "employer_name_layout_anomaly",
     "address_format",
+    "address_extraction_evidence",
     "retirement_plan_checkbox_evidence",
     "core_wage_tax_fields_required",
     "monetary_fields_valid",
     "box_12_code_format",
+    "box_12_amount_without_code",
     "no_empty_state_local_entries",
 )
 
@@ -169,10 +171,12 @@ def run_all_rules(document: W2Document, signals: ExtractionSignals) -> list[Vali
     issues.extend(_check_employer_name_address_leak(document))
     issues.extend(_check_employer_name_layout_anomaly(document, signals))
     issues.extend(_check_address_format(document))
+    issues.extend(_check_address_extraction_evidence(signals))
     issues.extend(_check_retirement_plan_checkbox_evidence(signals))
     issues.extend(_check_core_wage_tax_fields_required(document))
     issues.extend(_check_monetary_fields_valid(document))
     issues.extend(_check_box_12_code_format(document))
+    issues.extend(_check_box_12_amount_without_code(signals))
     issues.extend(_check_no_empty_state_local_entries(document))
     return issues
 
@@ -413,6 +417,82 @@ def _address_format_issues(address: Address, field_prefix: str) -> list[Validati
     return issues
 
 
+def _check_address_extraction_evidence(signals: ExtractionSignals) -> list[ValidationIssue]:
+    """Judge `employer.address`/`employee.address` extraction *evidence*
+    (Phase 8D.1B), independent of `_check_address_format` above (which
+    only judges a value that already exists).
+
+    Motivation, measured not assumed
+    (`docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`):
+    the Phase 8D.1A expanded benchmark's 13 unsafe-accepted address
+    failures were traced to one clean, deterministic evidence pattern --
+    OCR found real observations in the address zone
+    (`region_observation_count > 0`), but row-grouping produced too few
+    usable lines to complete parsing (`parse_complete is False`). Across
+    all 600 real documents this pattern has zero false positives (every
+    one of the 589/592 *correct* employer/employee address extractions
+    has `parse_complete is True`) and catches 11 of the 13 unsafe cases
+    -- the remaining 2 are OCR character-recognition errors (e.g. "Ave"
+    misread as "Áve") that produce a complete-but-wrong value, a
+    different failure class this evidence-shape signal cannot see and
+    is not designed to (see the phase doc's Section on OCR-confidence
+    signals being out of scope, consistent with Phase 8C.4's decision).
+
+    Deliberately does NOT fire on `parse_complete is False` alone: a
+    region with zero observations at all is a route/document that never
+    had this data to begin with (see the route-scoping guard below),
+    not an extraction failure.
+    """
+
+    issues: list[ValidationIssue] = []
+    if signals.route in ("ocr", "mixed"):
+        issues.extend(
+            _address_extraction_evidence_issues(
+                field_prefix="employer.address",
+                code="employer_address_extraction_incomplete",
+                region_observation_count=signals.employer_address_evidence_region_observation_count,
+                parse_complete=signals.employer_address_evidence_parse_complete,
+            )
+        )
+        issues.extend(
+            _address_extraction_evidence_issues(
+                field_prefix="employee.address",
+                code="employee_address_extraction_incomplete",
+                region_observation_count=signals.employee_address_evidence_region_observation_count,
+                parse_complete=signals.employee_address_evidence_parse_complete,
+            )
+        )
+    return issues
+
+
+def _address_extraction_evidence_issues(
+    *,
+    field_prefix: str,
+    code: str,
+    region_observation_count: int | None,
+    parse_complete: bool | None,
+) -> list[ValidationIssue]:
+    if region_observation_count is None or parse_complete is None:
+        return []
+    if parse_complete or region_observation_count == 0:
+        return []
+    return [
+        ValidationIssue(
+            code=code,
+            field_path=f"{field_prefix}.address_line_1",
+            severity=ValidationSeverity.ERROR,
+            message=(
+                f"OCR found {region_observation_count} observation(s) in the "
+                f"{field_prefix} region, but extraction could not assemble a "
+                "complete address from them (too few usable printed lines) -- "
+                "consistent with an incomplete extraction, not a document that "
+                "genuinely has no address."
+            ),
+            metadata={"region_observation_count": region_observation_count},
+        )
+    ]
+
+
 def _check_retirement_plan_checkbox_evidence(signals: ExtractionSignals) -> list[ValidationIssue]:
     """Judge `box_13.retirement_plan`'s checkbox-detector evidence quality
     (Phase 8C.12), not the extracted boolean's validity -- a boolean is
@@ -612,6 +692,40 @@ def _check_monetary_fields_valid(document: W2Document) -> list[ValidationIssue]:
                 )
             )
     return issues
+
+
+def _check_box_12_amount_without_code(signals: ExtractionSignals) -> list[ValidationIssue]:
+    """Route to review when OCR found a real (nonzero) Box 12 amount with
+    no matching code (Phase 8D.1B) -- evidence of possibly-incomplete
+    Box 12 extraction, not a genuine unused-slot placeholder.
+
+    Per the 2026 Form W-2 instructions, Box 12 represents coded items; a
+    placeholder for an unused slot is always exactly "$0.00" or blank
+    (confirmed across all 600 real slots in the external benchmark, 0
+    exceptions -- see
+    docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md),
+    so a *nonzero* amount with no code is never a placeholder and must
+    not be silently dropped without at least surfacing the uncertainty
+    to a reviewer -- `_extract_box_12_entries`/`_apply_ocr_box_12_layout_fallback`
+    are still correct to never fabricate a code, but omitting the entry
+    entirely would otherwise hide this from validation completely.
+    """
+
+    if not signals.box_12_amount_without_code_found:
+        return []
+    return [
+        ValidationIssue(
+            code="box_12_amount_without_code",
+            field_path="box_12_entries",
+            severity=ValidationSeverity.ERROR,
+            message=(
+                "OCR found a nonzero Box 12 amount with no matching code -- "
+                "not a valid Box12Entry (a code must never be fabricated), but "
+                "also not the usual blank/\"$0.00\" unused-slot pattern, "
+                "consistent with incomplete Box 12 extraction."
+            ),
+        )
+    ]
 
 
 def _check_box_12_code_format(document: W2Document) -> list[ValidationIssue]:

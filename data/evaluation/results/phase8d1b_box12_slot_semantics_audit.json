@@ -1,0 +1,25 @@
+{
+  "phase": "8D.1B",
+  "method": "Direct inspection of all 600 Box 12 slots (4 slots x 150 base documents) via FUNSD entity linking: each 'Code' question (12a-12d) paired by geometric row order with the corresponding amount answer from the shared 'See instructions for box 12' question's linking list -- the same pairing logic run_annotation_coverage_audit.py/_extract_box_12_entries already use, applied here without the code-blank filter so every slot (not just real entries) is counted.",
+  "slot_state_counts": {
+    "blank_code_blank_amount": 300,
+    "blank_code_zero_amount": 135,
+    "blank_code_nonzero_amount": 0,
+    "populated_code_zero_amount": 0,
+    "populated_code_nonzero_amount": 165
+  },
+  "total_slots_examined": 600,
+  "findings": [
+    "A blank-code slot's amount is ALWAYS either entirely blank (300/600) or exactly '$0.00' (135/600) -- never nonzero. 0/600 counter-examples.",
+    "A populated-code slot's amount is ALWAYS nonzero -- never '$0.00'. 0/600 counter-examples.",
+    "165/600 populated-code slots exactly matches the independently-computed entry-count distribution (69 one-entry docs + 48 two-entry docs = 165 real entries), cross-confirming both measurements.",
+    "This is airtight, symmetric evidence (zero exceptions in either direction across all 600 slots) that a blank-code '$0.00' is a rendering/synthetic-generator placeholder for an unused slot, not a real Box 12 entry that happens to have a zero-dollar amount."
+  ],
+  "canonical_schema_evidence": {
+    "Box12Entry.code": "str = Field(min_length=1, max_length=2) -- required, non-nullable",
+    "Box12Entry.amount": "Money (Decimal) -- required, non-nullable",
+    "docs/contracts/canonical-w2-schema.md": "'Box 12 is modeled as repeated Box12Entry records with code and amount.' -- no mention of representing unused/blank visual slots.",
+    "conclusion": "The canonical schema already structurally cannot represent a blank-code or blank-amount slot at all (both fields are required) -- confirming box_12_entries is intended to mean 'actual semantic Box 12 code/amount entries', not 'every visually printed slot 12a-12d'."
+  },
+  "decision": "A: current omission is semantically correct. No schema change. box_12_entries continues to represent only real, complete, code-bearing entries; a blank-code slot (whether truly blank or a printed '$0.00' placeholder) is correctly excluded, matching both the measured data pattern and the canonical schema's own pre-existing non-nullable field design."
+}

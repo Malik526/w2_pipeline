@@ -95,6 +95,29 @@ class ExtractionSignals(ValidationModel):
     checkbox_evidence_shape_score: float | None = None
     checkbox_evidence_interior_ink_ratio: float | None = None
     checkbox_evidence_decision_margin: float | None = None
+    # Phase 8D.1B: mirror w2_pipeline.extraction.models.AddressExtractionEvidence
+    # as primitives, same reasoning as checkbox_evidence_* above. None
+    # when the route never attempted the address zone at all.
+    employer_address_evidence_region_observation_count: int | None = None
+    employer_address_evidence_usable_row_count: int | None = None
+    employer_address_evidence_parse_complete: bool | None = None
+    employee_address_evidence_region_observation_count: int | None = None
+    employee_address_evidence_usable_row_count: int | None = None
+    employee_address_evidence_parse_complete: bool | None = None
+    box_12_amount_without_code_found: bool = Field(
+        default=False,
+        description=(
+            "Phase 8D.1B: mirrors "
+            "w2_pipeline.extraction.models.ExtractionResult.box_12_amount_without_code_found "
+            "-- whether OCR found a real (nonzero) Box 12 amount with no "
+            "matching code, evidence of possibly-incomplete Box 12 "
+            "extraction rather than a genuine unused-slot placeholder "
+            "(a placeholder's amount is always blank or exactly '$0.00', "
+            "never a real nonzero value -- confirmed across all 600 real "
+            "slots in the external benchmark, see "
+            "docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md)."
+        ),
+    )
 
 
 class ValidationIssue(ValidationModel):

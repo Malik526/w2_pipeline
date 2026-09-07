@@ -112,7 +112,21 @@ class FederalWagesAndTaxes(ContractModel):
 
 
 class Box12Entry(ContractModel):
-    """Repeated Box 12 code/value entry."""
+    """One IRS Box 12 coded item: an IRS-defined code paired with an amount.
+
+    Per the 2026 Form W-2 instructions, Box 12 represents coded items,
+    not a fixed set of visually printed slots (12a-12d is a print-layout
+    convenience, not part of the data model) -- `code` and `amount` are
+    both required precisely because a "slot" with no code is not a
+    coded item at all, whether the form prints it blank or with a
+    placeholder "$0.00" (confirmed empirically, Phase 8D.1B: across all
+    600 real slots audited, a blank code's amount is always either
+    blank or exactly "$0.00", never a real nonzero value -- see
+    `docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`).
+    A slot with neither a real code nor a real amount is simply not
+    represented here at all, the same way an unused line is not
+    represented as an empty `Box12Entry`.
+    """
 
     code: str = Field(min_length=1, max_length=2)
     amount: Money

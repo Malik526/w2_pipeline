@@ -1499,6 +1499,45 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.1B - Address Safety Closure + Box 12 Blank-Slot Semantics Audit
+
+Full record: `docs/experiments/phase8d1b-address-safety-and-box12-slot-semantics.md`.
+
+Closed most of the unsafe-acceptance gap Phase 8D.1A surfaced. Traced
+all 13 unsafe address failures and found a clean, zero-exception
+evidence separator: `usable_row_count` (OCR observations in the address
+zone after row-grouping) sits exactly at the expected line count for
+every one of the 589/592 correct extractions and below it for every
+structurally-failed one. Built the full evidence-threading architecture
+(`AddressExtractionEvidence` -> `ExtractionResult` -> `ExtractionSignals`
+-> new `address_extraction_evidence` rule), mirroring Phase 8C.12's
+checkbox-evidence pattern -- not a bare null-check.
+
+**Result**: unsafe acceptance 2.17% -> 0.33% overall, 7.33% -> 0.0% on
+`rotated_png`; error detection recall 23.5% -> 88.2% overall (26.7% ->
+100% on `rotated_png`); zero false-review cost. 11/13 unsafe cases
+closed; the remaining 2 are a genuinely different failure class (OCR
+character-recognition misreads under blur/compression), honestly
+reported, not chased -- consistent with Phase 8C.4's standing decision
+against OCR-confidence-based validation. Demonstrated the full
+formerly-unsafe review path end-to-end for real: extraction ->
+needs_review -> reviewer correction -> revalidation -> accepted ->
+finalized -> JSON/CSV.
+
+Separately confirmed (per the 2026 IRS W-2 instructions) that Box 12
+represents coded items, not every printed slot: an airtight, symmetric
+600-slot audit found a blank code's amount is always blank or exactly
+"$0.00" (0 exceptions) and a populated code's amount is always nonzero
+(0 exceptions) -- the existing omission of blank-code placeholders from
+canonical `box_12_entries` was already correct. `Box12Entry`'s docstring
+now states this explicitly. Added a defensive signal/rule
+(`box_12_amount_without_code`) for the one anomalous shape (nonzero
+amount, no code) never observed in this dataset but explicitly
+in-contract.
+
+22 new tests; full suite: **597 tests passing, up from 573, zero
+regressions.** Decision: Address A, Box 12 A.
+
 ### Phase 8D.1A - Annotation Coverage Audit, Ground-Truth Adapter Repair, and Full-Field Downstream Verification
 
 Full record: `docs/experiments/phase8d1a-annotation-coverage-and-full-field-remediation.md`.
@@ -1753,16 +1792,16 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Future Phases (after Phase 8D.1A)
+## Future Phases (after Phase 8D.1B)
 
 ```text
-Phase 8D.1B (recommended, not yet scoped) - close the unsafe-acceptance
-gap Phase 8D.1A surfaced: an evidence-calibrated validator signal for
-"address extraction produced nothing at all," analogous to how Phase
-8C.12 calibrated the checkbox validator, rather than a hasty bolt-on.
-Should happen before address fields are treated as production-
-trustworthy without human review. Optionally also close the ~13-document
-rotated_png address-extraction margin found in the same phase.
+Phase 8D.1C (optional, not yet scoped) - the 2 residual unsafe address
+cases (OCR character-recognition misreads under blur/compression) are a
+different failure class than Phase 8D.1B's evidence signal targets;
+closing them would need either an OCR-confidence-based signal (a
+boundary this project has deliberately not crossed since Phase 8C.4) or
+a content-plausibility check (e.g. non-ASCII characters in a printed
+US street address), not attempted here.
 
 Phase 8D.2 (not yet scoped, per the Phase 8D.1 brief) - end-user/
 operator walkthrough of the complete backend.

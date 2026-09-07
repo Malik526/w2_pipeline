@@ -286,6 +286,243 @@ def test_address_with_no_state_or_postal_code_not_flagged(happy_path_document: W
     assert "invalid_address_postal_code_format" not in codes
 
 
+# --- Phase 8D.1B: address extraction evidence ----------------------------
+
+
+def test_strong_employer_address_evidence_not_flagged(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(
+        route="ocr",
+        employer_address_evidence_region_observation_count=4,
+        employer_address_evidence_usable_row_count=3,
+        employer_address_evidence_parse_complete=True,
+    )
+
+    codes = [issue.code for issue in run_all_rules(happy_path_document, signals)]
+
+    assert "employer_address_extraction_incomplete" not in codes
+
+
+def test_strong_employee_address_evidence_not_flagged(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(
+        route="ocr",
+        employee_address_evidence_region_observation_count=3,
+        employee_address_evidence_usable_row_count=2,
+        employee_address_evidence_parse_complete=True,
+    )
+
+    codes = [issue.code for issue in run_all_rules(happy_path_document, signals)]
+
+    assert "employee_address_extraction_incomplete" not in codes
+
+
+def test_missing_employer_address_evidence_with_observations_is_flagged(
+    happy_path_document: W2Document,
+) -> None:
+    """The exact evidence shape measured across all 13 real Phase 8D.1A
+    unsafe-acceptance cases: OCR found observations in the region
+    (`region_observation_count > 0`) but extraction never completed
+    (`parse_complete=False`)."""
+
+    signals = ExtractionSignals(
+        route="ocr",
+        employer_address_evidence_region_observation_count=4,
+        employer_address_evidence_usable_row_count=2,
+        employer_address_evidence_parse_complete=False,
+    )
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    matching = [issue for issue in issues if issue.code == "employer_address_extraction_incomplete"]
+    assert len(matching) == 1
+    assert matching[0].severity == ValidationSeverity.ERROR
+    assert matching[0].field_path == "employer.address.address_line_1"
+
+
+def test_missing_employee_address_evidence_with_observations_is_flagged(
+    happy_path_document: W2Document,
+) -> None:
+    signals = ExtractionSignals(
+        route="ocr",
+        employee_address_evidence_region_observation_count=3,
+        employee_address_evidence_usable_row_count=1,
+        employee_address_evidence_parse_complete=False,
+    )
+
+    codes = [issue.code for issue in run_all_rules(happy_path_document, signals)]
+
+    assert "employee_address_extraction_incomplete" in codes
+
+
+def test_zero_region_observations_not_flagged(happy_path_document: W2Document) -> None:
+    """A region with zero OCR observations at all is a route/document
+    that never had this data to begin with, not an extraction failure --
+    must not be conflated with the 13-real-case "found evidence but
+    could not complete" pattern this rule targets."""
+
+    signals = ExtractionSignals(
+        route="ocr",
+        employer_address_evidence_region_observation_count=0,
+        employer_address_evidence_usable_row_count=0,
+        employer_address_evidence_parse_complete=False,
+    )
+
+    codes = [issue.code for issue in run_all_rules(happy_path_document, signals)]
+
+    assert "employer_address_extraction_incomplete" not in codes
+
+
+def test_no_address_evidence_supplied_is_not_flagged(happy_path_document: W2Document) -> None:
+    """Missing evidence (e.g. a caller/pipeline that never threaded it)
+    must not be treated as a failure -- only real "found evidence, could
+    not complete" evidence fires this rule."""
+
+    signals = ExtractionSignals(route="ocr")
+
+    codes = [issue.code for issue in run_all_rules(happy_path_document, signals)]
+
+    assert "employer_address_extraction_incomplete" not in codes
+    assert "employee_address_extraction_incomplete" not in codes
+
+
+def test_address_extraction_evidence_route_scoped_to_ocr_and_mixed(happy_path_document: W2Document) -> None:
+    incomplete_evidence = {
+        "employer_address_evidence_region_observation_count": 4,
+        "employer_address_evidence_usable_row_count": 2,
+        "employer_address_evidence_parse_complete": False,
+    }
+
+    for route in (None, "vlm", "native_pdf"):
+        signals = ExtractionSignals(route=route, **incomplete_evidence)
+        codes = [issue.code for issue in run_all_rules(happy_path_document, signals)]
+        assert "employer_address_extraction_incomplete" not in codes
+
+    for route in ("ocr", "mixed"):
+        signals = ExtractionSignals(route=route, **incomplete_evidence)
+        codes = [issue.code for issue in run_all_rules(happy_path_document, signals)]
+        assert "employer_address_extraction_incomplete" in codes
+
+
+def test_employer_and_employee_address_issues_are_independent(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(
+        route="ocr",
+        employer_address_evidence_region_observation_count=4,
+        employer_address_evidence_usable_row_count=2,
+        employer_address_evidence_parse_complete=False,
+        employee_address_evidence_region_observation_count=3,
+        employee_address_evidence_usable_row_count=1,
+        employee_address_evidence_parse_complete=False,
+    )
+
+    codes = {issue.code for issue in run_all_rules(happy_path_document, signals)}
+
+    assert "employer_address_extraction_incomplete" in codes
+    assert "employee_address_extraction_incomplete" in codes
+
+
+def test_address_evidence_issue_does_not_suppress_employer_name_issues() -> None:
+    document = generate_synthetic_w2_documents_for_name("Elan Consulting Corp 2861 Geneva Ponce De Leon Rd")
+    signals = ExtractionSignals(
+        route="ocr",
+        employer_name_observation_count=2,
+        employer_address_evidence_region_observation_count=4,
+        employer_address_evidence_usable_row_count=2,
+        employer_address_evidence_parse_complete=False,
+    )
+
+    codes = {issue.code for issue in run_all_rules(document, signals)}
+
+    assert "employer_name_address_leak" in codes
+    assert "employer_name_layout_anomaly" in codes
+    assert "employer_address_extraction_incomplete" in codes
+
+
+def test_optional_address_line_2_null_does_not_trigger_review(happy_path_document: W2Document) -> None:
+    """Missing whole address (Section 9's evidence-based rule) is a
+    distinct concept from an optional `address_line_2` that is
+    legitimately null -- the latter must never be conflated with the
+    former."""
+
+    document = happy_path_document.model_copy(
+        update={
+            "employer": happy_path_document.employer.model_copy(
+                update={
+                    "address": happy_path_document.employer.address.model_copy(
+                        update={
+                            "address_line_1": "105 Penland St",
+                            "address_line_2": None,
+                            "city": "Murphy",
+                            "state": "NC",
+                            "postal_code": "28906",
+                        }
+                    )
+                }
+            )
+        }
+    )
+    signals = ExtractionSignals(
+        route="ocr",
+        employer_address_evidence_region_observation_count=3,
+        employer_address_evidence_usable_row_count=3,
+        employer_address_evidence_parse_complete=True,
+    )
+
+    codes = [issue.code for issue in run_all_rules(document, signals)]
+
+    assert "employer_address_extraction_incomplete" not in codes
+    assert "invalid_address_postal_code_format" not in codes
+
+
+# --- Phase 8D.1B: Box 12 amount-without-code -----------------------------
+
+
+def test_box_12_amount_without_code_signal_routes_to_review(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(box_12_amount_without_code_found=True)
+
+    issues = run_all_rules(happy_path_document, signals)
+
+    matching = [issue for issue in issues if issue.code == "box_12_amount_without_code"]
+    assert len(matching) == 1
+    assert matching[0].severity == ValidationSeverity.ERROR
+    assert matching[0].field_path == "box_12_entries"
+
+
+def test_box_12_amount_without_code_absent_signal_not_flagged(happy_path_document: W2Document) -> None:
+    codes = _issue_codes(happy_path_document)
+
+    assert "box_12_amount_without_code" not in codes
+
+
+def test_checkbox_rules_unaffected_by_address_and_box12_signals(happy_path_document: W2Document) -> None:
+    signals = ExtractionSignals(
+        route="ocr",
+        checkbox_evidence_detection_method="anchor_relative",
+        checkbox_evidence_fallback_used=False,
+        checkbox_evidence_anchor_found=True,
+        checkbox_evidence_checkbox_found=True,
+        checkbox_evidence_shape_score=0.86,
+        checkbox_evidence_interior_ink_ratio=0.27,
+        checkbox_evidence_decision_margin=0.15,
+        employer_address_evidence_region_observation_count=4,
+        employer_address_evidence_usable_row_count=2,
+        employer_address_evidence_parse_complete=False,
+        box_12_amount_without_code_found=True,
+    )
+
+    codes = {issue.code for issue in run_all_rules(happy_path_document, signals)}
+
+    checkbox_codes = {
+        "retirement_plan_checkbox_evidence_missing",
+        "retirement_plan_checkbox_fallback_used",
+        "retirement_plan_checkbox_anchor_missing",
+        "retirement_plan_checkbox_not_found",
+        "retirement_plan_checkbox_low_decision_margin",
+        "retirement_plan_checkbox_geometry_anomaly",
+    }
+    assert not (codes & checkbox_codes)
+    assert "employer_address_extraction_incomplete" in codes
+    assert "box_12_amount_without_code" in codes
+
+
 def test_extraction_failed_signal_reported_as_error(happy_path_document: W2Document) -> None:
     from w2_pipeline.validation.models import ExtractionOutcome
 
@@ -323,7 +560,7 @@ def test_multiple_issues_are_all_returned_not_short_circuited(happy_path_documen
 
 
 def test_all_rule_names_documents_the_checks_run_count() -> None:
-    assert len(ALL_RULE_NAMES) == 14
+    assert len(ALL_RULE_NAMES) == 16
 
 
 # --- Phase 8C.8: employer.name address-leak rule -----------------------

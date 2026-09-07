@@ -295,6 +295,58 @@ def test_external_adapter_box_12_all_slots_blank_yields_no_entries() -> None:
     assert not any(path.startswith("box_12_entries[") for path in result.evaluated_field_paths)
 
 
+# --- Phase 8D.1B: Box 12 blank-code "$0.00" placeholder semantics -------
+#
+# The slot-semantics audit (`data/evaluation/results/phase8d1b_box12_slot_semantics_audit.json`)
+# examined all 600 real slots (4 x 150 base documents) and found a
+# perfectly symmetric, zero-exception pattern: a blank-code slot's
+# amount is always either entirely blank or exactly "$0.00" (never
+# nonzero); a populated-code slot's amount is always nonzero (never
+# "$0.00"). Combined with `Box12Entry.code`/`.amount` both being
+# required, non-nullable schema fields, this confirms a blank-code
+# "$0.00" is a rendering/synthetic-generator placeholder for an unused
+# slot, not a real Box 12 entry with a genuinely zero-dollar amount --
+# the current omission is the intended, semantically-correct behavior,
+# not an oversight. These tests pin that decision down explicitly.
+
+
+def test_external_adapter_populated_code_with_zero_amount_is_still_emitted() -> None:
+    """Never observed in the real 600-slot audit, but the decision here
+    is deliberate: a *populated* code paired with a genuinely zero
+    amount is still a real, complete Box12Entry (both required fields
+    present) and must not be silently dropped -- only a *blank* code is
+    grounds for exclusion."""
+
+    record = _full_coverage_record()
+    form = json.loads(record["funsd_json"])
+    next(entity for entity in form if entity["id"] == 23)["text"] = "C"
+    next(entity for entity in form if entity["id"] == 27)["text"] = "$0.00"
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert Box12Entry(code="C", amount=Decimal("0.00")) in result.document.box_12_entries
+
+
+def test_external_adapter_blank_code_with_nonzero_amount_is_dropped_not_fabricated() -> None:
+    """Never observed in the real 600-slot audit (this exact combination
+    has 0/600 occurrences), but the explicit, documented decision for
+    this anomalous shape: a nonzero amount with no code cannot become a
+    canonical Box12Entry (the schema requires a code, and one must never
+    be fabricated), so it is dropped -- the same outcome as a "$0.00"
+    placeholder, reached for a different, anomalous reason rather than
+    silently coinciding with it."""
+
+    record = _full_coverage_record()
+    form = json.loads(record["funsd_json"])
+    next(entity for entity in form if entity["id"] == 27)["text"] = "$500.00"
+    record["funsd_json"] = json.dumps(form)
+
+    result = SymageW2Adapter().build_ground_truth(record)
+
+    assert result.document.box_12_entries == [Box12Entry(code="DD", amount=Decimal("2994.37"))]
+
+
 def test_external_adapter_maps_state_local_entry() -> None:
     result = SymageW2Adapter().build_ground_truth(_full_coverage_record())
 
