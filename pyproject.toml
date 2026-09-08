@@ -27,6 +27,15 @@ paddle = [
     "paddlepaddle>=3,<4",
     "paddleocr>=3,<4",
 ]
+# Phase 8D.7: thin FastAPI transport layer for the Next.js demo UI
+# (`w2_pipeline.api`). No pipeline/business logic lives here -- it only
+# calls `run_document()`/`run_batch()` -- so this stays a separate,
+# optional extra rather than a base dependency.
+api = [
+    "fastapi>=0.104,<1",
+    "uvicorn[standard]>=0.24,<1",
+    "python-multipart>=0.0.9,<1",
+]
 # GPU execution deliberately excludes a pinned `paddlepaddle-gpu` dependency
 # here: NVIDIA CUDA build selection depends on the local driver version and
 # GPU wheels are distributed from Paddle's own CUDA-specific package index

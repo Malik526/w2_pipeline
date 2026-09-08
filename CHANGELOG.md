@@ -2,6 +2,64 @@
 
 ## 2026-09-07
 
+### Phase 8D.7 - Lightweight Next.js + FastAPI Demo Interface
+
+- Added `src/w2_pipeline/api/` (`app.py`, `service.py`, `schemas.py`,
+  `uploads.py`), a thin FastAPI transport layer over the unmodified
+  `run_document()`/`run_batch()` application services -- no
+  extraction/validation/review/export/CSV-flattening logic added.
+  Routes: `GET /api/health`, `POST /api/process` (one file ->
+  `run_document()`, two or more -> `run_batch()`, always exactly one
+  call), `GET /api/runs/{run_id}`,
+  `GET /api/runs/{run_id}/documents/{document_id}` (adds canonical
+  W2Document data), `GET .../final.json`/`.../final.csv`,
+  `GET /api/runs/{run_id}/batch.csv`.
+- Added `frontend/`, a Next.js 16 + TypeScript + Tailwind demo UI:
+  upload (drag/drop + picker), a results table with status
+  badges/latency, a run summary (model startup, mean/median latency,
+  total wall time), a document detail panel (canonical W-2 data,
+  review issues/ID, downloads), and a collapsed "How it works" panel.
+  Calls the FastAPI API via plain `fetch` -- no state-management or UI
+  component library, no business logic in TypeScript.
+- Added a shared, lazily-warmed `PipelineAExtractor` reused across
+  HTTP requests (`service._get_shared_extractor()`), guarded by a
+  non-blocking lock (`409` on concurrent access, `502` with a clean
+  retry path on backend-startup failure) -- the same
+  build-once/warm-once/reuse pattern `run_batch()` already uses within
+  one batch, extended across requests.
+- Fixed a timing-reporting gap found during this phase's own real
+  smoke test: the shared extractor's real cold-start cost happened
+  *before* `run_document()`/`run_batch()` started their own timers, so
+  those functions always reported near-zero `model_startup_seconds`
+  even on a genuinely cold first request, silently absorbing the real
+  cost into unreported wall time. Fixed by measuring the shared
+  extractor's own build/warm-up duration in `service.py` and reporting
+  that at the run level instead; covered by a regression test.
+- Upload/download safety: uploaded filenames are sanitized to a
+  `[A-Za-z0-9_-]` document ID before touching any filesystem path
+  (never the raw filename); every download route re-validates
+  `run_id`/`document_id` against that run's own persisted manifest and
+  only ever serves the two fixed `final.json`/`final.csv` filenames.
+- Real UI smoke run (PaddleOCR, GPU) against the same known accepted/
+  needs_review/mixed-batch cases Phase 8D.5 used, run through the
+  actual FastAPI backend: single accepted, single needs_review
+  (correct issue codes, review persisted, downloads blocked), and the
+  6-document mixed batch (4 accepted / 2 needs_review / 0 failed,
+  aggregate CSV with exactly 4 rows). Frontend build/lint/type-check
+  all pass and the dev server was confirmed serving the expected page;
+  a full interactive browser click-through could not be completed in
+  this sandbox (Playwright's Chromium needs OS packages unavailable
+  without `sudo` here) -- noted as a verification limitation, not a
+  defect.
+- Added `docs/demo-ui.md`; updated `README.md` ("Run the demo UI"
+  section), `docs/final-architecture.md` (post-freeze addendum),
+  `docs/known-limitations.md` (#8 marked partially resolved -- no
+  in-UI review correction), `docs/project-state.md`, `pyproject.toml`
+  (optional `api` extra: fastapi/uvicorn/python-multipart), and
+  `.gitignore`.
+- 21 new tests (`tests/api/`); full suite: 660 passing, up from 639,
+  zero regressions.
+
 ### Phase 8D.6 - Deterministic Agent Skill For Single + Batch Execution
 
 - Added `skills/run-w2-pipeline/SKILL.md`, a thin agent skill for

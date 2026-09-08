@@ -45,3 +45,13 @@ data/evaluation/results/*.pid
 data/review/**
 !data/review/
 !data/review/README.md
+
+# Phase 8D.7 demo UI: staged uploads and per-run UI output are ephemeral
+# session state, not committed project artifacts.
+data/ui_uploads/**
+!data/ui_uploads/
+!data/ui_uploads/README.md
+output/ui/
+
+# `frontend/` carries its own create-next-app .gitignore (node_modules,
+# .next/, .env*, etc.); nothing frontend-specific needs duplicating here.

@@ -6,13 +6,13 @@ Last updated: 2026-09-07
 
 **Phase 8D.3 (final architecture/documentation freeze) is complete.**
 No further core feature work is planned within this take-home's scope.
-Phase 8D.4, 8D.5, and 8D.6 (below) are demo/operability additions on
-top of the freeze -- a single-document production runner CLI/service,
-a batch runner over the same service plus per-document latency
-instrumentation, then a thin agent skill over both -- not a reopening
-of extraction, validation, or export behavior. For the current system
-(not the phase-by-phase history
-below), start with:
+Phase 8D.4 through 8D.7 (below) are demo/operability additions on top
+of the freeze -- a single-document production runner CLI/service, a
+batch runner over the same service plus per-document latency
+instrumentation, a thin agent skill over both, then a local Next.js/
+FastAPI demo UI over the same services -- not a reopening of
+extraction, validation, or export behavior. For the current system
+(not the phase-by-phase history below), start with:
 
 - [`docs/final-architecture.md`](final-architecture.md) -- production
   architecture: PaddleOCR (GPU) + deterministic extraction, evidence-
@@ -44,11 +44,15 @@ below), start with:
   an explicit batch, or a deterministic benchmark-demo selection
   through the two CLIs above, using their machine-readable output as
   the sole source of truth.
+- [`docs/demo-ui.md`](demo-ui.md) -- Phase 8D.7's local demo UI: a
+  Next.js/TypeScript frontend over a thin FastAPI/Python API
+  (`src/w2_pipeline/api/`), both presentation/transport only over the
+  same `run_document()`/`run_batch()` calls above.
 
 Possible future production work (GPU-cost-vs-review-cost pricing study,
-a review front-end, real-cloud-cost benchmarking, native-PDF evidence
-parity, real-taxpayer-corpus validation, a lightweight frontend over
-the batch runner) is listed in `docs/known-limitations.md` and
+a review-correction UI, real-cloud-cost benchmarking, native-PDF
+evidence parity, real-taxpayer-corpus validation) is listed in
+`docs/known-limitations.md` and
 `docs/architecture-decision-record.md` Section 16 as explicitly **not**
 part of this take-home's scope, not as unfinished project tasks.
 
@@ -1556,6 +1560,108 @@ Checkbox-specific remediation remains a fully open gap.
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
 
+### Phase 8D.7 - Lightweight Next.js + FastAPI Demo Interface
+
+Full record: `docs/demo-ui.md`.
+
+Adds a local demo UI over the Phase 8D.4/8D.5 application services --
+the last of the demo/operability addenda this take-home's freeze
+addendum sequence explicitly planned (`skills/run-w2-pipeline/SKILL.md`
+already named this as its own "AFTER THAT" next step). No extraction,
+validation, review-decision, finalization, or CSV-flattening logic was
+added anywhere in this phase; both new layers are thin adapters over
+the unmodified `run_document()`/`run_batch()`.
+
+**New**: `src/w2_pipeline/api/` (`app.py` FastAPI routes,
+`service.py` shared-extractor lifecycle + result mapping,
+`schemas.py` response models, `uploads.py` safe upload staging) and
+`frontend/` (Next.js 16 + TypeScript + Tailwind, App Router). Stack
+choice: FastAPI because the processing authority must stay Python (it
+calls `run_document()`/`run_batch()` directly, never via subprocess);
+Next.js/TypeScript per explicit instruction (an already-known stack),
+kept to plain fetch + local component state -- no state-management
+library, no UI component library, no server actions carrying business
+logic.
+
+**Shared extractor across HTTP requests**: `service._get_shared_extractor()`
+lazily builds and warms one `PipelineAExtractor` per server process,
+guarded by a non-blocking `threading.Lock` that also serializes
+processing (`409` on a concurrent request) and a `warm_up()` failure
+(`502`, extractor left unset so a later request can retry). One file
+-> `run_document()`; two or more -> `run_batch()` -- always exactly one
+call, never one per file. A real warm-vs-cold comparison on a live
+server: first request `model_startup_seconds ~= 5.6s`, every
+subsequent request `~= 0.00001s`, `processing_latency_seconds` steady
+at ~1.3-2.1s both times.
+
+**Timing-reporting bug found and fixed during this phase's own real
+smoke test** (caught before it shipped, not a known limitation): the
+shared extractor's real cold-start cost happens inside `service.py`,
+*before* `run_document()`/`run_batch()` start their own timers -- so
+those functions always see an already-warm extractor and report
+near-zero `model_startup_seconds` themselves, even on a truly cold
+first request. Fixed by measuring `_get_shared_extractor()`'s own
+duration in `service.py` and reporting *that* as the run-level
+`model_startup_seconds` (added to `total_duration_seconds` too),
+instead of trusting `run_document()`/`run_batch()`'s inner value at the
+run level. Each document's own `model_startup_seconds` is left as
+`run_document()`/`run_batch()` computed it (correctly near-zero,
+consistent with Phase 8D.5 per-document semantics) -- only the
+run-level number needed the fix. Covered by a regression test
+(`test_shared_extractor_cold_start_is_reported_at_run_level`).
+
+**Download/upload safety**: uploaded filenames are sanitized to a
+`[A-Za-z0-9_-]` document ID before ever touching a filesystem path
+(`uploads._safe_stem` -- a filename like `../../etc/passwd.png` cannot
+influence the staged path); every download route re-validates `run_id`
+(`^[0-9a-f]{32}$`) and `document_id` against that run's own persisted
+manifest, and only ever serves the two fixed `final.json`/`final.csv`
+filenames -- the client never supplies a raw path.
+
+**Real UI smoke** (PaddleOCR, GPU, via the actual FastAPI backend --
+see "Frontend verification" below for what could and could not be
+exercised through a real browser in this environment):
+single accepted (`symage_900001`/`external_clean_render`) -- `accepted`,
+zero issues, JSON/CSV downloads byte-identical to the equivalent CLI
+run's `final.csv`. Single needs_review (`symage_900021`/`rotated`) --
+`needs_review`, both expected address-evidence issue codes, review ID
+persisted, both download routes `404`. Mixed batch (the same six
+documents Phase 8D.5's own smoke used) -- 4 accepted / 2 needs_review /
+0 failed, aggregate CSV downloadable with exactly 4 rows, review
+documents absent.
+
+**Frontend verification**: `tsc --noEmit`, `next lint`, and
+`next build` all pass; the dev server was started and its HTML/JS
+confirmed to serve the expected page content. A full interactive
+browser click-through (drag-drop, opening the detail modal, clicking
+Download) could not be completed in this sandbox -- Playwright's
+Chromium could be downloaded but its OS-level shared libraries
+(`libnspr4.so` etc.) require `apt`/`sudo`, unavailable here. The API
+contract every frontend call depends on was independently verified for
+real against PaddleOCR/GPU (above); the frontend code was reviewed
+against that exact contract but not literally clicked through in a
+rendered browser in this environment.
+
+**Tests**: 21 new (`tests/api/test_uploads.py`, 7: extension validation,
+staging, path-traversal-safe sanitization, ID collision handling;
+`tests/api/test_app.py`, 14: health, single-vs-batch routing,
+accepted/needs_review download gating, document detail, unsupported
+upload, processor-busy/-unavailable, run/document ID validation, run
+isolation, concurrency lock, the cold-start-reporting regression).
+Mocked at the `run_document`/`run_batch` boundary -- no GPU required.
+Full suite: **660 tests passing, up from 639, zero regressions.**
+
+**Docs**: added `docs/demo-ui.md`; updated `README.md` ("Run the demo
+UI" section, repository structure, known limitations),
+`docs/final-architecture.md` (post-freeze addendum + diagram),
+`docs/known-limitations.md` (#8 marked partially resolved),
+`pyproject.toml` (optional `api` extra), `.gitignore`
+(`data/ui_uploads/`, `output/ui/`).
+
+**Scope held**: no OCR/parser/validation changes, no concurrency beyond
+one shared sequential extractor, no database, no auth, no cloud
+deployment, no review-correction UI.
+
 ### Phase 8D.6 - Deterministic Agent Skill For Single + Batch Execution
 
 Full record: `skills/run-w2-pipeline/SKILL.md`.
@@ -2118,19 +2224,21 @@ evidence fields), remain open product decisions.
 25 new tests (20 detector unit/architecture tests + 5 integration
 tests); full suite: **514 tests passing, up from 489, zero regressions.**
 
-## Take-Home Scope: Complete (Phase 8D.3 Freeze; Phase 8D.4/8D.5/8D.6 Demo/Operability Addenda)
+## Take-Home Scope: Complete (Phase 8D.3 Freeze; Phase 8D.4-8D.7 Demo/Operability Addenda)
 
 Phase 8D.3 closed the take-home's planned phase sequence (Phase 0
-through 8D.3). Phases 8D.4, 8D.5, and 8D.6 (see above) were
-subsequently added as scoped demo/operability follow-ups -- a
-single-document runner CLI/service, a batch runner over it with
-latency instrumentation, then a thin agent skill over both --
-explicitly requested after the freeze; none changed
-extraction/validation/routing/export behavior, so the "backend
-complete" declaration above still stands. **No further phase beyond
-8D.6 is currently planned.** The items below are possible future
-*production* work, listed for completeness -- they are not unfinished
-take-home tasks.
+through 8D.3). Phases 8D.4 through 8D.7 (see above) were subsequently
+added as scoped demo/operability follow-ups -- a single-document
+runner CLI/service, a batch runner over it with latency
+instrumentation, a thin agent skill over both, then a local Next.js/
+FastAPI demo UI over the same services -- explicitly requested after
+the freeze; none changed extraction/validation/routing/export
+behavior, so the "backend complete" declaration above still stands.
+**No further phase beyond 8D.7 is currently planned; per the last
+brief in this sequence, feature development is now frozen in favor of
+architecture understanding, presentation preparation, and demo
+rehearsal.** The items below are possible future *production* work,
+listed for completeness -- they are not unfinished take-home tasks.
 
 ```text
 Possible future production work (not in take-home scope):
@@ -2147,9 +2255,12 @@ Possible future production work (not in take-home scope):
   checkbox/address evidence pattern, to close the evidence-parity gap
   documented in docs/known-limitations.md #4.
 
-- A review UI/frontend consuming ReviewRecord and the review/cli.py
-  workflow -- the backend workflow is complete and independently
-  provable via CLI alone (Phase 8D.2).
+- A review-*correction* UI consuming the existing generic
+  `apply_correction`/`revalidate` API -- the Phase 8D.7 demo UI already
+  covers upload/process/view/download, but review correction/resolution
+  remains `review/cli.py`-only, a deliberate scope boundary (see
+  `docs/known-limitations.md` #8); the backend workflow is complete and
+  independently provable via CLI alone (Phase 8D.2).
 
 - A real cloud-cost pricing study to close the Paddle-vs-Tesseract
   economics question (still open/directional, per
@@ -2168,12 +2279,9 @@ Possible future production work (not in take-home scope):
   management, managed database/object storage) before handling real
   taxpayer data -- see README's Security section.
 
-- A lightweight frontend calling `run_document()`/`run_batch()`
-  directly, surfacing filename/status/processing latency/validation
-  issues/review ID and a finalized-batch CSV download. (The Phase
-  8D.6 agent skill, `skills/run-w2-pipeline/SKILL.md`, already covers
-  the deterministic demo/evaluation-selection use case a skill would
-  have filled here.)
+- Multi-tenant/authenticated hosting of the Phase 8D.7 demo UI, and a
+  review-correction form built on it (see above) -- both explicit
+  scope boundaries of that phase, not gaps in what it delivered.
 ```
 
 Any future Pipeline B benchmark should be compared against whichever

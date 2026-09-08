@@ -244,8 +244,69 @@ As of Phase 8D.2, `validate`/`review-create`/`export-document` accept an
 optional `--signals-json <path>` (a full `ExtractionSignals` JSON
 document) so a real OCR-route extraction's checkbox/address evidence can
 reach the validator through the CLI, not only `--pipeline-id`/`--route`.
-See `docs/operator-walkthrough.md` for the full command sequence and
-`docs/known-limitations.md` #6 for the one acknowledged gap: there is no
-single-document *extraction* CLI yet, only batch/manifest benchmark
-scripts (`run_pipeline_a.py` and variants) and this review/downstream
-CLI, which takes an already-extracted `W2Document` as input.
+See `docs/operator-walkthrough.md` for the full command sequence.
+
+## Post-freeze operator/demo layer (Phase 8D.4-8D.7 addendum)
+
+Everything above this section is the frozen Phase 8D.3 snapshot,
+preserved as written. Phases 8D.4-8D.7 subsequently closed the
+single-document-extraction-CLI gap this section used to describe and
+added three more ways to drive the same, otherwise-unchanged
+extraction/validation/review/export flow -- none of them changed any
+extraction, validation, or export behavior described above:
+
+- **Phase 8D.4**: `python -m w2_pipeline.cli.run_document <file>`
+  (`w2_pipeline.application.run_document.run_document()`) -- the
+  canonical single-document entry point. See
+  `docs/single-document-runner.md`.
+- **Phase 8D.5**: `python -m w2_pipeline.cli.run_batch <files...>`
+  (`w2_pipeline.application.run_batch.run_batch()`) -- runs many
+  documents through one warmed-once Pipeline A extractor, plus
+  explicit `model_startup_seconds`/`processing_latency_seconds`/
+  `total_duration_seconds` timing semantics both CLIs now share. See
+  `docs/batch-runner.md`.
+- **Phase 8D.6**: `skills/run-w2-pipeline/SKILL.md` -- a thin agent
+  skill so Claude Code/Codex can drive both CLIs using their
+  machine-readable `run_summary.json`/`batch_summary.json` output.
+- **Phase 8D.7**: a local demo UI -- a thin FastAPI transport layer
+  (`w2_pipeline.api`) over the same `run_document()`/`run_batch()`
+  calls, with a Next.js/TypeScript frontend. See `docs/demo-ui.md`.
+
+```text
+                        +--------------------+
+                        | Next.js/TypeScript |
+                        | Operator UI        |
+                        +---------+----------+
+                                  | HTTP
+                                  v
+                        +--------------------+
+                        | FastAPI / Python   |
+                        | Thin API Layer     |
+                        +---------+----------+
+                                  |
+                     +------------+------------+
+                     v                         v
+              run_document()              run_batch()
+                     |                         |
+                     +------------+------------+
+                                  v
+                         Pipeline A / Paddle
+                                  v
+                         Canonical Extraction
+                                  v
+                            Validation
+                       +----------+----------+
+                       v                     v
+                  Accepted             Needs Review
+                       |                     |
+                  Finalize              ReviewRecord
+                       |
+                  JSON / CSV
+```
+
+The Next.js UI is presentation only; FastAPI is transport/API only.
+Neither contains extraction, validation, review-decision, finalization,
+or CSV-flattening logic -- both are thin adapters over the exact same
+`run_document()`/`run_batch()` application services the CLIs and the
+agent skill call, so the backend documented above remains fully usable
+(and independently correct) with no UI running at all.

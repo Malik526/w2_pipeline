@@ -2,8 +2,9 @@
 
 The single canonical list of what this system does **not** currently do,
 as of Phase 8D.3 (final freeze), updated in Phase 8D.4 to mark item 6
-resolved and in Phase 8D.5 to mark item 7 resolved, rather than silently
-dropped. Every item below is either
+resolved, in Phase 8D.5 to mark item 7 resolved, and in Phase 8D.7 to
+mark item 8 partially resolved, rather than silently dropped. Every
+item below is either
 restated from an earlier phase, newly identified during the Phase 8D.2
 operator walkthrough, or marked resolved inline once a later phase
 closed it. This document does not propose fixes -- see each item's
@@ -123,20 +124,31 @@ accepted-only aggregate CSV plus a machine-readable
 operator-ergonomics/throughput gap; the underlying extraction,
 validation, finalize, and export logic is unchanged and unduplicated.
 
-### 8. No frontend / operator GUI
+### 8. ~~No frontend / operator GUI~~ PARTIALLY RESOLVED (Phase 8D.7)
 
-**What it is**: the entire review and downstream workflow is exposed
+**What it was**: the entire review and downstream workflow was exposed
 only via `review/cli.py` (a demonstration/operator CLI) and the
-underlying Python API (`start_review`, `apply_correction`, `revalidate`,
-`finalize_document`, `export_json`, `export_csv`). No web UI exists.
-**Impact**: a non-technical reviewer cannot use this system directly
-today.
-**Correctness-critical**: no -- not required for this take-home's scope;
-the backend workflow itself is complete and independently exercised via
-the CLI (Phase 8D.2).
-**Production follow-up**: a review front-end consuming the existing
-`ReviewRecord`/`review.cli` API, as already noted in the architecture
-decision record.
+underlying Python API. No web UI existed.
+**Resolved by**: a local demo UI (Next.js/TypeScript frontend +
+FastAPI/Python backend, both thin over the unmodified
+`run_document()`/`run_batch()`) that uploads W-2s, runs them, and shows
+accepted/needs_review/failed status, per-document latency, canonical
+extracted data, issue codes, review IDs, and JSON/CSV/aggregate-CSV
+downloads. See [`docs/demo-ui.md`](demo-ui.md).
+**What remains unresolved**: this UI has no review-*correction* form --
+a `needs_review` document's issues/review ID are displayed, but
+applying a correction and resolving the review is still `review/cli.py`
+only (a deliberate Phase 8D.7 scope boundary, not an oversight: adding
+correction would mean reimplementing field-specific business logic in
+TypeScript, which the whole thin-adapter architecture is designed to
+avoid).
+**Correctness-critical**: no -- an operator-ergonomics gap, same as
+before; the backend workflow itself is complete and independently
+exercised via the CLI (Phase 8D.2).
+**Production follow-up**: a review-correction UI consuming the
+existing generic `apply_correction`/`revalidate` API through thin
+endpoints, if a future phase decides that ergonomics gap is worth
+closing.
 
 ### 9. Benchmark and schema are scoped to the 2026 tax-year W-2
 

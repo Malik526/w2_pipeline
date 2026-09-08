@@ -208,6 +208,25 @@ benchmark-demo selection), reading `run_summary.json`/
 terminal-text scraping. It contains no extraction/validation logic of
 its own.
 
+## Run the demo UI
+
+A local Next.js/TypeScript + FastAPI demo interface over the same
+`run_document()`/`run_batch()` services -- upload one or more W-2s in a
+browser, see accepted/needs-review/failed with per-document latency,
+inspect canonical extracted data, and download JSON/CSV output.
+
+```bash
+PYTHONPATH=src python3 -m uvicorn w2_pipeline.api.app:app --reload --port 8000
+
+# in a second terminal
+cd frontend && npm install && cp .env.example .env.local && npm run dev
+```
+
+Open `http://localhost:3000` (API: `http://localhost:8000`). The
+FastAPI layer requires the optional `api` extra
+(`pip install '.[api]'`). Full architecture, API contract, and known
+limitations: [`docs/demo-ui.md`](docs/demo-ui.md).
+
 ## Operator flow
 
 The full copy/paste runbook, run for real against two documents (one
@@ -251,12 +270,18 @@ src/w2_pipeline/
   review/        ReviewRecord workflow + review/cli.py (operator CLI)
   downstream/    FinalizedW2, JSON/CSV export
   evaluation/    benchmark harnesses, dataset generation, ground truth
-  application/   run_document() -- the single-document service function (Phase 8D.4)
-  cli/           run_document CLI -- thin wrapper over application/ (Phase 8D.4)
+  application/   run_document()/run_batch() -- the reusable service functions (Phase 8D.4/8D.5)
+  cli/           run_document/run_batch CLIs -- thin wrappers over application/ (Phase 8D.4/8D.5)
+  api/           FastAPI transport layer for the demo UI -- thin wrapper over application/ (Phase 8D.7)
+skills/
+  run-w2-pipeline/SKILL.md   agent skill over both CLIs (Phase 8D.6)
+frontend/
+  Next.js/TypeScript demo UI calling api/ (Phase 8D.7)
 docs/
   final-architecture.md, final-decisions.md,
   final-evaluation-summary.md, known-limitations.md   current state (start here)
-  single-document-runner.md                            single-document CLI/service contract
+  single-document-runner.md, batch-runner.md           single-document/batch CLI+service contracts
+  demo-ui.md                                            demo UI architecture and API contract
   operator-walkthrough.md                             operational proof
   architecture-decision-record.md                      full historical narrative through Phase 8C
   experiments/                                         phase-by-phase experiment history
@@ -271,8 +296,10 @@ Synthetic benchmark (not real taxpayer data); 2 of 600 documents still
 unsafely accept an OCR character-misread address; several optional
 canonical fields (Box 14, local tax rows, address line 2) are
 schema-complete but have no populated benchmark example; no global
-calibrated OCR confidence (a deliberate decision, not a gap); no
-frontend/GUI.
+calibrated OCR confidence (a deliberate decision, not a gap); the demo
+UI (`docs/demo-ui.md`) is a local two-process operator interface, not a
+production deployment (no auth, no database, one shared sequential
+extractor) -- no in-UI review correction.
 
 Full list, with impact and correctness-criticality for each item:
 [`docs/known-limitations.md`](docs/known-limitations.md).
