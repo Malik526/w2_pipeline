@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-09-11
+
+### Phase 8D.8A - Recognition-Confidence Residual Error Audit (Evaluation Only)
+
+- Evaluation-only audit: does native PaddleOCR recognition confidence
+  (Phase 8C.4's plumbing, applied to a wider 22-field scope including
+  address fields for the first time) separate the two remaining
+  600-document-benchmark unsafe-accepted residuals (`symage_900027`
+  blurred `Ave`->`Áve` at 0.9864 confidence, `symage_900061` compressed
+  `S`->`Š` at 0.9752 confidence) from correct OCR-derived fields well
+  enough, composed with the current production validator at
+  document-routing level, to justify promotion. A fresh instrumented
+  600-document PaddleOCR GPU run confirmed these are the only two OCR
+  recognition errors and the only two unsafe-accepted documents in the
+  entire benchmark, reproducing the frozen Phase 8D.1B baseline exactly
+  before the confidence analysis was trusted.
+- **Decision: B - partial/expensive separation, not promoted.** A
+  threshold (0.99) catches both residuals with zero remaining unsafe
+  acceptance, but at a cost of 351/583 correct documents (59.9%) newly
+  routed to review and autoaccept falling from 97.5% to 39.0% -- every
+  newly-routed document at every threshold tested was already correct.
+  No change to `validation/rules.py`, `validation/routing.py`, OCR
+  configuration, or production routing behavior.
+- Added `src/w2_pipeline/evaluation/recognition_confidence_residual_audit.py`
+  (pure, unit-tested threshold/routing-composition/distribution helpers)
+  and `src/w2_pipeline/evaluation/run_recognition_confidence_residual_audit.py`
+  (instrumented PaddleOCR run). Fixed an early-draft bug in the latter,
+  caught by its own extraction/validator stability check: a hand-built
+  `ExtractionSignals` mapping omitted Phase 8D.1B's address-evidence
+  fields, silently reproducing the pre-8D.1B validator baseline; fixed
+  by switching to the shared `build_extraction_signals` helper
+  (`src/w2_pipeline/extraction/signals.py`) and rerunning the full
+  600-document pass.
+- Artifacts: `data/evaluation/results/phase8d8a_recognition_confidence_{rows.jsonl,audit.json,thresholds.json}`,
+  `docs/experiments/phase8d8a-recognition-confidence-residual-audit.md`.
+- 31 new tests; full suite: 691 passing (660 baseline + 31 confidence
+  helper tests, unaffected by the mid-phase runner fix since the fix
+  only touched the instrumented-run script, not the tested pure
+  helpers), zero regressions.
+
 ## 2026-09-07
 
 ### Phase 8D.7 - Lightweight Next.js + FastAPI Demo Interface

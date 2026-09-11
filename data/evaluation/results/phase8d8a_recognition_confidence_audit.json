@@ -1,0 +1,404 @@
+{
+  "address_correct_distribution": {
+    "max": 0.9999985098838806,
+    "mean": 0.9968283336721854,
+    "median": 0.9997804164886475,
+    "min": 0.9034596681594849,
+    "n": 3551,
+    "p1": 0.9658175706863403,
+    "p5": 0.9800354838371277
+  },
+  "address_incorrect_observations": [
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field_path": "employer.address.address_line_1",
+      "field_value": "369 Pennsylvania \u00c1ve N",
+      "selected": 0.9863941669464111,
+      "variant_id": "blurred_png"
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field_path": "employer.address.address_line_1",
+      "field_value": "9992 \u0160 Jefferson St",
+      "selected": 0.975196123123169,
+      "variant_id": "compressed_jpeg"
+    }
+  ],
+  "all_correct_distribution": {
+    "max": 0.9999992847442627,
+    "mean": 0.9984116987192381,
+    "median": 0.9999713897705078,
+    "min": 0.9015146493911743,
+    "n": 10619,
+    "p1": 0.9690855538845062,
+    "p5": 0.9892741978168488
+  },
+  "all_incorrect_observations": [
+    {
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field_path": "employer.address.address_line_1",
+      "field_value": "369 Pennsylvania \u00c1ve N",
+      "selected": 0.9863941669464111,
+      "variant_id": "blurred_png"
+    },
+    {
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field_path": "employer.address.address_line_1",
+      "field_value": "9992 \u0160 Jefferson St",
+      "selected": 0.975196123123169,
+      "variant_id": "compressed_jpeg"
+    }
+  ],
+  "average_duration_seconds": 1.3316576272383387,
+  "correct_fields": 25829,
+  "documents": 600,
+  "failed_documents": 0,
+  "field_accuracy": 0.9964891975308642,
+  "known_residuals": [
+    {
+      "correct": true,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "369 Pennsylvania Ave N",
+      "mean": 0.9989187121391296,
+      "min": 0.9989187121391296,
+      "selected": 0.9989187121391296,
+      "selected_reason": "ok",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "337 Tarentum-New Ken Brg",
+      "mean": 0.9999473690986633,
+      "min": 0.9999473690986633,
+      "selected": 0.9999473690986633,
+      "selected_reason": "ok",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "369 Pennsylvania Ave N",
+      "mean": 0.9878833293914795,
+      "min": 0.9878833293914795,
+      "selected": 0.9878833293914795,
+      "selected_reason": "ok",
+      "variant_id": "rotated_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "337 Tarentum-New Ken Brg",
+      "mean": 0.9999823570251465,
+      "min": 0.9999823570251465,
+      "selected": 0.9999823570251465,
+      "selected_reason": "ok",
+      "variant_id": "rotated_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "369 Pennsylvania Ave N",
+      "mean": 0.9791349172592163,
+      "min": 0.9791349172592163,
+      "selected": 0.9791349172592163,
+      "selected_reason": "ok",
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "337 Tarentum-New Ken Brg",
+      "mean": 0.9999675750732422,
+      "min": 0.9999675750732422,
+      "selected": 0.9999675750732422,
+      "selected_reason": "ok",
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": false,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "369 Pennsylvania \u00c1ve N",
+      "mean": 0.9863941669464111,
+      "min": 0.9863941669464111,
+      "selected": 0.9863941669464111,
+      "selected_reason": "ok",
+      "variant_id": "blurred_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "337 Tarentum-New Ken Brg",
+      "mean": 0.9997694492340088,
+      "min": 0.9997694492340088,
+      "selected": 0.9997694492340088,
+      "selected_reason": "ok",
+      "variant_id": "blurred_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "9992 S Jefferson St",
+      "mean": 0.9999158978462219,
+      "min": 0.9999158978462219,
+      "selected": 0.9999158978462219,
+      "selected_reason": "ok",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "1958 State Spur 380",
+      "mean": 0.9999855160713196,
+      "min": 0.9999855160713196,
+      "selected": 0.9999855160713196,
+      "selected_reason": "ok",
+      "variant_id": "external_clean_render"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "9992 S Jefferson St",
+      "mean": 0.9907222390174866,
+      "min": 0.9907222390174866,
+      "selected": 0.9907222390174866,
+      "selected_reason": "ok",
+      "variant_id": "rotated_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "1958 State Spur 380",
+      "mean": 0.998896062374115,
+      "min": 0.998896062374115,
+      "selected": 0.998896062374115,
+      "selected_reason": "ok",
+      "variant_id": "rotated_png"
+    },
+    {
+      "correct": false,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "9992 \u0160 Jefferson St",
+      "mean": 0.975196123123169,
+      "min": 0.975196123123169,
+      "selected": 0.975196123123169,
+      "selected_reason": "ok",
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "1958 State Spur 380",
+      "mean": 0.9996379017829895,
+      "min": 0.9996379017829895,
+      "selected": 0.9996379017829895,
+      "selected_reason": "ok",
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employer.address.address_line_1",
+      "field_value": "9992 S Jefferson St",
+      "mean": 0.9937375783920288,
+      "min": 0.9937375783920288,
+      "selected": 0.9937375783920288,
+      "selected_reason": "ok",
+      "variant_id": "blurred_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field": "employee.address.address_line_1",
+      "field_value": "1958 State Spur 380",
+      "mean": 0.994346022605896,
+      "min": 0.994346022605896,
+      "selected": 0.994346022605896,
+      "selected_reason": "ok",
+      "variant_id": "blurred_png"
+    }
+  ],
+  "manifest_path": "data/evaluation/external/symage-synthetic-us-forms-preview-final/manifest.jsonl",
+  "non_ascii_field_values": [
+    {
+      "correct": true,
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Jes\u00fas",
+      "mean": 0.9995237588882446,
+      "min": 0.9995237588882446,
+      "selected": 0.9995237588882446,
+      "variant_id": "external_clean_render"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Jes\u00fas",
+      "mean": 0.9998506903648376,
+      "min": 0.9998506903648376,
+      "selected": 0.9998506903648376,
+      "variant_id": "rotated_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Jes\u00fas",
+      "mean": 0.9998030066490173,
+      "min": 0.9998030066490173,
+      "selected": 0.9998030066490173,
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900026-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Jes\u00fas",
+      "mean": 0.9998522400856018,
+      "min": 0.9998522400856018,
+      "selected": 0.9998522400856018,
+      "variant_id": "blurred_png"
+    },
+    {
+      "correct": false,
+      "document_id": "symage_900027-irs_w2_single_page_2026-p0",
+      "field_path": "employer.address.address_line_1",
+      "field_value": "369 Pennsylvania \u00c1ve N",
+      "mean": 0.9863941669464111,
+      "min": 0.9863941669464111,
+      "selected": 0.9863941669464111,
+      "variant_id": "blurred_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "\u00d3liver",
+      "mean": 0.9995285272598267,
+      "min": 0.9995285272598267,
+      "selected": 0.9995285272598267,
+      "variant_id": "external_clean_render"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "\u00d3liver",
+      "mean": 0.9993516206741333,
+      "min": 0.9993516206741333,
+      "selected": 0.9993516206741333,
+      "variant_id": "rotated_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "\u00d3liver",
+      "mean": 0.9986842274665833,
+      "min": 0.9986842274665833,
+      "selected": 0.9986842274665833,
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900052-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "\u00d3liver",
+      "mean": 0.9992213845252991,
+      "min": 0.9992213845252991,
+      "selected": 0.9992213845252991,
+      "variant_id": "blurred_png"
+    },
+    {
+      "correct": false,
+      "document_id": "symage_900061-irs_w2_single_page_2026-p0",
+      "field_path": "employer.address.address_line_1",
+      "field_value": "9992 \u0160 Jefferson St",
+      "mean": 0.975196123123169,
+      "min": 0.975196123123169,
+      "selected": 0.975196123123169,
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Ad\u00e1n",
+      "mean": 0.9991269111633301,
+      "min": 0.9991269111633301,
+      "selected": 0.9991269111633301,
+      "variant_id": "external_clean_render"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Ad\u00e1n",
+      "mean": 0.9950068593025208,
+      "min": 0.9950068593025208,
+      "selected": 0.9950068593025208,
+      "variant_id": "rotated_png"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Ad\u00e1n",
+      "mean": 0.9995415210723877,
+      "min": 0.9995415210723877,
+      "selected": 0.9995415210723877,
+      "variant_id": "compressed_jpeg"
+    },
+    {
+      "correct": true,
+      "document_id": "symage_900103-irs_w2_single_page_2026-p0",
+      "field_path": "employee.first_name",
+      "field_value": "Ad\u00e1n",
+      "mean": 0.9992187023162842,
+      "min": 0.9992187023162842,
+      "selected": 0.9992187023162842,
+      "variant_id": "blurred_png"
+    }
+  ],
+  "residual_audit_field_paths": [
+    "employee.address.address_line_1",
+    "employee.address.city",
+    "employee.address.country",
+    "employee.address.postal_code",
+    "employee.address.state",
+    "employee.first_name",
+    "employee.last_name",
+    "employee.middle_initial",
+    "employee.ssn",
+    "employer.address.address_line_1",
+    "employer.address.city",
+    "employer.address.country",
+    "employer.address.postal_code",
+    "employer.address.state",
+    "employer.ein",
+    "employer.name",
+    "federal_wages_and_taxes.box_1_wages_tips_other_compensation",
+    "federal_wages_and_taxes.box_2_federal_income_tax_withheld",
+    "federal_wages_and_taxes.box_3_social_security_wages",
+    "federal_wages_and_taxes.box_4_social_security_tax_withheld",
+    "federal_wages_and_taxes.box_5_medicare_wages_and_tips",
+    "federal_wages_and_taxes.box_6_medicare_tax_withheld"
+  ],
+  "total_duration_seconds": 798.9945763430032,
+  "total_fields": 25920
+}
