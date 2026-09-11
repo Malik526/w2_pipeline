@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-09-07
+Last updated: 2026-09-11
 
 ## Project Status: BACKEND COMPLETE / FROZEN FOR TAKE-HOME DELIVERY
 
@@ -1559,6 +1559,50 @@ Checkbox-specific remediation remains a fully open gap.
 
 12 new tests; full suite: **489 tests passing, up from 477, zero
 regressions.**
+
+### Phase 8D.8A - Recognition-Confidence Residual Error Audit: evaluation only, production behavior unchanged
+
+Full record:
+`docs/experiments/phase8d8a-recognition-confidence-residual-audit.md`.
+
+Evaluation-only audit: does native PaddleOCR recognition confidence
+(Phase 8C.4's plumbing, unmodified, applied to a wider 22-field scope
+including addresses for the first time) separate the two remaining
+600-document-benchmark unsafe-accepted residuals (`symage_900027`
+blurred `Ave`->`Áve`, `symage_900061` compressed `S`->`Š`, both
+character-level OCR substitutions, confidences 0.9864/0.9752) from
+correct OCR-derived fields well enough, **composed at document-routing
+level with the current production validator**, to justify promotion? A
+fresh instrumented 600-document PaddleOCR GPU run (13.3 min, 1.33s/doc)
+confirmed these are the *only* two OCR-recognition errors and the *only*
+two unsafe-accepted documents in the entire benchmark, reproducing the
+frozen Phase 8D.1B baseline exactly (17 erroneous, 15 routed, 2 unsafe
+accepted, 88.2% recall, 0.33% unsafe acceptance) before trusting the
+confidence analysis.
+
+**Decision: B - partial/expensive separation.** Unlike Phase 8C.4's
+`employer.name` finding (zero separation, OCR was genuinely correct),
+real separation exists here -- a threshold (0.99) catches both residuals
+with zero remaining unsafe acceptance -- but the cost is material: 351
+of 583 correct documents (59.9%) newly routed to review, autoaccept
+falling from 97.5% to 39.0%, review-queue precision falling to 4.6%,
+to catch 2 errors the validator already leaves unsafe-accepted at only a
+0.33% rate. Every newly-routed document at every threshold tested was
+genuinely correct (100% false-review, 0% coincidental additional
+recall). **Not promoted.** `validation/rules.py`/`routing.py` unchanged.
+
+Caught and self-corrected during this phase: an earlier draft of the
+instrumented runner hand-built `ExtractionSignals` and omitted the Phase
+8D.1B address-evidence fields, silently reproducing the *pre*-8D.1B
+validator baseline (13 unsafe-accepted, 23.5% recall) instead of current
+production behavior -- caught by this phase's own extraction/validator
+stability check (which exists exactly to catch this), fixed by switching
+to the shared `w2_pipeline.extraction.signals.build_extraction_signals`
+helper, full run redone.
+
+31 new tests
+(`tests/evaluation/test_recognition_confidence_residual_audit.py`); full
+suite: **691 tests passing, up from 660, zero regressions.**
 
 ### Phase 8D.7 - Lightweight Next.js + FastAPI Demo Interface
 
